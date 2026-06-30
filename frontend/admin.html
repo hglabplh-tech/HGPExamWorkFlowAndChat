@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="/static/styles.css">
+  <title>Trust administration · Study Harbour</title>
+</head>
+<body>
+  <header><strong>Study Harbour</strong><span>Trust administration</span></header>
+  <main class="admin-layout">
+    <section class="workspace">
+      <p class="eyebrow">CERTIFICATES AND SIGNATURES</p>
+      <h1>Trusted lists</h1>
+      <p>Upload a signed ETSI TS 119 612 v5/v6 private trusted list. Official EU trust is synchronized by the configured validation service and cannot be declared through an upload.</p>
+      <form id="trust-form" class="admin-form">
+        <label>Name<input id="trust-name" required></label>
+        <label>Framework<select id="trust-framework"><option value="custom_etsi">European private trust</option><option value="us_private_pki">US private PKI</option><option value="us_federal_profile">US federal profile</option></select></label>
+        <label>Signed trusted-list XML<input id="trust-file" type="file" accept="application/xml,text/xml,.xml" required></label>
+        <button>Validate and add</button>
+      </form>
+      <div id="trust-status" aria-live="polite"></div>
+      <div id="trust-lists"></div>
+      <hr>
+      <p class="eyebrow">CUSTOMER CERTIFICATE AUTHORITY</p>
+      <h1>Private PKI</h1>
+      <p>Add an OpenSSL root and intermediate chain. It remains disabled until an audited activation decision.</p>
+      <form id="pki-form" class="admin-form">
+        <label>Name<input id="pki-name" required></label>
+        <label>Root certificate PEM<input id="pki-root" type="file" accept=".pem,.crt" required></label>
+        <label>Intermediate bundle PEM<input id="pki-intermediate" type="file" accept=".pem,.crt"></label>
+        <label>OCSP responder URL<input id="pki-ocsp" type="url" placeholder="https://example.org/api/v1/ocsp/…"></label>
+        <button>Validate and add private PKI</button>
+      </form>
+      <div id="pki-status" aria-live="polite"></div>
+      <div id="pki-lists"></div>
+      <hr>
+      <p class="eyebrow">ASAG AND SEARCH</p>
+      <h1>Discipline scoring</h1>
+      <form id="scoring-form" class="admin-form">
+        <label>Discipline<input id="score-discipline" required placeholder="Biology"></label>
+        <label>Jaccard weight<input id="w-jaccard" type="number" min="0" max="1" step="0.01" value="0.10"></label>
+        <label>Keyword weight<input id="w-keywords" type="number" min="0" max="1" step="0.01" value="0.15"></label>
+        <label>Sentence-transformer weight<input id="w-semantic" type="number" min="0" max="1" step="0.01" value="0.25"></label>
+        <label>Fact-entailment weight<input id="w-facts" type="number" min="0" max="1" step="0.01" value="0.20"></label>
+        <label>Contradiction-safety weight<input id="w-contradiction" type="number" min="0" max="1" step="0.01" value="0.20"></label>
+        <label>Answer-length weight<input id="w-length" type="number" min="0" max="1" step="0.01" value="0.10"></label>
+        <label>Full-text search weight<input id="w-fulltext" type="number" min="0" max="1" step="0.01" value="0.40"></label>
+        <label>Semantic search weight<input id="w-search-semantic" type="number" min="0" max="1" step="0.01" value="0.60"></label>
+        <label>Model profile<select id="score-profile"><option value="economy">Economy</option><option value="quality">Quality</option></select></label>
+        <button>Create new version</button>
+      </form>
+      <div id="scoring-status" aria-live="polite"></div>
+      <div id="scoring-list"></div>
+    </section>
+  </main>
+  <script src="/static/admin.js"></script>
+</body>
+</html>

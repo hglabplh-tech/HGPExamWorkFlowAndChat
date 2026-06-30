@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: study-harbour-ocsp
+  labels: { app.kubernetes.io/name: study-harbour, app.kubernetes.io/component: ocsp }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app.kubernetes.io/name: study-harbour, app.kubernetes.io/component: ocsp }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: study-harbour, app.kubernetes.io/component: ocsp }
+    spec:
+      containers:
+        - name: ocsp
+          image: ghcr.io/OWNER/study-harbour:0.1.0
+          command: ["uvicorn", "backend.ocsp_signer:app", "--host", "0.0.0.0", "--port", "8010"]
+          ports:
+            - { name: http, containerPort: 8010 }
+          env:
+            - name: OCSP_SIGNER_TOKEN
+              valueFrom: { secretKeyRef: { name: study-harbour, key: OCSP_SIGNER_TOKEN } }
+          volumeMounts:
+            - { name: ocsp-secrets, mountPath: /run/secrets, readOnly: true }
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: [ALL] }
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+      volumes:
+        - name: ocsp-secrets
+          secret: { secretName: study-harbour-ocsp-keys }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: study-harbour-ocsp
+spec:
+  selector: { app.kubernetes.io/name: study-harbour, app.kubernetes.io/component: ocsp }
+  ports:
+    - { name: http, port: 8010, targetPort: http }
+

@@ -1,0 +1,16 @@
+:root { color-scheme: light; --ink:#17233b; --paper:#f5f2e9; --accent:#dd6b3d; --sea:#2c716d; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.5 system-ui,sans-serif; }
+header { height:64px; padding:0 24px; display:flex; align-items:center; gap:18px; color:white; background:var(--ink); }
+header strong { font-family:Georgia,serif; font-size:22px; } header span { opacity:.7; }
+main { min-height:calc(100vh - 64px); display:grid; grid-template-columns:220px minmax(320px,1fr) 300px; }
+nav, aside { padding:24px 18px; background:#ebe6da; } nav { border-right:1px solid #d8d1c2; } aside { border-left:1px solid #d8d1c2; }
+h1,h2 { font-family:Georgia,serif; } h1 { font-size:clamp(2rem,5vw,4.5rem); line-height:1; max-width:700px; margin:.2em 0 .55em; }
+h2 { font-size:18px; }.course { width:100%; padding:12px; margin:4px 0; border:0; border-radius:8px; text-align:left; background:transparent; }.course.active { background:white; color:var(--sea); }
+.workspace { padding:clamp(24px,5vw,72px); }.eyebrow { letter-spacing:.15em; color:var(--sea); font-size:12px; font-weight:700; }
+form { display:flex; gap:8px; } input { width:100%; border:1px solid #c9c0af; border-radius:8px; padding:13px; font:inherit; background:white; } button { border:0; border-radius:8px; padding:12px 18px; color:white; background:var(--accent); font-weight:700; cursor:pointer; }
+#results { margin-top:30px; display:grid; gap:12px; }.result,.empty { padding:20px; border-radius:12px; background:white; box-shadow:0 8px 25px #17233b10; }.result a { color:var(--sea); }
+#messages { min-height:220px; }.warning { border-left:4px solid var(--accent); }
+aside form { position:sticky; top:20px; flex-direction:column; }
+@media (max-width:900px) { main { grid-template-columns:1fr; } nav { display:none; } aside { border:0; } }
+.admin-layout { display:block; max-width:1000px; margin:auto; }.admin-form { display:grid; gap:14px; max-width:620px; }.admin-form label { display:grid; gap:6px; font-weight:700; }.admin-form select { padding:13px; border:1px solid #c9c0af; border-radius:8px; background:white; }

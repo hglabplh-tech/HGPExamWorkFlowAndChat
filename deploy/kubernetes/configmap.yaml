@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: study-harbour
+data:
+  ACCESS_TOKEN_MINUTES: "15"
+  NONCE_TTL_SECONDS: "3600"
+  SIGNATURE_CLOCK_SKEW_SECONDS: "300"
+  RETENTION_YEARS: "10"
+  EMBEDDING_PROFILE: "economy"
+  COMPUTE_DEVICE: "cpu"
+  PUBLIC_BASE_URL: "https://study.example.org"
+  CHROMA_URL: "http://chroma.example.svc:8000"
+  OCSP_SIGNER_URL: "http://study-harbour-ocsp:8010"
+

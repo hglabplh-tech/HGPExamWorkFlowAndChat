@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#17233b">
+  <link rel="manifest" href="/static/manifest.webmanifest">
+  <link rel="stylesheet" href="/static/styles.css">
+  <title>Study Harbour</title>
+</head>
+<body>
+  <header><strong>Study Harbour</strong><span>Courses · knowledge · people</span></header>
+  <main>
+    <nav aria-label="Course list">
+      <h2>Your courses</h2>
+      <button class="course active">Biology · BIO101</button>
+      <button class="course">Mathematics · MAT201</button>
+    </nav>
+    <section class="workspace">
+      <div class="hero">
+        <p class="eyebrow">BIO101 · EXAM PREPARATION</p>
+        <h1>What would you like to understand?</h1>
+        <form id="search-form">
+          <input id="query" placeholder="Ask course material or find a learning video…" required minlength="2">
+          <button>Search</button>
+        </form>
+      </div>
+      <div id="results" aria-live="polite">
+        <div class="empty">Approved documents and videos will appear here with their sources.</div>
+      </div>
+    </section>
+    <aside>
+      <h2>Course room</h2>
+      <div id="messages"><p><b>Welcome</b><br>Ask classmates, compare approaches, and prepare together.</p></div>
+      <form id="chat-form"><input id="chat-message" placeholder="Write to the course…"><button>Send</button></form>
+    </aside>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>
+

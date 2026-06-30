@@ -1,0 +1,22 @@
+{
+  # Caddy negotiates TLS 1.3 and falls back to TLS 1.2.
+  auto_https disable_redirects
+}
+
+https://localhost {
+  tls /certs/server.crt /certs/server.key {
+    protocols tls1.2 tls1.3
+    # For mutual TLS, uncomment and provide the staff/client CA:
+    # client_auth {
+    #   mode require_and_verify
+    #   trust_pool file /certs/customer-client-roots.pem
+    # }
+  }
+  encode zstd gzip
+  reverse_proxy api:8000
+  # When mutual TLS is enabled above, forward only Caddy's verified fingerprint.
+  # The API container is intentionally not published to the host network.
+  # reverse_proxy api:8000 {
+  #   header_up X-Client-Cert-Fingerprint {http.request.tls.client.fingerprint}
+  # }
+}

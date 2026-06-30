@@ -1,0 +1,7 @@
+{
+  "replace-with-private-pki-uuid": {
+    "responder_certificate": "/run/secrets/customer-ocsp-cert.pem",
+    "responder_key": "/run/secrets/customer-ocsp-key.pem",
+    "key_password_env": "CUSTOMER_OCSP_KEY_PASSWORD"
+  }
+}
