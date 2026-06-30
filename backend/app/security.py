@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
+"""Utilities for security."""
 import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -22,10 +24,12 @@ hasher = PasswordHasher(time_cost=2, memory_cost=19456, parallelism=1)
 
 
 def hash_password(password: str) -> str:
+    """Perform the hash password operation."""
     return hasher.hash(password)
 
 
 def create_access_token(user: User) -> str:
+    """Perform the create access token operation."""
     settings = get_settings()
     now = datetime.now(UTC)
     return jwt.encode(
@@ -36,6 +40,7 @@ def create_access_token(user: User) -> str:
 
 
 def decode_user_id(token: str) -> uuid.UUID:
+    """Perform the decode user id operation."""
     try:
         payload = jwt.decode(
             token,
@@ -53,6 +58,7 @@ async def authenticate(
     client_cert_fingerprint: str | None = Header(default=None, alias="X-Client-Cert-Fingerprint"),
     db: AsyncSession = Depends(get_db),
 ) -> User:
+    """Perform the authenticate operation."""
     user: User | None = None
     if bearer_credentials:
         try:
@@ -84,6 +90,7 @@ async def require_nonce(
     db: AsyncSession = Depends(get_db),
 ) -> User:
     # A unique nonce makes retries explicit and prevents replay of write requests.
+    """Perform the require nonce operation."""
     cutoff = datetime.now(UTC) - timedelta(seconds=get_settings().nonce_ttl_seconds)
     await db.execute(delete(RequestNonce).where(RequestNonce.used_at < cutoff))
     if await db.get(RequestNonce, nonce):
@@ -94,4 +101,5 @@ async def require_nonce(
 
 
 def new_nonce() -> str:
+    """Perform the new nonce operation."""
     return secrets.token_urlsafe(24)

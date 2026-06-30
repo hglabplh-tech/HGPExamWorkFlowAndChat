@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
+"""Utilities for test evidence."""
 import uuid
 from datetime import UTC, datetime
 
@@ -8,6 +10,7 @@ from backend.app.services.evidence import sha256_hex, signature_message, verify_
 
 
 def test_signed_exam_receipt_verifies_and_detects_changes():
+    """Verify signed exam receipt verifies and detects changes."""
     private_key = Ed25519PrivateKey.generate()
     public_pem = private_key.public_key().public_bytes(
         serialization.Encoding.PEM,

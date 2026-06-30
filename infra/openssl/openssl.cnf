@@ -1,10 +1,11 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 [ req ]
 distinguished_name = dn
 prompt = no
 
 [ dn ]
 C = DE
-O = Study Harbour Private PKI
+O = HcpXmlWorkflowChat Private PKI
 CN = replace-me
 
 [ root_ca ]

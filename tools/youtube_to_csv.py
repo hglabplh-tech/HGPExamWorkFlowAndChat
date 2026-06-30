@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """Search YouTube's official Data API and create a staff-review CSV."""
 import argparse
 import csv
@@ -7,6 +8,7 @@ import httpx
 
 
 def main() -> None:
+    """Perform the main operation."""
     parser = argparse.ArgumentParser()
     parser.add_argument("query")
     parser.add_argument("output")

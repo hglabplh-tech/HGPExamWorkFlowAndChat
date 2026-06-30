@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
+"""Utilities for indexing."""
 import uuid
 
 import chromadb
@@ -8,6 +10,7 @@ from .embeddings import encode
 
 
 def split_text(text: str, size: int = 1000, overlap: int = 150) -> list[str]:
+    """Perform the split text operation."""
     if not text.strip():
         return []
     chunks: list[str] = []
@@ -22,6 +25,7 @@ def split_text(text: str, size: int = 1000, overlap: int = 150) -> list[str]:
 
 
 def make_chunks(document: Document) -> list[DocumentChunk]:
+    """Perform the make chunks operation."""
     return [
         DocumentChunk(ordinal=i, text=text, search_text=text, chroma_id=str(uuid.uuid4()))
         for i, text in enumerate(split_text(document.body_text))

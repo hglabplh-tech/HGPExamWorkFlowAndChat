@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 version: 2
 updates:
   - package-ecosystem: pip

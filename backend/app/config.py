@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
+"""Utilities for config."""
 from functools import lru_cache
 
 from pydantic import SecretStr
@@ -5,6 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    """Represent settings."""
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     database_url: str = "postgresql+asyncpg://study:study@localhost:5432/study"
@@ -26,8 +29,13 @@ class Settings(BaseSettings):
     ocsp_signer_url: str | None = None
     ocsp_signer_token: SecretStr = SecretStr("development-ocsp-token-change-me")
     nli_model: str = "MoritzLaurer/mDeBERTa-v3-base-mnli-xnli"
+    generation_model: str = "google/flan-t5-base"
+    nightly_training_mode: str = "dataset"
+    model_output_dir: str = "/tmp/study-models"
+    minimum_training_examples: int = 20
 
 
 @lru_cache
 def get_settings() -> Settings:
+    """Perform the get settings operation."""
     return Settings()

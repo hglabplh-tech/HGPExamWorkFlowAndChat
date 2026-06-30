@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License. */
 const token = sessionStorage.getItem("token");
 const headers = () => ({Authorization:`Bearer ${token}`});
 const nonce = () => crypto.getRandomValues(new Uint32Array(4)).join("-") + crypto.randomUUID();
@@ -71,7 +72,7 @@ document.querySelector("#pki-form").addEventListener("submit", async event => {
 document.querySelector("#scoring-form").addEventListener("submit",async event=>{
   event.preventDefault();
   const number=id=>Number(document.querySelector(id).value);
-  const payload={discipline:document.querySelector("#score-discipline").value,semantic_profile:document.querySelector("#score-profile").value,grading_weights:{jaccard:number("#w-jaccard"),keywords:number("#w-keywords"),semantic:number("#w-semantic"),fact_entailment:number("#w-facts"),contradiction:number("#w-contradiction"),length:number("#w-length")},search_weights:{full_text:number("#w-fulltext"),semantic:number("#w-search-semantic")}};
+  const payload={discipline:document.querySelector("#score-discipline").value,semantic_profile:document.querySelector("#score-profile").value,grading_weights:{jaccard:number("#w-jaccard"),keywords:number("#w-keywords"),semantic:number("#w-semantic"),trained_scoring:number("#w-trained"),fact_entailment:number("#w-facts"),contradiction:number("#w-contradiction"),length:number("#w-length")},search_weights:{full_text:number("#w-fulltext"),semantic:number("#w-search-semantic")}};
   const response=await fetch("/api/v1/scoring-profiles",{method:"POST",headers:{...headers(),"Content-Type":"application/json","X-Request-Nonce":nonce()},body:JSON.stringify(payload)});
   const data=await response.json();
   document.querySelector("#scoring-status").textContent=response.ok?`Created ${data.discipline} profile version ${data.version}`:(data.detail||"Configuration failed");

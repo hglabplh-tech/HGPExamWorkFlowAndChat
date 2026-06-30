@@ -1,3 +1,5 @@
+<!-- Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License. -->
+
 # Contributor Covenant Code of Conduct
 
 ## Our Pledge

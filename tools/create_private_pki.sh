@@ -1,4 +1,5 @@
 #!/bin/sh
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 set -eu
 
 OUT="${1:-private-pki}"

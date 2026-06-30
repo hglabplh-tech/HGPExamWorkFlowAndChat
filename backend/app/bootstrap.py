@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
+"""Utilities for bootstrap."""
 import argparse
 import asyncio
 
@@ -9,6 +11,7 @@ from .security import hash_password
 
 
 async def create_user(email: str, password: str, name: str, role: Role) -> None:
+    """Perform the create user operation."""
     async with SessionLocal() as db:
         if await db.scalar(select(User).where(User.email == email)):
             raise SystemExit(f"User {email} already exists")

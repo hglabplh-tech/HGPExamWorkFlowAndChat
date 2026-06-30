@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 .PHONY: install test check run build up down
 
 install:
@@ -14,7 +15,7 @@ run:
 	python -m uvicorn backend.app.main:app --reload
 
 build:
-	docker build -t study-harbour:local .
+	docker build -t hcp-xml-workflow-chat:local .
 
 up:
 	docker compose up --build

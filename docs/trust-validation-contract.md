@@ -1,3 +1,5 @@
+<!-- Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License. -->
+
 # Trust and signature validation boundary
 
 The Python service does not declare eIDAS qualification by inspecting an X.509

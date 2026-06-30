@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """Train a small character LSTM for experimentation, not factual RAG answers."""
 import argparse
 from pathlib import Path
@@ -8,31 +9,39 @@ from torch.utils.data import DataLoader, Dataset
 
 
 class TextWindows(Dataset):
+    """Represent textwindows."""
     def __init__(self, encoded: list[int], sequence_length: int):
+        """Perform the init operation."""
         self.data, self.sequence_length = encoded, sequence_length
 
     def __len__(self) -> int:
+        """Perform the len operation."""
         return max(0, len(self.data) - self.sequence_length)
 
     def __getitem__(self, index: int):
+        """Perform the getitem operation."""
         x = torch.tensor(self.data[index:index + self.sequence_length], dtype=torch.long)
         y = torch.tensor(self.data[index + 1:index + self.sequence_length + 1], dtype=torch.long)
         return x, y
 
 
 class CharLSTM(nn.Module):
+    """Represent charlstm."""
     def __init__(self, vocabulary_size: int, embedding_size: int = 128, hidden_size: int = 256):
+        """Perform the init operation."""
         super().__init__()
         self.embedding = nn.Embedding(vocabulary_size, embedding_size)
         self.lstm = nn.LSTM(embedding_size, hidden_size, batch_first=True, num_layers=2, dropout=0.2)
         self.output = nn.Linear(hidden_size, vocabulary_size)
 
     def forward(self, tokens: torch.Tensor) -> torch.Tensor:
+        """Perform the forward operation."""
         hidden, _ = self.lstm(self.embedding(tokens))
         return self.output(hidden)
 
 
 def main() -> None:
+    """Perform the main operation."""
     parser = argparse.ArgumentParser()
     parser.add_argument("corpus")
     parser.add_argument("--output", default="artifacts/text-lstm.pt")

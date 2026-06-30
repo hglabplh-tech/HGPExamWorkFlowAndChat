@@ -1,25 +1,26 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: study-harbour-ocsp
-  labels: { app.kubernetes.io/name: study-harbour, app.kubernetes.io/component: ocsp }
+  name: hcp-xml-workflow-chat-ocsp
+  labels: { app.kubernetes.io/name: hcp-xml-workflow-chat, app.kubernetes.io/component: ocsp }
 spec:
   replicas: 1
   selector:
-    matchLabels: { app.kubernetes.io/name: study-harbour, app.kubernetes.io/component: ocsp }
+    matchLabels: { app.kubernetes.io/name: hcp-xml-workflow-chat, app.kubernetes.io/component: ocsp }
   template:
     metadata:
-      labels: { app.kubernetes.io/name: study-harbour, app.kubernetes.io/component: ocsp }
+      labels: { app.kubernetes.io/name: hcp-xml-workflow-chat, app.kubernetes.io/component: ocsp }
     spec:
       containers:
         - name: ocsp
-          image: ghcr.io/OWNER/study-harbour:0.1.0
+          image: ghcr.io/OWNER/hcp-xml-workflow-chat:0.1.0
           command: ["uvicorn", "backend.ocsp_signer:app", "--host", "0.0.0.0", "--port", "8010"]
           ports:
             - { name: http, containerPort: 8010 }
           env:
             - name: OCSP_SIGNER_TOKEN
-              valueFrom: { secretKeyRef: { name: study-harbour, key: OCSP_SIGNER_TOKEN } }
+              valueFrom: { secretKeyRef: { name: hcp-xml-workflow-chat, key: OCSP_SIGNER_TOKEN } }
           volumeMounts:
             - { name: ocsp-secrets, mountPath: /run/secrets, readOnly: true }
           resources:
@@ -32,14 +33,14 @@ spec:
             runAsNonRoot: true
       volumes:
         - name: ocsp-secrets
-          secret: { secretName: study-harbour-ocsp-keys }
+          secret: { secretName: hcp-xml-workflow-chat-ocsp-keys }
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: study-harbour-ocsp
+  name: hcp-xml-workflow-chat-ocsp
 spec:
-  selector: { app.kubernetes.io/name: study-harbour, app.kubernetes.io/component: ocsp }
+  selector: { app.kubernetes.io/name: hcp-xml-workflow-chat, app.kubernetes.io/component: ocsp }
   ports:
     - { name: http, port: 8010, targetPort: http }
 

@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 services:
   postgres:
     image: pgvector/pgvector:pg16
@@ -20,10 +21,27 @@ services:
   api:
     build: .
     env_file: .env
+    environment:
+      MODEL_OUTPUT_DIR: /models
     depends_on:
       postgres:
         condition: service_healthy
     expose: ["8000"]
+    volumes:
+      - model_data:/models:ro
+  trainer:
+    build: .
+    env_file: .env
+    command: ["python", "-m", "backend.training_job"]
+    environment:
+      NIGHTLY_TRAINING_MODE: train
+      MODEL_OUTPUT_DIR: /models
+    profiles: [tools]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - model_data:/models
   ocsp-signer:
     build: .
     env_file: .env
@@ -41,3 +59,4 @@ services:
 volumes:
   postgres_data:
   chroma_data:
+  model_data:

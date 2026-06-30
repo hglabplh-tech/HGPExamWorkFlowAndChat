@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """Fine-tune mBERT or XLM-RoBERTa as a query/passage relevance reranker.
 
 Expected CSV columns: query,passage,label where label is 0 or 1.
@@ -15,6 +16,7 @@ MODELS = {
 
 
 def main() -> None:
+    """Perform the main operation."""
     parser = argparse.ArgumentParser()
     parser.add_argument("csv_file")
     parser.add_argument("--family", choices=MODELS, default="mbert")
@@ -25,6 +27,7 @@ def main() -> None:
     tokenizer = AutoTokenizer.from_pretrained(MODELS[args.family])
 
     def tokenize(batch: dict) -> dict:
+        """Perform the tokenize operation."""
         return tokenizer(batch["query"], batch["passage"], truncation=True, max_length=384)
 
     encoded = dataset.map(tokenize, batched=True).rename_column("label", "labels")

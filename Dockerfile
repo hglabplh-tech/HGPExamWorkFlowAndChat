@@ -1,5 +1,6 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 FROM python:3.12-slim
-LABEL org.opencontainers.image.title="Study Harbour" \
+LABEL org.opencontainers.image.title="HcpXmlWorkflowChat" \
       org.opencontainers.image.description="Course collaboration, hybrid search, and assisted grading" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.authors="Harald Glab-Plhak"

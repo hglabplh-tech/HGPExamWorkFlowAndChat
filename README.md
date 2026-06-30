@@ -1,4 +1,6 @@
-# Study Harbour
+<!-- Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License. -->
+
+# HcpXmlWorkflowChat
 
 A cloud-ready Python service for course chat, curated documents and videos,
 hybrid search, secure examination submissions, assisted grading, and independent
@@ -10,11 +12,14 @@ Copyright © 2026 Harald Glab-Plhak. Distributed under the MIT License.
 ## Boundaries
 
 - `frontend/`: responsive HTML5 Progressive Web App (one UI for phones, tablets, and desktops)
-- `backend/app/api.py`: versioned REST boundary
-- `backend/app/services/`: indexing and retrieval algorithms
-- `backend/app/models.py`: PostgreSQL source-of-truth model
+- `backend/app/api.py` and `api_routes/`: small, versioned REST route modules
+- `backend/app/db_models/`: PostgreSQL models split by business area
+- `backend/app/services/`: scoring, search, evidence, trust, reporting, and ML utilities
+- `backend/app/workflows/`: pure exam-state and chat-visibility policies
 - `clients/`: independent Python REST client
 - `ml/`: BERT fine-tuning and educational LSTM training
+- `data/sample_courses/`: two reviewable example course definitions
+- `data/training/`: synthetic ASAG examples for pipeline development
 - `infra/`: TLS proxy and database setup
 
 ChromaDB is a derived semantic index. PostgreSQL remains canonical, including
@@ -53,8 +58,21 @@ services or separately operated stateful workloads.
 The provided deployment starts with one API replica. Before scaling out, replace
 the in-process WebSocket room broadcaster with Redis/NATS pub-sub, move startup
 schema changes to an Alembic migration Job, and use shared model/object storage.
-The GitHub workflows test Python 3.11/3.12, build the image, and publish tagged
+The GitHub workflows test Python 3.11/3.12 with coverage, build the image, and publish tagged
 releases to GHCR with provenance and an SBOM.
+
+## Sample courses and tests
+
+The repository includes `CS-M3-101`, covering supported ARM64, profiling, concurrency,
+unified-memory, and Metal development on Apple Silicon M3, plus `HIST-DE-1949`, covering
+German history since 1949. Their accompanying CSV answer sets are intentionally synthetic.
+They are examples for ingestion and nightly-training tests, not sufficiently large or
+independently validated model-training corpora.
+
+Run `python -m pytest` after installing `.[dev]`. Tests cover persistence metadata,
+cryptographic evidence, password hashing, deterministic ASAG metrics, hybrid ranking,
+indexing, workflow visibility, and sample-data contracts. External PostgreSQL, Chroma,
+OCSP, and trust-list interoperability still require deployment-level integration tests.
 
 ## Authentication and TLS
 
@@ -80,6 +98,19 @@ client timestamp, and one-time nonce. PostgreSQL stores the original bytes,
 signature, digest, nonce, server receipt timestamp, and retention deadline.
 Database triggers reject mutation or physical deletion of evidence and reject
 all updates/deletes to the hash-chained audit log.
+
+Submission requires an active certificate from an enabled application trust
+chain. The certificate fingerprint is bound into the student's signature. For a
+real examination, return additionally requires the instructor's active
+certificate and signature over the original exam hash, student-signature hash,
+and final grading hash. Practice examinations deliberately have no instructor
+signature and are labelled AI-only.
+
+Both workflows generate an A4 PDF report from PostgreSQL containing each
+question and answer, per-question score, ASAG metrics, feedback, evidence hashes,
+certificate fingerprints, and signature fingerprints. The report bytes and
+their own SHA-256 digest are retained in PostgreSQL and available from
+`GET /api/v1/submissions/{id}/report.pdf` subject to feedback-release rules.
 
 The administrative delete endpoint is deliberately a soft deletion: it requires
 an explicit retention override plus a reason during an active ten-year period,
@@ -206,6 +237,27 @@ The same discipline profile controls search ranking. PostgreSQL full-text and
 Chroma sentence-transformer results are normalized independently, multiplied by
 their configured weights, and summed. Each search result returns
 `score_components`, making its final rank explainable.
+
+## End-to-end learning and examination workflow
+
+Research questions, grounded answers, citations, visibility decisions, chat
+messages, shared research, practice scores, examination states, submissions,
+corrections, and returned grades are persisted in PostgreSQL. Practice exams
+release immediate provisional feedback; real exams suppress all feedback until
+an instructor approves and explicitly returns the grading. See
+`docs/workflows.md` for the student/instructor state transitions and REST flow.
+
+A nightly Kubernetes CronJob curates consented course-public research and
+teacher-returned scoring examples. Staff moderate student research examples.
+When training is enabled and enough approved examples exist, it fine-tunes the
+retrieval Sentence Transformer and supervised scoring CrossEncoder and records
+the resulting model run and artifact.
+
+For a local/manual nightly run use:
+
+```sh
+docker compose --profile tools run --rm trainer
+```
 
 ## Production work still required
 

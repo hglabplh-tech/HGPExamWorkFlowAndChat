@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """Fine-tune a Hugging Face BERT-compatible model for course text classification.
 
 Expected CSV columns: text,label. Labels are integer class identifiers.
@@ -9,6 +10,7 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer, Data
 
 
 def main() -> None:
+    """Perform the main operation."""
     parser = argparse.ArgumentParser()
     parser.add_argument("csv_file")
     parser.add_argument("--model", default="distilbert/distilbert-base-multilingual-cased")
@@ -20,6 +22,7 @@ def main() -> None:
     tokenizer = AutoTokenizer.from_pretrained(args.model)
 
     def tokenize(batch: dict) -> dict:
+        """Perform the tokenize operation."""
         return tokenizer(batch["text"], truncation=True, max_length=512)
 
     encoded = dataset.map(tokenize, batched=True)

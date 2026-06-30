@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License. */
 :root { color-scheme: light; --ink:#17233b; --paper:#f5f2e9; --accent:#dd6b3d; --sea:#2c716d; }
 * { box-sizing:border-box; }
 body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.5 system-ui,sans-serif; }

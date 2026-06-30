@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 name: CI
 
 on:
@@ -34,7 +35,6 @@ jobs:
         with:
           context: .
           push: false
-          tags: study-harbour:ci
+          tags: hcp-xml-workflow-chat:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
-

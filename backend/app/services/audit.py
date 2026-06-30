@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
+"""Utilities for audit."""
 import hashlib
 import json
 import uuid
@@ -18,6 +20,7 @@ async def append_audit(
     details: dict | None = None,
 ) -> AuditEvent:
     # Serialize writers so two events cannot claim the same previous hash.
+    """Perform the append audit operation."""
     await db.execute(text("SELECT pg_advisory_xact_lock(741852963)"))
     previous = await db.scalar(select(AuditEvent).order_by(AuditEvent.created_at.desc()).limit(1))
     material = {

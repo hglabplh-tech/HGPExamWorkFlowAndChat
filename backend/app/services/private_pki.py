@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
+"""Utilities for private pki."""
 import subprocess
 import tempfile
 from dataclasses import dataclass
@@ -9,6 +11,7 @@ from cryptography.hazmat.primitives import hashes
 
 @dataclass(frozen=True)
 class CertificateDetails:
+    """Represent certificatedetails."""
     fingerprint: str
     subject: str
     serial_number: str
@@ -17,6 +20,7 @@ class CertificateDetails:
 
 
 def certificate_details(pem: bytes) -> CertificateDetails:
+    """Perform the certificate details operation."""
     certificate = x509.load_pem_x509_certificate(pem)
     return CertificateDetails(
         fingerprint=certificate.fingerprint(hashes.SHA256()).hex(),
@@ -47,6 +51,7 @@ def verify_private_chain(leaf_pem: bytes, root_pem: bytes, intermediate_pem: byt
 
 
 def verify_root(root_pem: bytes) -> CertificateDetails:
+    """Perform the verify root operation."""
     details = verify_private_chain(root_pem, root_pem)
     certificate = x509.load_pem_x509_certificate(root_pem)
     try:

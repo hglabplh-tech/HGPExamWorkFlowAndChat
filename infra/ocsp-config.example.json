@@ -1,4 +1,5 @@
 {
+  "_copyright": "Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.",
   "replace-with-private-pki-uuid": {
     "responder_certificate": "/run/secrets/customer-ocsp-cert.pem",
     "responder_key": "/run/secrets/customer-ocsp-key.pem",

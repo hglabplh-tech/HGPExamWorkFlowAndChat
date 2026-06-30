@@ -1,7 +1,8 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: study-harbour
+  name: hcp-xml-workflow-chat
 data:
   ACCESS_TOKEN_MINUTES: "15"
   NONCE_TTL_SECONDS: "3600"
@@ -11,5 +12,6 @@ data:
   COMPUTE_DEVICE: "cpu"
   PUBLIC_BASE_URL: "https://study.example.org"
   CHROMA_URL: "http://chroma.example.svc:8000"
-  OCSP_SIGNER_URL: "http://study-harbour-ocsp:8010"
-
+  OCSP_SIGNER_URL: "http://hcp-xml-workflow-chat-ocsp:8010"
+  MODEL_OUTPUT_DIR: "/models"
+  NIGHTLY_TRAINING_MODE: "dataset"

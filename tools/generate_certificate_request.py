@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """Generate a protected ECDSA key and CSR for a CA/QTSP to certify.
 
 This creates no eIDAS-qualified or federally trusted certificate by itself.
@@ -12,6 +13,7 @@ from cryptography.x509.oid import NameOID
 
 
 def main() -> None:
+    """Perform the main operation."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--common-name", required=True)
     parser.add_argument("--email", required=True)

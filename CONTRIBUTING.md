@@ -1,6 +1,8 @@
+<!-- Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License. -->
+
 # Contributing
 
-Thank you for helping improve Study Harbour.
+Thank you for helping improve HcpXmlWorkflowChat.
 
 1. Open an issue for substantial behavior or architecture changes.
 2. Create a focused branch and include tests for changed behavior.

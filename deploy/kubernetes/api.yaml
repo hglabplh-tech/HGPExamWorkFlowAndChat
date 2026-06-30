@@ -1,27 +1,28 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: study-harbour-api
-  labels: { app.kubernetes.io/name: study-harbour, app.kubernetes.io/component: api }
+  name: hcp-xml-workflow-chat-api
+  labels: { app.kubernetes.io/name: hcp-xml-workflow-chat, app.kubernetes.io/component: api }
 spec:
   replicas: 1
   selector:
-    matchLabels: { app.kubernetes.io/name: study-harbour, app.kubernetes.io/component: api }
+    matchLabels: { app.kubernetes.io/name: hcp-xml-workflow-chat, app.kubernetes.io/component: api }
   template:
     metadata:
-      labels: { app.kubernetes.io/name: study-harbour, app.kubernetes.io/component: api }
+      labels: { app.kubernetes.io/name: hcp-xml-workflow-chat, app.kubernetes.io/component: api }
     spec:
       securityContext:
         seccompProfile: { type: RuntimeDefault }
       containers:
         - name: api
-          image: ghcr.io/OWNER/study-harbour:0.1.0
+          image: ghcr.io/OWNER/hcp-xml-workflow-chat:0.1.0
           imagePullPolicy: IfNotPresent
           ports:
             - { name: http, containerPort: 8000 }
           envFrom:
-            - configMapRef: { name: study-harbour }
-            - secretRef: { name: study-harbour }
+            - configMapRef: { name: hcp-xml-workflow-chat }
+            - secretRef: { name: hcp-xml-workflow-chat }
           readinessProbe:
             httpGet: { path: /ready, port: http }
             initialDelaySeconds: 15
@@ -41,18 +42,20 @@ spec:
           volumeMounts:
             - { name: tmp, mountPath: /tmp }
             - { name: model-cache, mountPath: /app/.cache }
+            - { name: trained-models, mountPath: /models, readOnly: true }
       volumes:
         - name: tmp
           emptyDir: {}
         - name: model-cache
           emptyDir: {}
+        - name: trained-models
+          persistentVolumeClaim: { claimName: hcp-xml-workflow-chat-models, readOnly: true }
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: study-harbour-api
+  name: hcp-xml-workflow-chat-api
 spec:
-  selector: { app.kubernetes.io/name: study-harbour, app.kubernetes.io/component: api }
+  selector: { app.kubernetes.io/name: hcp-xml-workflow-chat, app.kubernetes.io/component: api }
   ports:
     - { name: http, port: 80, targetPort: http }
-

@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """Isolated RFC 6960 responder signer for customer private PKIs.
 
 Mount /run/secrets/ocsp-config.json and referenced encrypted/private key files.
@@ -16,21 +17,24 @@ from cryptography.x509.oid import OCSPExtensionOID
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 
-app = FastAPI(title="Study Harbour private OCSP signer")
+app = FastAPI(title="HcpXmlWorkflowChat private OCSP signer")
 
 
 class SignRequest(BaseModel):
+    """Represent signrequest."""
     pki_id: str
     request_der_base64: str
     certificate_status: dict
 
 
 def configuration() -> dict:
+    """Perform the configuration operation."""
     return json.loads(Path(os.environ.get("OCSP_CONFIG", "/run/secrets/ocsp-config.json")).read_text())
 
 
 @app.post("/responses/sign")
 async def sign_response(data: SignRequest, authorization: str = Header(default="")):
+    """Perform the sign response operation."""
     expected = f"Bearer {os.environ.get('OCSP_SIGNER_TOKEN', '')}"
     if not expected.removeprefix("Bearer ") or authorization != expected:
         raise HTTPException(401, "Invalid service credential")

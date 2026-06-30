@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
+"""Utilities for model router."""
 from dataclasses import dataclass
 
 from ..config import get_settings
@@ -5,6 +7,7 @@ from ..config import get_settings
 
 @dataclass(frozen=True)
 class ModelDecision:
+    """Represent modeldecision."""
     embedding_model: str
     reranker_model: str | None
     device: str
@@ -12,6 +15,7 @@ class ModelDecision:
 
 
 def query_complexity(query: str) -> int:
+    """Perform the query complexity operation."""
     words = query.split()
     score = len(words)
     score += 8 if any(mark in query for mark in ("?", ":", ";")) else 0
@@ -20,6 +24,7 @@ def query_complexity(query: str) -> int:
 
 
 def select_models(query: str, profile: str | None = None, device: str | None = None) -> ModelDecision:
+    """Perform the select models operation."""
     settings = get_settings()
     profile = profile or settings.embedding_profile
     complexity = query_complexity(query)
@@ -34,6 +39,7 @@ def select_models(query: str, profile: str | None = None, device: str | None = N
 
 
 def resolve_torch_device(requested: str = "auto") -> str:
+    """Perform the resolve torch device operation."""
     import torch
 
     if requested != "auto":

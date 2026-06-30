@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
+"""Utilities for search."""
 import uuid
 import asyncio
 
@@ -9,9 +11,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..schemas import SearchHit, SearchResponse
 from ..config import get_settings
 from .embeddings import encode
+from .search_ranking import HybridRanker
 
 
 def _semantic_search(query: str, course_id: uuid.UUID | None, limit: int, profile: str) -> list[SearchHit]:
+    """Perform the semantic search operation."""
     settings = get_settings()
     host = settings.chroma_url.removeprefix("http://").removeprefix("https://")
     hostname, _, port = host.partition(":")
@@ -42,9 +46,8 @@ async def hybrid_search(
     profile: str = "economy",
     weights: dict[str, float] | None = None,
 ) -> SearchResponse:
+    """Perform the hybrid search operation."""
     weights = weights or {"full_text": 0.4, "semantic": 0.6}
-    weight_total = sum(weights.values())
-    weights = {name: value / weight_total for name, value in weights.items()}
     rows = (
         await db.execute(
             text("""
@@ -85,28 +88,6 @@ async def hybrid_search(
     except Exception:
         semantic = []  # lexical search remains available while the derived index rebuilds
 
-    # Normalize each channel, then apply the configured discipline weights.
-    fused: dict[tuple[str, uuid.UUID], tuple[SearchHit, float]] = {}
-    components: dict[tuple[str, uuid.UUID], dict[str, float]] = {}
-    def strongest(items: list[SearchHit]) -> list[SearchHit]:
-        reduced: dict[tuple[str, uuid.UUID], SearchHit] = {}
-        for item in items:
-            key = (item.kind, item.id)
-            if key not in reduced or item.score > reduced[key].score:
-                reduced[key] = item
-        return list(reduced.values())
-
-    channels = (("full_text", strongest(hits), weights["full_text"]), ("semantic", strongest(semantic), weights["semantic"]))
-    for channel_name, ranked, channel_weight in channels:
-        maximum = max((item.score for item in ranked), default=0.0) or 1.0
-        for item in ranked:
-            key = (item.kind, item.id)
-            old_item, old_score = fused.get(key, (item, 0.0))
-            normalized = max(0.0, item.score / maximum)
-            contribution = channel_weight * normalized
-            components.setdefault(key, {})[channel_name] = round(contribution, 6)
-            fused[key] = (old_item, old_score + contribution)
-    hits = [item.model_copy(update={"score": score, "score_components": components[key]}) for key, (item, score) in fused.items()]
-    hits.sort(key=lambda item: item.score, reverse=True)
+    hits = HybridRanker.fuse({"full_text": hits, "semantic": semantic}, weights)
     warning = None if hits else "No approved sources cover this query yet; staff review is recommended."
     return SearchResponse(query=query, results=hits[:limit], coverage_warning=warning)

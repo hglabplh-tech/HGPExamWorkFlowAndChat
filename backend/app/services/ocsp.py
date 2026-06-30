@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
+"""Utilities for ocsp."""
 import base64
 
 import httpx
@@ -7,6 +9,7 @@ from ..config import get_settings
 
 
 def parse_ocsp_request(request_der: bytes) -> dict:
+    """Perform the parse ocsp request operation."""
     try:
         request = ocsp.load_der_ocsp_request(request_der)
     except ValueError as error:
@@ -20,6 +23,7 @@ def parse_ocsp_request(request_der: bytes) -> dict:
 
 
 async def sign_ocsp_response(request_der: bytes, status: dict, pki_id: str) -> bytes:
+    """Perform the sign ocsp response operation."""
     settings = get_settings()
     if not settings.ocsp_signer_url:
         raise RuntimeError("OCSP_SIGNER_URL is not configured")

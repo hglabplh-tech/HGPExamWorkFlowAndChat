@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
+"""Utilities for main."""
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -19,6 +21,7 @@ FRONTEND = ROOT / "frontend"
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     # Convenient for the starter; replace with Alembic migrations before production.
+    """Perform the lifespan operation."""
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
         for statement in RETENTION_DDL:
@@ -27,7 +30,7 @@ async def lifespan(_: FastAPI):
     await engine.dispose()
 
 
-app = FastAPI(title="Study Platform API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="HcpXmlWorkflowChat API", version="0.1.0", lifespan=lifespan)
 app.include_router(api_router)
 app.include_router(chat_router)
 app.mount("/static", StaticFiles(directory=FRONTEND), name="static")
@@ -35,11 +38,13 @@ app.mount("/static", StaticFiles(directory=FRONTEND), name="static")
 
 @app.get("/health")
 async def health() -> dict:
+    """Perform the health operation."""
     return {"status": "ok"}
 
 
 @app.get("/ready")
 async def ready() -> dict:
+    """Perform the ready operation."""
     async with engine.connect() as connection:
         await connection.execute(text("SELECT 1"))
     return {"status": "ready"}
@@ -47,9 +52,11 @@ async def ready() -> dict:
 
 @app.get("/", include_in_schema=False)
 async def index():
+    """Perform the index operation."""
     return FileResponse(FRONTEND / "index.html")
 
 
 @app.get("/admin", include_in_schema=False)
 async def admin():
+    """Perform the admin operation."""
     return FileResponse(FRONTEND / "admin.html")

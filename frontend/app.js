@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License. */
 const state = { token: sessionStorage.getItem("token"), courseId: null };
 const results = document.querySelector("#results");
 
