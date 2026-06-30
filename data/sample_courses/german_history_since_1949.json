@@ -1,0 +1,20 @@
+{
+  "_copyright": "Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.",
+  "course_code": "HIST-DE-1949",
+  "title": "German History Since 1949",
+  "discipline": "History",
+  "description": "A source-critical survey of the Federal Republic, the GDR, division, reunification, European integration, and social change since 1949.",
+  "modules": [
+    {"title": "Two German states", "objectives": ["Compare political systems", "Explain the Basic Law", "Assess the uprising of 17 June 1953"]},
+    {"title": "Division and détente", "objectives": ["Explain the Berlin Wall", "Evaluate Ostpolitik", "Analyze primary sources"]},
+    {"title": "Peaceful Revolution and unity", "objectives": ["Trace events in 1989", "Explain the Two Plus Four Treaty", "Discuss consequences of reunification"]},
+    {"title": "Germany in Europe", "objectives": ["Assess European integration", "Discuss migration and social change", "Build evidence-based arguments"]}
+  ],
+  "sample_questions": [
+    {"id": "de-q1", "question": "Why was the Basic Law adopted in 1949 and initially called provisional?", "reference_answer": "The Parliamentary Council designed the Basic Law for the Federal Republic after dictatorship and war, with strong protection for human dignity and constitutional democracy. Its provisional language reflected the continued division of Germany and the goal of future unity.", "keywords": ["1949", "human dignity", "democracy", "division"], "facts": ["The Basic Law entered into force in 1949", "German division influenced its provisional framing"], "max_score": 10},
+    {"id": "de-q2", "question": "Explain two causes and one consequence of the uprising of 17 June 1953.", "reference_answer": "Higher work norms and wider dissatisfaction with SED rule helped trigger protests in the GDR. Soviet forces suppressed the uprising, exposing the regime's dependence on Soviet power and deepening political division.", "keywords": ["work norms", "SED", "Soviet", "suppression"], "facts": ["Soviet forces helped suppress the uprising", "The uprising occurred in the GDR"], "max_score": 10},
+    {"id": "de-q3", "question": "What changed with Ostpolitik in the early 1970s?", "reference_answer": "The Brandt government pursued practical normalization with the Soviet Union, Poland and the GDR, accepted existing borders in treaties, and sought change through rapprochement without abandoning the Federal Republic's Western alliances.", "keywords": ["Brandt", "normalization", "treaties", "rapprochement"], "facts": ["Ostpolitik sought normalization", "It did not end West Germany's Western alignment"], "max_score": 10},
+    {"id": "de-q4", "question": "Why is 1989 described as a peaceful revolution in the GDR?", "reference_answer": "Mass demonstrations, civic groups, emigration pressure and reform demands undermined SED rule largely without violent overthrow. The opening of the Berlin Wall on 9 November became the best-known turning point.", "keywords": ["demonstrations", "SED", "Berlin Wall", "nonviolent"], "facts": ["The Berlin Wall opened on 9 November 1989", "Mass demonstrations challenged SED rule"], "max_score": 10},
+    {"id": "de-q5", "question": "What did the Two Plus Four Treaty settle?", "reference_answer": "The two German states and the four former occupying powers settled external aspects of German unity, including borders, sovereignty and security arrangements, enabling reunification on 3 October 1990.", "keywords": ["sovereignty", "borders", "security", "reunification"], "facts": ["The treaty addressed external aspects of unity", "Reunification occurred on 3 October 1990"], "max_score": 10}
+  ]
+}

@@ -1,0 +1,53 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hcp-xml-workflow-chat-models
+spec:
+  accessModes: [ReadWriteMany]
+  resources:
+    requests: { storage: 20Gi }
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hcp-xml-workflow-chat-nightly-training
+spec:
+  schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          securityContext:
+            fsGroup: 1000
+            seccompProfile: { type: RuntimeDefault }
+          containers:
+            - name: trainer
+              image: ghcr.io/OWNER/hcp-xml-workflow-chat:0.1.0
+              command: ["python", "-m", "backend.training_job"]
+              envFrom:
+                - configMapRef: { name: hcp-xml-workflow-chat }
+                - secretRef: { name: hcp-xml-workflow-chat }
+              env:
+                - { name: NIGHTLY_TRAINING_MODE, value: train }
+                - { name: MODEL_OUTPUT_DIR, value: /models }
+              resources:
+                requests: { cpu: "2", memory: 4Gi }
+                limits: { cpu: "4", memory: 16Gi }
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities: { drop: [ALL] }
+                runAsNonRoot: true
+              volumeMounts:
+                - { name: models, mountPath: /models }
+                - { name: tmp, mountPath: /tmp }
+          volumes:
+            - name: models
+              persistentVolumeClaim: { claimName: hcp-xml-workflow-chat-models }
+            - name: tmp
+              emptyDir: {}

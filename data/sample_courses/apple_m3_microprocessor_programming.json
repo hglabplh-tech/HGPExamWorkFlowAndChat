@@ -1,0 +1,20 @@
+{
+  "_copyright": "Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.",
+  "course_code": "CS-M3-101",
+  "title": "Programming and Performance Engineering on Apple Silicon M3",
+  "discipline": "Computer Science",
+  "description": "A practical course on ARM64 software, memory, concurrency, profiling, and GPU compute on the Apple M3 system-on-chip. It teaches supported macOS and Metal development rather than undocumented bare-metal programming.",
+  "modules": [
+    {"title": "M3 architecture", "objectives": ["Distinguish a CPU from a system-on-chip", "Explain performance and efficiency cores", "Describe unified memory"]},
+    {"title": "ARM64 programming", "objectives": ["Compile and inspect AArch64 code", "Use SIMD where measurement justifies it", "Explain alignment and memory ordering"]},
+    {"title": "Concurrency and profiling", "objectives": ["Avoid data races", "Measure before optimizing", "Interpret Instruments traces"]},
+    {"title": "Metal compute", "objectives": ["Write a compute kernel", "Choose threadgroup sizes experimentally", "Minimize unnecessary transfers"]}
+  ],
+  "sample_questions": [
+    {"id": "m3-q1", "question": "Why is M3 more accurately called a system-on-chip than a microprocessor?", "reference_answer": "M3 integrates CPU, GPU, Neural Engine, memory controllers, media engines and other functions in one system-on-chip; a microprocessor usually refers more narrowly to the CPU.", "keywords": ["CPU", "GPU", "system-on-chip", "integration"], "facts": ["M3 contains CPU and GPU components", "M3 is a system-on-chip"], "max_score": 10},
+    {"id": "m3-q2", "question": "What is unified memory and what does it not guarantee?", "reference_answer": "Unified memory provides a shared physical memory pool for CPU and GPU, reducing explicit copies. It does not eliminate synchronization, cache behavior, capacity limits, or the need to design data access carefully.", "keywords": ["shared", "CPU", "GPU", "synchronization"], "facts": ["CPU and GPU can use a shared memory pool", "Synchronization can still be necessary"], "max_score": 10},
+    {"id": "m3-q3", "question": "Describe a safe optimization workflow for an ARM64 program.", "reference_answer": "Establish a correct baseline, benchmark a representative workload, profile to find a bottleneck, change one factor, verify correctness, and measure again. Inspect generated assembly or use SIMD only when evidence supports it.", "keywords": ["benchmark", "profile", "correctness", "measure"], "facts": ["Optimization should follow measurement", "Correctness must be checked after a change"], "max_score": 10},
+    {"id": "m3-q4", "question": "Why can a data race remain a bug on a strongly performing multicore SoC?", "reference_answer": "Core speed does not establish synchronization. Unsynchronized conflicting accesses have undefined or language-specific erroneous behavior, so atomics, locks, or structured concurrency are required to create ordering.", "keywords": ["synchronization", "atomics", "ordering", "data race"], "facts": ["Performance does not make a data race safe"], "max_score": 10},
+    {"id": "m3-q5", "question": "When is a Metal compute kernel preferable to CPU code?", "reference_answer": "It is suitable for sufficiently large, parallel workloads with regular computation when GPU execution benefits exceed dispatch, synchronization, and data-layout costs. Profiling should decide.", "keywords": ["parallel", "GPU", "overhead", "profiling"], "facts": ["GPU dispatch has overhead", "Parallel workloads can benefit from GPU execution"], "max_score": 10}
+  ]
+}

@@ -1,0 +1,98 @@
+"""Examination, question, submission, and grading models.
+
+Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
+"""
+import enum
+import uuid
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, LargeBinary, String, Text, UniqueConstraint
+from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+
+from .base import Base, Role, UUIDMixin
+
+class Examination(UUIDMixin, Base):
+    """Represent examination."""
+    __tablename__ = "examinations"
+    __table_args__ = (UniqueConstraint("course_id", "title"),)
+    course_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("courses.id"))
+    title: Mapped[str] = mapped_column(String(300))
+    instructions: Mapped[str] = mapped_column(Text, default="")
+    kind: Mapped[str] = mapped_column(String(20), default="practice", index=True)
+    state: Mapped[str] = mapped_column(String(30), default="draft", index=True)
+    created_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    released_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    closes_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    generation_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class ExamQuestion(UUIDMixin, Base):
+    """Represent examquestion."""
+    __tablename__ = "exam_questions"
+    examination_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("examinations.id", ondelete="CASCADE"), index=True)
+    prompt: Mapped[str] = mapped_column(Text)
+    reference_answer: Mapped[str] = mapped_column(Text)
+    required_keywords: Mapped[list] = mapped_column(JSONB, default=list)
+    expected_facts: Mapped[list] = mapped_column(JSONB, default=list)
+    max_score: Mapped[float] = mapped_column()
+
+
+class DisciplineScoringProfile(UUIDMixin, Base):
+    """Represent disciplinescoringprofile."""
+    __tablename__ = "discipline_scoring_profiles"
+    __table_args__ = (UniqueConstraint("discipline", "version"),)
+    discipline: Mapped[str] = mapped_column(String(120), index=True)
+    version: Mapped[int] = mapped_column(Integer)
+    grading_weights: Mapped[dict] = mapped_column(JSONB)
+    search_weights: Mapped[dict] = mapped_column(JSONB)
+    semantic_profile: Mapped[str] = mapped_column(String(20), default="economy")
+    active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    created_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class Submission(UUIDMixin, Base):
+    """Represent submission."""
+    __tablename__ = "submissions"
+    examination_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("examinations.id"))
+    student_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    answers: Mapped[dict] = mapped_column(JSONB)
+    ai_grade: Mapped[dict | None] = mapped_column(JSONB)
+    teacher_grade: Mapped[dict | None] = mapped_column(JSONB)
+    submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    content: Mapped[bytes] = mapped_column(LargeBinary)
+    content_type: Mapped[str] = mapped_column(String(120), default="application/json")
+    content_sha256: Mapped[str] = mapped_column(String(64), index=True)
+    student_signature: Mapped[bytes] = mapped_column(LargeBinary)
+    student_certificate_pem: Mapped[bytes] = mapped_column(LargeBinary)
+    signature_algorithm: Mapped[str] = mapped_column(String(40), default="Ed25519")
+    client_signed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    receipt_nonce: Mapped[str] = mapped_column(String(128), unique=True)
+    retention_until: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    legal_hold: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    deleted_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    deletion_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    state: Mapped[str] = mapped_column(String(30), default="submitted", index=True)
+    feedback_released_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    returned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    grading_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    instructor_signature: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    instructor_certificate_pem: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    instructor_signed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    report_pdf: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    report_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    report_generated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class GradeEvent(UUIDMixin, Base):
+    """Append-only grading history; never update or delete these records."""
+    __tablename__ = "grade_events"
+    submission_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("submissions.id", ondelete="CASCADE"))
+    actor_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    kind: Mapped[str] = mapped_column(String(40))
+    grade: Mapped[dict] = mapped_column(JSONB)
+    reason: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
