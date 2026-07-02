@@ -4,22 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6dcf1ec0-ee83-4509-bb62-c3e495e5bdad" name="Changes" comment="totp logic changed user authorization added totp buttons input to the login mask added history functionality">
-      <change afterPath="$PROJECT_DIR$/backend/app/services/sms_delivery.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/infra/migrations/011_registration_delivery.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/api_routes/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api_routes/auth.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/api_routes/users.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api_routes/users.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/db_models/identity.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/db_models/identity.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/authentication.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/authentication.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/admin.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/admin.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/admin.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/admin.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_api_contract.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_api_contract.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_database_metadata.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_database_metadata.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_totp_security.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_totp_security.py" afterDir="false" />
+    <list default="true" id="6dcf1ec0-ee83-4509-bb62-c3e495e5bdad" name="Changes" comment="totp logic changed completely new with registration and auth per TOTP per email or SMS">
+      <change afterPath="$PROJECT_DIR$/FEATURES.md" afterDir="false" />
     </list>
     <list id="ddda333b-02b2-478d-872f-da0899d48821" name="out" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/hcp-xml-workflow-chat.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/hgp-exam-work-flow-and-chat.iml" afterDir="false" />
@@ -34,23 +20,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0000061969939997" />
-      <entry key="MS500" value="1.0930306721749554" />
-      <entry key="S2" value="2.0960022358143275" />
-      <entry key="S5" value="4.298221602819072" />
-      <entry key="S10" value="7.586800584129912" />
-      <entry key="S30" value="15.422991477049866" />
-      <entry key="S60" value="20.1857174240068" />
-      <entry key="M2" value="23.584833019739648" />
-      <entry key="M5" value="26.090314648370793" />
-      <entry key="M10" value="27.01911682661305" />
-      <entry key="M15" value="27.340123196551453" />
-      <entry key="M30" value="27.66705603529073" />
-      <entry key="H1" value="27.84616700314791" />
-      <entry key="H2" value="28.317291561530485" />
-      <entry key="H4" value="30.151902941634887" />
-      <entry key="D1" value="37.03332985063939" />
-      <entry key="W1" value="39.52318456744774" />
+      <entry key="MS100" value="1.000018788044414" />
+      <entry key="MS500" value="1.1660030478134655" />
+      <entry key="S2" value="2.6082513929104962" />
+      <entry key="S5" value="4.869411020289311" />
+      <entry key="S10" value="7.6137808844551165" />
+      <entry key="S30" value="12.32692671479681" />
+      <entry key="S60" value="14.368885537540383" />
+      <entry key="M2" value="15.599581715794372" />
+      <entry key="M5" value="16.41781695916226" />
+      <entry key="M10" value="16.706854092335462" />
+      <entry key="M15" value="16.84683789335258" />
+      <entry key="M30" value="18.014562667055266" />
+      <entry key="H1" value="22.537241947555177" />
+      <entry key="H2" value="29.659112731704916" />
+      <entry key="H4" value="37.16735129854532" />
+      <entry key="D1" value="51.63382161069235" />
+      <entry key="W1" value="56.14680377332219" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -72,23 +58,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.8766110418408939" />
-      <entry key="MS500" value="1.0642577847977268" />
-      <entry key="S2" value="2.08171453976582" />
-      <entry key="S5" value="4.286983553959136" />
-      <entry key="S10" value="7.576866710407853" />
-      <entry key="S30" value="15.415277274489666" />
-      <entry key="S60" value="20.180306828801466" />
-      <entry key="M2" value="23.581545826867657" />
-      <entry key="M5" value="26.08882398949796" />
-      <entry key="M10" value="27.018338538579524" />
-      <entry key="M15" value="27.3395967151976" />
-      <entry key="M30" value="27.66678890484258" />
-      <entry key="H1" value="27.846032016970707" />
-      <entry key="H2" value="28.317217486680345" />
-      <entry key="H4" value="30.15185113100487" />
-      <entry key="D1" value="37.03331181071796" />
-      <entry key="W1" value="39.52318150235943" />
+      <entry key="MS100" value="0.8645546147081639" />
+      <entry key="MS500" value="1.1337511040912687" />
+      <entry key="S2" value="2.592333469161996" />
+      <entry key="S5" value="4.858458203499631" />
+      <entry key="S10" value="7.605094289534245" />
+      <entry key="S30" value="12.321882013689807" />
+      <entry key="S60" value="14.365856463708335" />
+      <entry key="M2" value="15.597909987873662" />
+      <entry key="M5" value="16.41710580385748" />
+      <entry key="M10" value="16.70649095094619" />
+      <entry key="M15" value="16.846593276415945" />
+      <entry key="M30" value="18.014429171593246" />
+      <entry key="H1" value="22.537153276700153" />
+      <entry key="H2" value="29.65904870353313" />
+      <entry key="H4" value="37.167301185425266" />
+      <entry key="D1" value="51.63380216376934" />
+      <entry key="W1" value="56.14680036951691" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo"><![CDATA[{
@@ -166,7 +152,15 @@
       <option name="project" value="LOCAL" />
       <updated>1783012486442</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="totp logic changed completely new with registration and auth per TOTP per email or SMS">
+      <option name="closed" value="true" />
+      <created>1783020822041</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1783020822041</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -177,6 +171,7 @@
     <MESSAGE value="commit .gitignore" />
     <MESSAGE value="added egg info" />
     <MESSAGE value="totp logic changed user authorization added totp buttons input to the login mask added history functionality" />
-    <option name="LAST_COMMIT_MESSAGE" value="totp logic changed user authorization added totp buttons input to the login mask added history functionality" />
+    <MESSAGE value="totp logic changed completely new with registration and auth per TOTP per email or SMS" />
+    <option name="LAST_COMMIT_MESSAGE" value="totp logic changed completely new with registration and auth per TOTP per email or SMS" />
   </component>
 </project>
