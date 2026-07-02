@@ -27,15 +27,29 @@ document.querySelector("#login-form").addEventListener("submit", async event => 
   loadCourses(); loadConversations(); loadHistories();
 });
 
-document.querySelector("#request-login-totp").addEventListener("click",async()=>{
+document.querySelector("#send-login-totp").addEventListener("click",async()=>{
   const email=document.querySelector("#login-email").value;
   const password=document.querySelector("#login-password").value;
   if(!email||!password){document.querySelector("#login-status").textContent="Enter user id and password first.";return;}
-  const response=await fetch(apiUrl("/api/v1/auth/get_fresh_totp"),{method:"POST",headers:{Authorization:`Basic ${btoa(`${email}:${password}`)}`}});
+  const response=await fetch(apiUrl("/api/v1/auth/send_totp"),{method:"POST",headers:{Authorization:`Basic ${btoa(`${email}:${password}`)}`}});
   const data=await response.json().catch(()=>({}));
-  if(!response.ok){document.querySelector("#login-status").textContent=data.detail||"Could not request TOTP";return;}
-  document.querySelector("#login-totp").value=data.totp_code;
-  document.querySelector("#login-status").textContent=`Fresh TOTP received; valid for ${data.expires_in_seconds} seconds.`;
+  document.querySelector("#login-status").textContent=response.ok?`TOTP sent via ${data.channel}; valid for ${data.expires_in_seconds} seconds.`:(data.detail||"Could not send TOTP");
+});
+
+document.querySelector("#register-start-form").addEventListener("submit",async event=>{
+  event.preventDefault();
+  const payload={user_id:document.querySelector("#register-user-id").value,password:document.querySelector("#register-password").value,contact_email:document.querySelector("#register-contact-email").value,mobile_number:document.querySelector("#register-mobile").value||null};
+  const response=await fetch(apiUrl("/api/v1/auth/register/start"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  const data=await response.json().catch(()=>({}));
+  document.querySelector("#register-status").textContent=response.ok?`Codes sent. SMS required: ${data.sms_required?"yes":"no"}.`:(data.detail||"Registration start failed");
+});
+
+document.querySelector("#register-verify-form").addEventListener("submit",async event=>{
+  event.preventDefault();
+  const payload={user_id:document.querySelector("#register-user-id").value,password:document.querySelector("#register-password").value,email_code:document.querySelector("#register-email-code").value,mobile_code:document.querySelector("#register-mobile-code").value||null,totp_delivery_channel:document.querySelector("#register-totp-channel").value};
+  const response=await fetch(apiUrl("/api/v1/auth/register/verify"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  const data=await response.json().catch(()=>({}));
+  document.querySelector("#register-status").textContent=response.ok?"Activation email sent. Open the link within 30 minutes to activate your account.":(data.detail||"Registration verification failed");
 });
 
 document.querySelector("#logout-button").addEventListener("click",async()=>{

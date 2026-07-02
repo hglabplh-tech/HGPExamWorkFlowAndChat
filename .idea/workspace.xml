@@ -4,31 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6dcf1ec0-ee83-4509-bb62-c3e495e5bdad" name="Changes" comment="added egg info">
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/api_routes/auth.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/services/authentication.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/services/research_history.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/infra/migrations/009_active_user_sessions.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/infra/migrations/010_research_history.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_research_history.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/api_routes/examinations.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api_routes/examinations.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/api_routes/research.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api_routes/research.py" afterDir="false" />
+    <list default="true" id="6dcf1ec0-ee83-4509-bb62-c3e495e5bdad" name="Changes" comment="totp logic changed user authorization added totp buttons input to the login mask added history functionality">
+      <change afterPath="$PROJECT_DIR$/backend/app/services/sms_delivery.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/infra/migrations/011_registration_delivery.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/api_routes/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api_routes/auth.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/api_routes/users.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api_routes/users.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/db_models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/db_models/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/db_models/collaboration.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/db_models/collaboration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/config.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/db_models/identity.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/db_models/identity.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/security.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/security.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/authentication.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/authentication.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/admin.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/admin.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/admin.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/admin.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/styles.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/test_api_contract.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_api_contract.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/test_database_metadata.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_database_metadata.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_security_tokens.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_security_tokens.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/test_totp_security.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_totp_security.py" afterDir="false" />
     </list>
     <list id="ddda333b-02b2-478d-872f-da0899d48821" name="out" comment="">
@@ -44,23 +34,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0000128482005537" />
-      <entry key="MS500" value="1.1623709636331905" />
-      <entry key="S2" value="2.2278963698793497" />
-      <entry key="S5" value="3.0416387048241345" />
-      <entry key="S10" value="3.4618025321081465" />
-      <entry key="S30" value="3.827940787857914" />
-      <entry key="S60" value="4.257608720228422" />
-      <entry key="M2" value="5.536059287873342" />
-      <entry key="M5" value="8.09373916016196" />
-      <entry key="M10" value="9.708674987900572" />
-      <entry key="M15" value="10.384570609993451" />
-      <entry key="M30" value="11.144626294906798" />
-      <entry key="H1" value="11.559642804852167" />
-      <entry key="H2" value="11.77655388717994" />
-      <entry key="H4" value="11.887447213429445" />
-      <entry key="D1" value="11.98112485397343" />
-      <entry key="W1" value="11.997300686657393" />
+      <entry key="MS100" value="1.0000061969939997" />
+      <entry key="MS500" value="1.0930306721749554" />
+      <entry key="S2" value="2.0960022358143275" />
+      <entry key="S5" value="4.298221602819072" />
+      <entry key="S10" value="7.586800584129912" />
+      <entry key="S30" value="15.422991477049866" />
+      <entry key="S60" value="20.1857174240068" />
+      <entry key="M2" value="23.584833019739648" />
+      <entry key="M5" value="26.090314648370793" />
+      <entry key="M10" value="27.01911682661305" />
+      <entry key="M15" value="27.340123196551453" />
+      <entry key="M30" value="27.66705603529073" />
+      <entry key="H1" value="27.84616700314791" />
+      <entry key="H2" value="28.317291561530485" />
+      <entry key="H4" value="30.151902941634887" />
+      <entry key="D1" value="37.03332985063939" />
+      <entry key="W1" value="39.52318456744774" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -82,23 +72,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.9526498756118555" />
-      <entry key="MS500" value="1.1496944121444537" />
-      <entry key="S2" value="2.2187980442626305" />
-      <entry key="S5" value="3.0358762903702408" />
-      <entry key="S10" value="3.458340677307881" />
-      <entry key="S30" value="3.8265135629493936" />
-      <entry key="S60" value="4.255911526686198" />
-      <entry key="M2" value="5.533396867423496" />
-      <entry key="M5" value="8.091207236858004" />
-      <entry key="M10" value="9.706950152568414" />
-      <entry key="M15" value="10.383293329080939" />
-      <entry key="M30" value="11.143916236024598" />
-      <entry key="H1" value="11.559268320936384" />
-      <entry key="H2" value="11.776361567147797" />
-      <entry key="H4" value="11.887349756128707" />
-      <entry key="D1" value="11.981108428508875" />
-      <entry key="W1" value="11.997298335659435" />
+      <entry key="MS100" value="0.8766110418408939" />
+      <entry key="MS500" value="1.0642577847977268" />
+      <entry key="S2" value="2.08171453976582" />
+      <entry key="S5" value="4.286983553959136" />
+      <entry key="S10" value="7.576866710407853" />
+      <entry key="S30" value="15.415277274489666" />
+      <entry key="S60" value="20.180306828801466" />
+      <entry key="M2" value="23.581545826867657" />
+      <entry key="M5" value="26.08882398949796" />
+      <entry key="M10" value="27.018338538579524" />
+      <entry key="M15" value="27.3395967151976" />
+      <entry key="M30" value="27.66678890484258" />
+      <entry key="H1" value="27.846032016970707" />
+      <entry key="H2" value="28.317217486680345" />
+      <entry key="H4" value="30.15185113100487" />
+      <entry key="D1" value="37.03331181071796" />
+      <entry key="W1" value="39.52318150235943" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo"><![CDATA[{
@@ -168,7 +158,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782977372941</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="totp logic changed user authorization added totp buttons input to the login mask added history functionality">
+      <option name="closed" value="true" />
+      <created>1783012486442</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1783012486442</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -178,6 +176,7 @@
     <MESSAGE value="rename the project" />
     <MESSAGE value="commit .gitignore" />
     <MESSAGE value="added egg info" />
-    <option name="LAST_COMMIT_MESSAGE" value="added egg info" />
+    <MESSAGE value="totp logic changed user authorization added totp buttons input to the login mask added history functionality" />
+    <option name="LAST_COMMIT_MESSAGE" value="totp logic changed user authorization added totp buttons input to the login mask added history functionality" />
   </component>
 </project>

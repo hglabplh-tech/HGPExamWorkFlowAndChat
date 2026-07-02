@@ -25,16 +25,14 @@ document.querySelector("#login-form").addEventListener("submit", async event => 
   refresh(); refreshPki(); refreshScoring(); refreshThesauri(); loadAdminCourses(); loadAdminChatrooms();
 });
 
-document.querySelector("#request-login-totp").addEventListener("click",async()=>{
+document.querySelector("#send-login-totp").addEventListener("click",async()=>{
   const email=document.querySelector("#login-email").value;
   const password=document.querySelector("#login-password").value;
   if(!email||!password){document.querySelector("#login-status").textContent="Enter email and password first.";return;}
   const auth=btoa(`${email}:${password}`);
-  const response=await fetch(apiUrl("/api/v1/auth/get_fresh_totp"),{method:"POST",headers:{Authorization:`Basic ${auth}`}});
+  const response=await fetch(apiUrl("/api/v1/auth/send_totp"),{method:"POST",headers:{Authorization:`Basic ${auth}`}});
   const data=await response.json().catch(()=>({}));
-  if(!response.ok){document.querySelector("#login-status").textContent=data.detail||"Could not request TOTP";return;}
-  document.querySelector("#login-totp").value=data.totp_code;
-  document.querySelector("#login-status").textContent=`Fresh TOTP received; valid for ${data.expires_in_seconds} seconds.`;
+  document.querySelector("#login-status").textContent=response.ok?`TOTP sent via ${data.channel}; valid for ${data.expires_in_seconds} seconds.`:(data.detail||"Could not send TOTP");
 });
 
 document.querySelector("#admin-logout").addEventListener("click",async()=>{

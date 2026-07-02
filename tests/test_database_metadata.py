@@ -61,6 +61,18 @@ def test_totp_columns_are_persisted() -> None:
     assert {"totp_secret", "totp_enabled"} <= columns
 
 
+def test_user_registration_contact_columns_are_persisted() -> None:
+    """Users can self-register email/mobile contact data after admin creation."""
+    columns = set(Base.metadata.tables["users"].columns.keys())
+    assert {
+        "contact_email", "mobile_number", "email_verified", "mobile_verified",
+        "totp_delivery_channel", "registration_completed",
+        "email_verification_code_sha256", "mobile_verification_code_sha256",
+        "verification_expires_at", "activation_token_sha256",
+        "activation_expires_at",
+    } <= columns
+
+
 def test_active_user_session_columns_are_persisted() -> None:
     """Every login is backed by a revocable session row."""
     columns = set(Base.metadata.tables["active_user_sessions"].columns.keys())

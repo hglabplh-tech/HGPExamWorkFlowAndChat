@@ -174,6 +174,23 @@ class TotpVerify(BaseModel):
     code: str = Field(pattern=r"^\d{6}$")
 
 
+class RegistrationStart(BaseModel):
+    """Start self-registration for an administrator-created user entry."""
+    user_id: str = Field(min_length=2, max_length=320)
+    password: str = Field(min_length=12, max_length=1024)
+    contact_email: str = Field(min_length=3, max_length=320)
+    mobile_number: str | None = Field(default=None, max_length=40)
+
+
+class RegistrationVerify(BaseModel):
+    """Verify email/SMS codes and choose the later TOTP delivery channel."""
+    user_id: str = Field(min_length=2, max_length=320)
+    password: str = Field(min_length=12, max_length=1024)
+    email_code: str = Field(pattern=r"^\d{6}$")
+    mobile_code: str | None = Field(default=None, pattern=r"^\d{6}$")
+    totp_delivery_channel: str = Field(default="email", pattern="^(email|sms)$")
+
+
 class QuestionDraftScore(BaseModel):
     """Score one practice-exam answer before final submission."""
     answer: str | list[str]

@@ -67,6 +67,9 @@ class Settings(BaseSettings):
     smtp_starttls: bool = True
     email_from: str = "no-reply@example.invalid"
     support_email: str | None = None
+    sms_gateway_url: str | None = None
+    sms_gateway_token: SecretStr = SecretStr("")
+    registration_activation_minutes: int = 30
     allowed_free_models: str = (
         "google-bert/bert-base-multilingual-cased,FacebookAI/xlm-roberta-base,"
         "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2,"

@@ -91,7 +91,18 @@ async def create_user(data: UserCreate, db: AsyncSession = Depends(get_db), admi
         permissions = validate_permissions(data.permissions)
     except ValueError as error:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(error)) from error
-    user = User(email=data.email, display_name=data.display_name, matriculation_number=data.matriculation_number, password_hash=hash_password(data.password), role=role, permissions=permissions)
+    user = User(
+        email=data.email,
+        display_name=data.display_name,
+        matriculation_number=data.matriculation_number,
+        password_hash=hash_password(data.password),
+        role=role,
+        permissions=permissions,
+        active=False,
+        registration_completed=False,
+        totp_secret=generate_totp_secret(),
+        totp_enabled=False,
+    )
     db.add(user)
     await db.flush()
     await append_audit(db, admin.id, "user_created", "user", user.id, details={"role": role.value})

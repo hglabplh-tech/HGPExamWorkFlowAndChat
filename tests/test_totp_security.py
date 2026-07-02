@@ -4,7 +4,7 @@ Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """
 
 from backend.app.security import generate_totp_secret, totp_uri, verify_totp, _totp_at
-from backend.app.services.authentication import fresh_totp_code, verify_totp_code
+from backend.app.services.authentication import fresh_totp_code, new_numeric_code, verify_totp_code
 
 
 def test_totp_secret_and_uri_are_authenticator_compatible() -> None:
@@ -31,3 +31,10 @@ def test_backend_fresh_totp_can_be_checked_independently() -> None:
     fresh = fresh_totp_code(secret, now=now)
     assert fresh["expires_in_seconds"] == 15
     assert verify_totp_code(secret, fresh["totp_code"], window=0, now=now)
+
+
+def test_registration_codes_are_six_digit_numbers() -> None:
+    """Registration email/SMS verification codes use the expected login-code shape."""
+    code = new_numeric_code()
+    assert code.isdigit()
+    assert len(code) == 6

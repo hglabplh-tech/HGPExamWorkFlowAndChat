@@ -18,6 +18,7 @@
       <a href="#research-history">Research history</a>
       <a href="#totp-config">TOTP configuration</a>
       <a href="/admin" id="admin-link">Admin: import/export/users</a>
+      <a href="/admin#user-definition">Create user entry</a>
       <button type="button" id="logout-button" class="link-button">Logout</button>
     </details>
     <strong>HGPExamWorkFlowAndChat</strong><span>Courses · knowledge · people</span>
@@ -29,11 +30,30 @@
         <form id="login-form" class="stack-form">
           <label>User ID / email<input id="login-email" type="email" placeholder="student@example.edu" autocomplete="username"></label>
           <label>Password<input id="login-password" type="password" placeholder="password" autocomplete="current-password"></label>
+          <button type="button" id="send-login-totp">Send TOTP</button>
           <label>TOTP code<input id="login-totp" inputmode="numeric" placeholder="123456" autocomplete="one-time-code"></label>
-          <button type="button" id="request-login-totp">Request TOTP</button>
           <button>Sign in</button>
         </form>
+        <p><a href="#register-user" id="register-link">Register user</a></p>
         <p id="login-status"></p>
+      </section>
+      <section class="side-card" id="register-user">
+        <h2>Register user</h2>
+        <p>Use this after an administrator has created your account entry.</p>
+        <form id="register-start-form" class="stack-form">
+          <label>User ID / email<input id="register-user-id" type="email" autocomplete="username"></label>
+          <label>Password<input id="register-password" type="password" autocomplete="current-password"></label>
+          <label>Your email address<input id="register-contact-email" type="email"></label>
+          <label>Mobile number, optional<input id="register-mobile" type="tel"></label>
+          <button>Send registration codes</button>
+        </form>
+        <form id="register-verify-form" class="stack-form">
+          <label>Email code<input id="register-email-code" inputmode="numeric" placeholder="123456"></label>
+          <label>SMS code, only if mobile was given<input id="register-mobile-code" inputmode="numeric" placeholder="123456"></label>
+          <label>TOTP delivery<select id="register-totp-channel"><option value="email">Email</option><option value="sms">SMS</option></select></label>
+          <button>Verify and send activation link</button>
+        </form>
+        <p id="register-status" aria-live="polite"></p>
       </section>
       <h2>Your courses</h2>
       <div id="course-list"><div class="empty">Sign in to load courses.</div></div>

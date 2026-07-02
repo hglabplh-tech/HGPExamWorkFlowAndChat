@@ -16,8 +16,8 @@
       <form id="login-form" class="stack-form">
         <label>Email<input id="login-email" type="email" autocomplete="username" required></label>
         <label>Password<input id="login-password" type="password" autocomplete="current-password" required></label>
+        <button type="button" id="send-login-totp">Send TOTP</button>
         <label>TOTP code<input id="login-totp" inputmode="numeric" pattern="[0-9]{6}" placeholder="123456"></label>
-        <button type="button" id="request-login-totp">Request TOTP</button>
         <button>Sign in</button>
       </form>
       <p id="login-status" aria-live="polite"></p>
@@ -29,6 +29,7 @@
         <a href="#admin-chatrooms">Defined chatrooms</a>
         <a href="#admin-import-export">Import/export</a>
         <a href="#user-definition">User definition</a>
+        <a href="#user-definition">Create user entry</a>
         <a href="#totp-config">TOTP configuration</a>
         <button type="button" id="admin-logout" class="link-button">Logout</button>
       </details>

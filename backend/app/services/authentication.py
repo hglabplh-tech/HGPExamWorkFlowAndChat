@@ -3,6 +3,7 @@
 import hashlib
 import hmac
 import base64
+import secrets
 import struct
 import time
 from datetime import UTC, datetime, timedelta
@@ -26,6 +27,11 @@ def normalize_certificate_fingerprint(value: str | None) -> str | None:
 def token_sha256(token: str) -> str:
     """Hash a bearer token before storing or looking it up in PostgreSQL."""
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def new_numeric_code() -> str:
+    """Generate a six-digit verification code for email, SMS, or TOTP-style delivery."""
+    return f"{secrets.randbelow(1_000_000):06d}"
 
 
 def issue_access_token(user: User) -> str:
@@ -73,10 +79,10 @@ def _totp_at(secret: str, counter: int) -> str:
     return f"{value % 1_000_000:06d}"
 
 
-async def authenticate_password_only(db: AsyncSession, *, user_id: str, password: str) -> User:
+async def authenticate_password_only(db: AsyncSession, *, user_id: str, password: str, allow_inactive: bool = False) -> User:
     """Verify a user id and password without consuming or checking a TOTP code."""
     user = await db.scalar(select(User).where(User.email == user_id))
-    if not user or not user.active:
+    if not user or (not allow_inactive and not user.active):
         raise ValueError("Invalid credentials")
     try:
         valid_password = hasher.verify(user.password_hash, password)
@@ -98,6 +104,8 @@ async def login_with_password(
 ) -> tuple[User, str, ActiveUserSession]:
     """Authenticate a user and persist a revocable active login session."""
     user = await authenticate_password_only(db, user_id=user_id, password=password)
+    if not user.registration_completed:
+        raise ValueError("Account registration is not completed")
     if user.totp_enabled and not verify_totp_code(user.totp_secret or "", totp_code or ""):
         raise ValueError("Invalid TOTP code")
     normalized_cert = normalize_certificate_fingerprint(client_cert_fingerprint)
