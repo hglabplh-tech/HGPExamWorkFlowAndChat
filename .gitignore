@@ -5,6 +5,7 @@
 .venv312/
 __pycache__/
 *.py[cod]
+*.iml
 .pytest_cache/
 .coverage
 htmlcov/
