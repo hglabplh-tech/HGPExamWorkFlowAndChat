@@ -1,5 +1,5 @@
 /* Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License. */
-const state = { token: sessionStorage.getItem("token"), courseId: null };
+const state = { token: sessionStorage.getItem("token"), courseId: null, historyId: null };
 const results = document.querySelector("#results");
 const nonce = () => crypto.getRandomValues(new Uint32Array(4)).join("-") + crypto.randomUUID();
 const authHeaders = () => ({Authorization:`Bearer ${state.token}`});
@@ -13,13 +13,41 @@ document.querySelector("#login-form").addEventListener("submit", async event => 
   const email=document.querySelector("#login-email").value;
   const password=document.querySelector("#login-password").value;
   const totp=document.querySelector("#login-totp").value.trim();
-  const response=await fetch("/api/v1/auth/token",{method:"POST",headers:{Authorization:`Basic ${btoa(`${email}:${password}`)}`,...(totp?{"X-TOTP-Code":totp}:{})}});
+  if(totp){
+    const check=await fetch(apiUrl("/api/v1/auth/check_totp"),{method:"POST",headers:{Authorization:`Basic ${btoa(`${email}:${password}`)}`,"X-TOTP-Code":totp}});
+    const checkData=await check.json().catch(()=>({}));
+    if(!check.ok||!checkData.valid){document.querySelector("#login-status").textContent=checkData.detail||"TOTP check failed";return;}
+  }
+  const response=await fetch(apiUrl("/api/v1/auth/token"),{method:"POST",headers:{Authorization:`Basic ${btoa(`${email}:${password}`)}`,...(totp?{"X-TOTP-Code":totp}:{})}});
   const data=await response.json().catch(()=>({}));
   if(!response.ok){document.querySelector("#login-status").textContent=data.detail||"Login failed";return;}
   state.token=data.access_token;
   sessionStorage.setItem("token",state.token);
   document.querySelector("#login-status").textContent=`Signed in as ${data.display_name||email}`;
-  loadCourses(); loadConversations();
+  loadCourses(); loadConversations(); loadHistories();
+});
+
+document.querySelector("#request-login-totp").addEventListener("click",async()=>{
+  const email=document.querySelector("#login-email").value;
+  const password=document.querySelector("#login-password").value;
+  if(!email||!password){document.querySelector("#login-status").textContent="Enter user id and password first.";return;}
+  const response=await fetch(apiUrl("/api/v1/auth/get_fresh_totp"),{method:"POST",headers:{Authorization:`Basic ${btoa(`${email}:${password}`)}`}});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok){document.querySelector("#login-status").textContent=data.detail||"Could not request TOTP";return;}
+  document.querySelector("#login-totp").value=data.totp_code;
+  document.querySelector("#login-status").textContent=`Fresh TOTP received; valid for ${data.expires_in_seconds} seconds.`;
+});
+
+document.querySelector("#logout-button").addEventListener("click",async()=>{
+  if(state.token){
+    await fetch(apiUrl("/api/v1/auth/logout"),{method:"POST",headers:authHeaders()}).catch(()=>null);
+  }
+  state.token=null;
+  sessionStorage.removeItem("token");
+  document.querySelector("#login-status").textContent="Logged out.";
+  document.querySelector("#course-list").innerHTML='<div class="empty">Sign in to load courses.</div>';
+  document.querySelector("#history-list").innerHTML='<div class="empty">Sign in to load histories.</div>';
+  document.querySelector("#history-entries").innerHTML="";
 });
 
 document.querySelector("#search-form").addEventListener("submit", async (event) => {
@@ -33,6 +61,66 @@ document.querySelector("#search-form").addEventListener("submit", async (event) 
   if (!response.ok) { results.textContent = `Search failed (${response.status})`; return; }
   const data = await response.json();
   results.innerHTML = data.results.map(item => `<article class="result"><small>${item.kind.toUpperCase()}</small><h2>${escapeHtml(item.title)}</h2><p>${item.excerpt}</p>${item.url ? `<a href="${item.url}" target="_blank" rel="noopener">Continue on YouTube</a>` : ""}</article>`).join("") || `<div class="result warning">${escapeHtml(data.coverage_warning)}</div>`;
+  loadHistories();
+});
+
+async function loadHistories(){
+  const target=document.querySelector("#history-list");
+  if(!state.token){target.innerHTML='<div class="empty">Sign in to load histories.</div>';return;}
+  const response=await fetch(apiUrl("/api/v1/research/histories"),{headers:authHeaders()});
+  const items=await response.json().catch(()=>[]);
+  if(!response.ok){target.innerHTML='<div class="result warning">Could not load research histories.</div>';return;}
+  const active=items.find(item=>item.active)||items[0];
+  if(active&&!state.historyId)state.historyId=active.id;
+  target.innerHTML=items.map(item=>`<button class="history-item ${item.id===state.historyId?"active":""}" data-id="${item.id}" data-label="${escapeHtml(item.label)}" data-stored="${item.stored}">
+    <strong>${escapeHtml(item.label)}</strong>
+    <small>${item.stored?"stored":"active / working"} · ${item.entries} entries · ${new Date(item.updated_at).toLocaleString()}</small>
+  </button>`).join("")||'<div class="empty">No history yet. Press New chat to create one.</div>';
+  if(state.historyId)loadHistoryEntries(state.historyId);
+}
+
+async function loadHistoryEntries(id){
+  const response=await fetch(apiUrl(`/api/v1/research/histories/${id}/entries`),{headers:authHeaders()});
+  const entries=await response.json().catch(()=>[]);
+  const target=document.querySelector("#history-entries");
+  if(!response.ok){target.innerHTML='<div class="result warning">Could not load history entries.</div>';return;}
+  target.innerHTML=entries.map(item=>`<article class="history-entry"><small>${escapeHtml(item.kind)} · ${new Date(item.created_at).toLocaleString()}</small><h2>${escapeHtml(item.label||item.input_text.slice(0,80))}</h2><p>${escapeHtml(item.input_text)}</p>${item.refined_text&&item.refined_text!==item.input_text?`<p><em>Refined:</em> ${escapeHtml(item.refined_text)}</p>`:""}<p>${escapeHtml(item.output_summary)}</p></article>`).join("")||'<div class="empty">No entries in this history yet.</div>';
+}
+
+document.querySelector("#history-list").addEventListener("click",async event=>{
+  const item=event.target.closest(".history-item");
+  if(!item)return;
+  state.historyId=item.dataset.id;
+  document.querySelector("#history-label").value=item.dataset.label;
+  document.querySelector("#history-stored").checked=item.dataset.stored==="true";
+  await fetch(apiUrl(`/api/v1/research/histories/${state.historyId}/activate`),{method:"POST",headers:{...authHeaders(),"X-Request-Nonce":nonce()}}).catch(()=>null);
+  loadHistories();
+});
+
+document.querySelector("#history-new").addEventListener("click",async()=>{
+  if(!state.token){document.querySelector("#history-list").innerHTML='<div class="result warning">Sign in first.</div>';return;}
+  const response=await fetch(apiUrl("/api/v1/research/histories"),{method:"POST",headers:{...authHeaders(),"Content-Type":"application/json","X-Request-Nonce":nonce()},body:JSON.stringify({label:"New chat"})});
+  const data=await response.json().catch(()=>({}));
+  if(response.ok){state.historyId=data.id;document.querySelector("#history-label").value=data.label;}
+  loadHistories();
+});
+
+document.querySelector("#history-refresh").addEventListener("click",loadHistories);
+
+document.querySelector("#history-edit-form").addEventListener("submit",async event=>{
+  event.preventDefault();
+  if(!state.historyId)return;
+  await fetch(apiUrl(`/api/v1/research/histories/${state.historyId}`),{method:"PATCH",headers:{...authHeaders(),"Content-Type":"application/json","X-Request-Nonce":nonce()},body:JSON.stringify({label:document.querySelector("#history-label").value||"New chat",stored:document.querySelector("#history-stored").checked})});
+  loadHistories();
+});
+
+document.querySelector("#history-delete").addEventListener("click",async()=>{
+  if(!state.historyId||!confirm("Delete this research history?"))return;
+  await fetch(apiUrl(`/api/v1/research/histories/${state.historyId}`),{method:"DELETE",headers:{...authHeaders(),"X-Request-Nonce":nonce()}});
+  state.historyId=null;
+  document.querySelector("#history-label").value="";
+  document.querySelector("#history-stored").checked=false;
+  loadHistories();
 });
 
 function escapeHtml(value) { const node=document.createElement("span"); node.textContent=value || ""; return node.innerHTML; }
@@ -167,6 +255,7 @@ document.querySelector("#exam-question-fields").addEventListener("click",async e
   const data=await response.json().catch(()=>({}));
   const target=document.querySelector("#score-results");
   target.insertAdjacentHTML("afterbegin",response.ok?`<article class="result"><small>${questionId}</small><h2>${data.score} / ${data.max_score}</h2><p>${escapeHtml(data.feedback||JSON.stringify(data.signals||{}))}</p></article>`:`<article class="result warning">${escapeHtml(data.detail||"Scoring failed")}</article>`);
+  if(response.ok)loadHistories();
 });
 
 document.querySelector("#chat-plus").addEventListener("click",()=>document.querySelector("#chat-files").click());
@@ -229,6 +318,22 @@ document.querySelector("#emoji-picker").addEventListener("click",event=>{
   document.querySelector("#emoji-picker").hidden=true;
 });
 
+document.querySelector("#totp-setup").addEventListener("click",async()=>{
+  if(!state.token){document.querySelector("#totp-status").textContent="Sign in first.";return;}
+  const response=await fetch(apiUrl("/api/v1/users/me/totp/setup"),{method:"POST",headers:{...authHeaders(),"X-Request-Nonce":nonce()}});
+  const data=await response.json().catch(()=>({}));
+  document.querySelector("#totp-secret").textContent=response.ok?`Secret: ${data.secret}\nURI: ${data.otpauth_uri}`:"";
+  document.querySelector("#totp-status").textContent=response.ok?"Add the secret to your authenticator app, then enter the next code.":(data.detail||"TOTP setup failed");
+});
+
+document.querySelector("#totp-verify-form").addEventListener("submit",async event=>{
+  event.preventDefault();
+  if(!state.token){document.querySelector("#totp-status").textContent="Sign in first.";return;}
+  const response=await fetch(apiUrl("/api/v1/users/me/totp/verify"),{method:"POST",headers:{...authHeaders(),"Content-Type":"application/json","X-Request-Nonce":nonce()},body:JSON.stringify({code:document.querySelector("#totp-code").value})});
+  const data=await response.json().catch(()=>({}));
+  document.querySelector("#totp-status").textContent=response.ok?"TOTP is enabled for this account. Use a fresh TOTP code at the next login.":(data.detail||"TOTP verification failed");
+});
+
 document.querySelector("#exam-form").addEventListener("submit", async event=>{
   event.preventDefault();
   if(!state.token){document.querySelector("#exam-status").textContent="Sign in first.";return;}
@@ -258,5 +363,5 @@ document.querySelector("#exam-form").addEventListener("submit", async event=>{
   document.querySelector("#exam-status").textContent=response.ok?`Submitted: ${data.id}`:(data.detail||"Submission failed");
 });
 
-loadCourses(); loadConversations();
+loadCourses(); loadConversations(); loadHistories();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("/static/sw.js");

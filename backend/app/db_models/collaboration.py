@@ -59,6 +59,33 @@ class ResearchInteraction(UUIDMixin, Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
 
+class ResearchHistory(UUIDMixin, Base):
+    """Group one user's research and scoring actions inside an active session."""
+    __tablename__ = "research_histories"
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    active_session_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("active_user_sessions.id", ondelete="SET NULL"), nullable=True, index=True)
+    label: Mapped[str] = mapped_column(String(160), default="New chat")
+    stored: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class ResearchHistoryEntry(UUIDMixin, Base):
+    """Store one hybrid-search, research-question, or ASAG-scoring history item."""
+    __tablename__ = "research_history_entries"
+    history_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("research_histories.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    course_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("courses.id"), nullable=True, index=True)
+    kind: Mapped[str] = mapped_column(String(40), index=True)
+    label: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    input_text: Mapped[str] = mapped_column(Text)
+    refined_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    output_summary: Mapped[str] = mapped_column(Text, default="")
+    payload: Mapped[dict] = mapped_column(JSONB, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+
 class ExamGroup(UUIDMixin, Base):
     """Bind a randomly assigned work group to an exam and X.509 identity."""
     __tablename__ = "exam_groups"

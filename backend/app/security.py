@@ -19,7 +19,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .config import get_settings
 from .database import get_db
-from .models import RequestNonce, User
+from .models import ActiveUserSession, RequestNonce, User
+from .services.authentication import active_session_for_token, normalize_certificate_fingerprint
 
 basic = HTTPBasic(auto_error=False)
 bearer = HTTPBearer(auto_error=False)
@@ -95,16 +96,24 @@ async def authenticate(
     totp_code: str | None = Header(default=None, alias="X-TOTP-Code"),
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    """Perform the authenticate operation."""
+    """Authenticate one REST request against a live session or trusted certificate."""
     user: User | None = None
     settings = get_settings()
     if bearer_credentials:
         try:
-            user = await db.get(User, decode_user_id(bearer_credentials.credentials))
+            session = await active_session_for_token(
+                db,
+                token=bearer_credentials.credentials,
+                client_cert_fingerprint=client_cert_fingerprint,
+            )
+            if session:
+                user = await db.get(User, decode_user_id(bearer_credentials.credentials))
+                if user and session.user_id != user.id:
+                    user = None
         except ValueError:
             pass
     elif client_cert_fingerprint and settings.client_certificate_auth_enabled:
-        normalized_fingerprint = client_cert_fingerprint.replace(":", "").lower()
+        normalized_fingerprint = normalize_certificate_fingerprint(client_cert_fingerprint)
         user = await db.scalar(
             select(User).where(User.client_cert_fingerprint == normalized_fingerprint)
         )
@@ -122,6 +131,21 @@ async def authenticate(
     if not user or not user.active:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials")
     return user
+
+
+async def current_active_session(
+    bearer_credentials: HTTPAuthorizationCredentials | None = Depends(bearer),
+    client_cert_fingerprint: str | None = Header(default=None, alias="X-Client-Cert-Fingerprint"),
+    db: AsyncSession = Depends(get_db),
+) -> ActiveUserSession | None:
+    """Return the active session associated with the request bearer token, if any."""
+    if not bearer_credentials:
+        return None
+    return await active_session_for_token(
+        db,
+        token=bearer_credentials.credentials,
+        client_cert_fingerprint=client_cert_fingerprint,
+    )
 
 
 async def require_nonce(

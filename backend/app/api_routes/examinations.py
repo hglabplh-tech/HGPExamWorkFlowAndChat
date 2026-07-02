@@ -17,9 +17,9 @@ from sqlalchemy.orm import selectinload
 
 from ..database import get_db
 from ..config import get_settings
-from ..models import Conversation, ConversationMember, Course, DisciplineScoringProfile, Document, Enrollment, ExamQuestion, Examination, ExamRuleSet, GradeEvent, Message, ModelTrainingRun, OCSPQuery, PrivatePKI, ResearchInteraction, Role, SignatureValidation, Submission, TrainingExample, TrustList, User, UserCertificate, VideoResource
+from ..models import ActiveUserSession, Conversation, ConversationMember, Course, DisciplineScoringProfile, Document, Enrollment, ExamQuestion, Examination, ExamRuleSet, GradeEvent, Message, ModelTrainingRun, OCSPQuery, PrivatePKI, ResearchInteraction, Role, SignatureValidation, Submission, TrainingExample, TrustList, User, UserCertificate, VideoResource
 from ..schemas import CertificateRevoke, ConversationCreate, CourseCreate, CourseOut, DeletionRequest, DocumentCreate, ExamDraftRequest, ExaminationCreate, ExaminationJsonCreate, ExaminationRelease, ExamRuleSetCreate, GradeOverride, InstructorReturn, MessageCreate, PrivatePKICreate, PublicKeyUpdate, QuestionCreate, QuestionDraftScore, ResearchQuestionCreate, ResearchVisibilityUpdate, ScoringProfileCreate, SearchResponse, SignatureValidationRequest, SubmissionCreate, SubmissionOut, TrainingApproval, TrustListCreate, TrustListDecision, UserCertificateAssign, UserCreate, UserUpdate, VideoCreate
-from ..security import authenticate, create_access_token, hash_password, require_nonce
+from ..security import authenticate, create_access_token, current_active_session, hash_password, require_nonce
 from ..services.audit import append_audit
 from ..services.asag import grade_answer
 from ..services.evidence import certificate_matches_public_key, certificate_sha256, grading_signature_message, sha256_hex, signature_message, validate_public_key_pem, verify_certificate_signature
@@ -30,6 +30,7 @@ from ..services.reports import generate_exam_report
 from ..services.private_pki import verify_private_chain, verify_root
 from ..services.ocsp import parse_ocsp_request, sign_ocsp_response
 from ..services.search import hybrid_search
+from ..services.research_history import record_history_entry
 from ..services.trust import TrustValidator, parse_etsi_trust_list
 from ..services.exam_xml import export_exam_xml, import_exam_xml
 from ..services.exam_json import export_exam_json, import_exam_json
@@ -264,6 +265,7 @@ async def score_practice_question(
     data: QuestionDraftScore,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_nonce),
+    session: ActiveUserSession | None = Depends(current_active_session),
 ):
     """Score one answered practice question without submitting the whole exam."""
     examination = await db.get(Examination, examination_id)
@@ -282,6 +284,16 @@ async def score_practice_question(
             raise HTTPException(status.HTTP_409_CONFLICT, "No active scoring profile exists for this discipline")
         result = await asyncio.to_thread(grade_answer, question, str(data.answer), profile)
     result["question_id"] = str(question.id)
+    await record_history_entry(
+        db,
+        user=user,
+        session=session,
+        kind="asag_scoring",
+        input_text=f"{question.prompt}\n\nAnswer: {data.answer}",
+        course_id=examination.course_id,
+        output_summary=f"Score {result.get('score')} of {result.get('max_score')}: {result.get('feedback', '')}",
+        payload={"examination_id": str(examination.id), "question_id": str(question.id), "result": result},
+    )
     await append_audit(db, user.id, "practice_question_scored", "exam_question", question.id, details={"examination_id": str(examination.id), "score": result.get("score")})
     await db.commit()
     return result

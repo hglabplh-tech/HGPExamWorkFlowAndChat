@@ -12,7 +12,8 @@ def test_required_workflow_tables_are_registered() -> None:
         "users", "courses", "documents", "examinations", "exam_questions",
         "submissions", "grade_events", "conversations", "messages",
         "audit_events", "training_examples", "trust_lists", "submission_confirmations",
-        "exam_groups", "exam_rule_sets", "thesauri",
+        "exam_groups", "exam_rule_sets", "thesauri", "active_user_sessions",
+        "research_histories", "research_history_entries",
     }
     assert required <= set(Base.metadata.tables)
 
@@ -58,3 +59,21 @@ def test_totp_columns_are_persisted() -> None:
     """Users can opt into authenticator-app two-factor login."""
     columns = set(Base.metadata.tables["users"].columns.keys())
     assert {"totp_secret", "totp_enabled"} <= columns
+
+
+def test_active_user_session_columns_are_persisted() -> None:
+    """Every login is backed by a revocable session row."""
+    columns = set(Base.metadata.tables["active_user_sessions"].columns.keys())
+    assert {
+        "user_id", "token_sha256", "client_cert_fingerprint", "issued_at",
+        "expires_at", "last_seen_at", "revoked_at", "auth_method",
+        "request_metadata",
+    } <= columns
+
+
+def test_research_history_tables_are_persisted() -> None:
+    """Research histories can label, store, and replay user-scoped context."""
+    history_columns = set(Base.metadata.tables["research_histories"].columns.keys())
+    entry_columns = set(Base.metadata.tables["research_history_entries"].columns.keys())
+    assert {"user_id", "active_session_id", "label", "stored", "deleted_at", "updated_at"} <= history_columns
+    assert {"history_id", "kind", "input_text", "refined_text", "output_summary", "payload"} <= entry_columns

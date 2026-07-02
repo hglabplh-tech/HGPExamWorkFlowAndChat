@@ -5,12 +5,12 @@ Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 
 from pathlib import Path
 
-from backend.app.api_routes import chat, content, courses, examinations, grading, research, submissions, trust, users
+from backend.app.api_routes import auth, chat, content, courses, examinations, grading, research, submissions, trust, users
 
 
 def test_journey_endpoints_are_registered() -> None:
     """Ensure the aggregate router exposes the principal application journeys."""
-    domain_routers = (chat, content, courses, examinations, grading, research, submissions, trust, users)
+    domain_routers = (auth, chat, content, courses, examinations, grading, research, submissions, trust, users)
     paths = {route.path for module in domain_routers for route in module.router.routes}
     assert {
         "/api/v1/courses", "/api/v1/search", "/api/v1/research/questions",
@@ -18,11 +18,17 @@ def test_journey_endpoints_are_registered() -> None:
         "/api/v1/thesauri", "/api/v1/thesauri/upload",
         "/api/v1/knowledge/vocab.txt", "/api/v1/knowledge/vocabulary.json",
         "/api/v1/users/me/totp/setup", "/api/v1/users/me/totp/verify",
+        "/api/v1/auth/token", "/api/v1/auth/logout",
+        "/api/v1/auth/check_totp", "/api/v1/auth/get_fresh_totp",
         "/api/v1/courses/{course_id}/examinations/from-json",
         "/api/v1/courses/{course_id}/examinations/import.json",
         "/api/v1/examinations/{examination_id}/export.json",
         "/api/v1/examinations/{examination_id}/questions/{question_id}/score-draft",
         "/api/v1/conversations/{conversation_id}/messages/upload",
+        "/api/v1/research/histories",
+        "/api/v1/research/histories/{history_id}/activate",
+        "/api/v1/research/histories/{history_id}",
+        "/api/v1/research/histories/{history_id}/entries",
     } <= paths
 
 

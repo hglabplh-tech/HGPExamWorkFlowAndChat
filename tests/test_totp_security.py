@@ -4,6 +4,7 @@ Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """
 
 from backend.app.security import generate_totp_secret, totp_uri, verify_totp, _totp_at
+from backend.app.services.authentication import fresh_totp_code, verify_totp_code
 
 
 def test_totp_secret_and_uri_are_authenticator_compatible() -> None:
@@ -21,3 +22,12 @@ def test_totp_verification_accepts_current_code() -> None:
     now = 1_800_000_000
     assert verify_totp(secret, _totp_at(secret, now // 30), now=now)
     assert not verify_totp(secret, "000000", window=0, now=now)
+
+
+def test_backend_fresh_totp_can_be_checked_independently() -> None:
+    """Backend-issued fresh TOTP values verify through the auth-service checker."""
+    secret = generate_totp_secret()
+    now = 1_800_000_015
+    fresh = fresh_totp_code(secret, now=now)
+    assert fresh["expires_in_seconds"] == 15
+    assert verify_totp_code(secret, fresh["totp_code"], window=0, now=now)

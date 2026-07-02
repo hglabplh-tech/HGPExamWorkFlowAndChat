@@ -11,13 +11,39 @@ document.querySelector("#login-form").addEventListener("submit", async event => 
   const password=document.querySelector("#login-password").value;
   const totp=document.querySelector("#login-totp").value.trim();
   const auth=btoa(`${email}:${password}`);
-  const response=await fetch("/api/v1/auth/token",{method:"POST",headers:{Authorization:`Basic ${auth}`,...(totp?{"X-TOTP-Code":totp}:{})}});
+  if(totp){
+    const check=await fetch(apiUrl("/api/v1/auth/check_totp"),{method:"POST",headers:{Authorization:`Basic ${auth}`,"X-TOTP-Code":totp}});
+    const checkData=await check.json().catch(()=>({}));
+    if(!check.ok||!checkData.valid){document.querySelector("#login-status").textContent=checkData.detail||"TOTP check failed";return;}
+  }
+  const response=await fetch(apiUrl("/api/v1/auth/token"),{method:"POST",headers:{Authorization:`Basic ${auth}`,...(totp?{"X-TOTP-Code":totp}:{})}});
   const data=await response.json().catch(()=>({}));
   if(!response.ok){document.querySelector("#login-status").textContent=data.detail||"Login failed";return;}
   token=data.access_token;
   sessionStorage.setItem("token",token);
   document.querySelector("#login-status").textContent=`Signed in as ${data.display_name||email}`;
   refresh(); refreshPki(); refreshScoring(); refreshThesauri(); loadAdminCourses(); loadAdminChatrooms();
+});
+
+document.querySelector("#request-login-totp").addEventListener("click",async()=>{
+  const email=document.querySelector("#login-email").value;
+  const password=document.querySelector("#login-password").value;
+  if(!email||!password){document.querySelector("#login-status").textContent="Enter email and password first.";return;}
+  const auth=btoa(`${email}:${password}`);
+  const response=await fetch(apiUrl("/api/v1/auth/get_fresh_totp"),{method:"POST",headers:{Authorization:`Basic ${auth}`}});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok){document.querySelector("#login-status").textContent=data.detail||"Could not request TOTP";return;}
+  document.querySelector("#login-totp").value=data.totp_code;
+  document.querySelector("#login-status").textContent=`Fresh TOTP received; valid for ${data.expires_in_seconds} seconds.`;
+});
+
+document.querySelector("#admin-logout").addEventListener("click",async()=>{
+  if(token){
+    await fetch(apiUrl("/api/v1/auth/logout"),{method:"POST",headers:headers()}).catch(()=>null);
+  }
+  token=null;
+  sessionStorage.removeItem("token");
+  document.querySelector("#login-status").textContent="Logged out.";
 });
 
 async function loadAdminCourses(){

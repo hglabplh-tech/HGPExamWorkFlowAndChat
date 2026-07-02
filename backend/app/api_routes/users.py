@@ -19,7 +19,7 @@ from ..database import get_db
 from ..config import get_settings
 from ..models import Conversation, ConversationMember, Course, DisciplineScoringProfile, Document, Enrollment, ExamQuestion, Examination, GradeEvent, Message, ModelTrainingRun, OCSPQuery, PrivatePKI, ResearchInteraction, Role, SignatureValidation, Submission, TrainingExample, TrustList, User, UserCertificate, VideoResource
 from ..schemas import CertificateRevoke, ConversationCreate, CourseCreate, CourseOut, DeletionRequest, DocumentCreate, EmailRequest, ExamDraftRequest, ExaminationCreate, ExaminationRelease, GradeOverride, InstructorReturn, MessageCreate, PrivatePKICreate, PublicKeyUpdate, QuestionCreate, ResearchQuestionCreate, ResearchVisibilityUpdate, ScoringProfileCreate, SearchResponse, SignatureValidationRequest, SubmissionCreate, SubmissionOut, TotpVerify, TrainingApproval, TrustListCreate, TrustListDecision, UserCertificateAssign, UserCreate, UserUpdate, VideoCreate
-from ..security import authenticate, create_access_token, generate_totp_secret, hash_password, require_nonce, totp_uri, verify_totp
+from ..security import authenticate, generate_totp_secret, hash_password, require_nonce, totp_uri, verify_totp
 from ..services.audit import append_audit
 from ..services.asag import grade_answer
 from ..services.evidence import certificate_matches_public_key, certificate_sha256, grading_signature_message, sha256_hex, signature_message, validate_public_key_pem, verify_certificate_signature
@@ -42,11 +42,6 @@ from .common import (
 )
 
 router = APIRouter(prefix="/api/v1")
-
-@router.post("/auth/token")
-async def token(user: User = Depends(authenticate)) -> dict:
-    """Perform the token operation."""
-    return {"access_token": create_access_token(user), "token_type": "bearer", "role": user.role.value, "display_name": user.display_name}
 
 
 @router.post("/users/me/totp/setup")

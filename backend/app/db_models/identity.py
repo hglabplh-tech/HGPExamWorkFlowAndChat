@@ -2,13 +2,12 @@
 
 Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """
-import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, LargeBinary, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, LargeBinary, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB, UUID
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 
 from .base import Base, Role, UUIDMixin
@@ -28,6 +27,21 @@ class User(UUIDMixin, Base):
     signing_public_key: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     client_cert_fingerprint: Mapped[str | None] = mapped_column(String(128), unique=True, nullable=True)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class ActiveUserSession(UUIDMixin, Base):
+    """Persist one authenticated login session for request-by-request checks."""
+    __tablename__ = "active_user_sessions"
+    __table_args__ = (UniqueConstraint("token_sha256"),)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    token_sha256: Mapped[str] = mapped_column(String(64), index=True)
+    client_cert_fingerprint: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    auth_method: Mapped[str] = mapped_column(String(40), default="password_totp")
+    request_metadata: Mapped[dict] = mapped_column(JSONB, default=dict)
 
 
 class Course(UUIDMixin, Base):

@@ -15,7 +15,10 @@
       <summary>☰ Menu</summary>
       <a href="#courses">Courses</a>
       <a href="#chat-panel">Chatrooms</a>
+      <a href="#research-history">Research history</a>
+      <a href="#totp-config">TOTP configuration</a>
       <a href="/admin" id="admin-link">Admin: import/export/users</a>
+      <button type="button" id="logout-button" class="link-button">Logout</button>
     </details>
     <strong>HGPExamWorkFlowAndChat</strong><span>Courses · knowledge · people</span>
   </header>
@@ -24,9 +27,10 @@
       <section class="side-card">
         <h2>Login</h2>
         <form id="login-form" class="stack-form">
-          <input id="login-email" type="email" placeholder="email" autocomplete="username">
-          <input id="login-password" type="password" placeholder="password" autocomplete="current-password">
-          <input id="login-totp" inputmode="numeric" placeholder="TOTP code">
+          <label>User ID / email<input id="login-email" type="email" placeholder="student@example.edu" autocomplete="username"></label>
+          <label>Password<input id="login-password" type="password" placeholder="password" autocomplete="current-password"></label>
+          <label>TOTP code<input id="login-totp" inputmode="numeric" placeholder="123456" autocomplete="one-time-code"></label>
+          <button type="button" id="request-login-totp">Request TOTP</button>
           <button>Sign in</button>
         </form>
         <p id="login-status"></p>
@@ -46,6 +50,37 @@
       <div id="results" aria-live="polite">
         <div class="empty">Approved documents and videos will appear here with their sources.</div>
       </div>
+      <section class="exam-card" id="research-history">
+        <p class="eyebrow">RESEARCH HISTORY</p>
+        <h2>History administration</h2>
+        <p>Use “New chat” to start a clean research context. Label, store, reopen, or delete histories. The latest entries help refine the next hybrid search or ASAG scoring request.</p>
+        <div class="button-row">
+          <button type="button" id="history-new">New chat</button>
+          <button type="button" id="history-refresh">Refresh</button>
+        </div>
+        <form id="history-edit-form" class="stack-form">
+          <label>Selected history label<input id="history-label" maxlength="160" placeholder="New chat"></label>
+          <label><input id="history-stored" type="checkbox"> Stored / pinned for later</label>
+          <div class="button-row">
+            <button>Save label/status</button>
+            <button type="button" id="history-delete">Delete selected history</button>
+          </div>
+        </form>
+        <div id="history-list" class="history-list"><div class="empty">Sign in to load histories.</div></div>
+        <div id="history-entries" class="history-entries"></div>
+      </section>
+      <section class="exam-card" id="totp-config">
+        <p class="eyebrow">SECURITY</p>
+        <h2>TOTP configuration</h2>
+        <p>Initialize two-factor authentication for the signed-in account. Store the secret in an authenticator app, then verify one six-digit code.</p>
+        <button type="button" id="totp-setup">Generate TOTP key</button>
+        <pre id="totp-secret"></pre>
+        <form id="totp-verify-form" class="stack-form">
+          <label>Authenticator code<input id="totp-code" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code"></label>
+          <button>Enable TOTP</button>
+        </form>
+        <div id="totp-status" aria-live="polite"></div>
+      </section>
       <section class="exam-card">
         <p class="eyebrow">EXAMINATION</p>
         <h2>Examination execution</h2>

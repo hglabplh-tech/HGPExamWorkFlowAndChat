@@ -17,6 +17,7 @@
         <label>Email<input id="login-email" type="email" autocomplete="username" required></label>
         <label>Password<input id="login-password" type="password" autocomplete="current-password" required></label>
         <label>TOTP code<input id="login-totp" inputmode="numeric" pattern="[0-9]{6}" placeholder="123456"></label>
+        <button type="button" id="request-login-totp">Request TOTP</button>
         <button>Sign in</button>
       </form>
       <p id="login-status" aria-live="polite"></p>
@@ -28,6 +29,8 @@
         <a href="#admin-chatrooms">Defined chatrooms</a>
         <a href="#admin-import-export">Import/export</a>
         <a href="#user-definition">User definition</a>
+        <a href="#totp-config">TOTP configuration</a>
+        <button type="button" id="admin-logout" class="link-button">Logout</button>
       </details>
       <section id="admin-courses" class="admin-panel">
         <p class="eyebrow">COURSES</p>
@@ -72,7 +75,7 @@
         </dialog>
         <div id="user-create-status" aria-live="polite"></div>
       </section>
-      <section class="admin-panel">
+      <section class="admin-panel" id="totp-config">
         <p class="eyebrow">SECURITY</p>
         <h1>Two-factor login</h1>
         <p>Generate a TOTP key for the signed-in administrator, add it to an authenticator app, then verify the six-digit code.</p>

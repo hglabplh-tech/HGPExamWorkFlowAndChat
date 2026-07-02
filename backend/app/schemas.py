@@ -384,6 +384,17 @@ class ResearchVisibilityUpdate(BaseModel):
     training_opt_in: bool = False
 
 
+class ResearchHistoryCreate(BaseModel):
+    """Create a new per-user research history, equivalent to a new chat."""
+    label: str = Field(default="New chat", min_length=1, max_length=160)
+
+
+class ResearchHistoryUpdate(BaseModel):
+    """Update one research history label or stored state."""
+    label: str | None = Field(default=None, min_length=1, max_length=160)
+    stored: bool | None = None
+
+
 class ExaminationRelease(BaseModel):
     """Represent examinationrelease."""
     closes_at: datetime | None = None
