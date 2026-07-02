@@ -58,17 +58,44 @@ class SearchResponse(BaseModel):
     query: str
     results: list[SearchHit]
     coverage_warning: str | None = None
+    query_expansion: dict | None = None
+
+
+class ThesaurusOut(BaseModel):
+    """Represent a stored full-text thesaurus."""
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    name: str
+    language: str
+    source_format: str
+    entries: list[dict]
+    active: bool
+    source_sha256: str
+    created_at: datetime
+
+
+class ThesaurusJsonImport(BaseModel):
+    """Accept normalized thesaurus JSON from an administration client."""
+    name: str = Field(min_length=2, max_length=120)
+    language: str = Field(default="simple", max_length=20)
+    entries: list[dict]
+    active: bool = True
 
 
 class SubmissionCreate(BaseModel):
     """Represent submissioncreate."""
     examination_id: uuid.UUID
-    answers: dict[str, str]
+    answers: dict[str, object]
     content_base64: str
     content_type: str = "application/json"
     signature_base64: str
     signing_certificate_pem: str = Field(min_length=100, max_length=20000)
     signed_at: datetime
+    file_confirmed: bool = False
+    ready_confirmed: bool = False
+    confirmation_token: str | None = None
+    replaces_submission_id: uuid.UUID | None = None
+    exam_group_id: uuid.UUID | None = None
 
     def content_bytes(self) -> bytes:
         """Perform the content bytes operation."""
@@ -92,6 +119,14 @@ class SubmissionOut(BaseModel):
     state: str
     feedback_released_at: datetime | None
     returned_at: datetime | None
+    correction_until: datetime | None
+    supersedes_submission_id: uuid.UUID | None
+
+
+class SubmissionPrepare(BaseModel):
+    """Describe a real-exam file before the final confirmation step."""
+    examination_id: uuid.UUID
+    content_sha256: str = Field(pattern=r"^[a-fA-F0-9]{64}$")
 
 
 class GradeOverride(BaseModel):
@@ -120,6 +155,7 @@ class UserCreate(BaseModel):
     display_name: str
     password: str = Field(min_length=12, max_length=1024)
     role: str = "student"
+    permissions: list[str] = Field(default_factory=list)
 
 
 class UserUpdate(BaseModel):
@@ -127,7 +163,13 @@ class UserUpdate(BaseModel):
     display_name: str | None = None
     active: bool | None = None
     role: str | None = None
+    permissions: list[str] | None = None
     client_cert_fingerprint: str | None = Field(default=None, pattern=r"^[A-Fa-f0-9:]{32,128}$")
+
+
+class TotpVerify(BaseModel):
+    """Verify and activate a user's TOTP authenticator setup."""
+    code: str = Field(pattern=r"^\d{6}$")
 
 
 class DeletionRequest(BaseModel):
@@ -142,6 +184,25 @@ class ConversationCreate(BaseModel):
     title: str
     member_ids: list[uuid.UUID] = Field(min_length=1)
     kind: str = "direct"
+    purpose: str = Field(default="general", pattern="^(general|exam_preparation|exam_work)$")
+    topic: str | None = Field(default=None, max_length=300)
+    examination_id: uuid.UUID | None = None
+
+
+class RandomExamGroupsCreate(BaseModel):
+    """Configure random exam-preparation or group-exam assignment."""
+    examination_id: uuid.UUID
+    topics: list[str] = Field(min_length=1, max_length=100)
+    group_size: int = Field(default=3, ge=2, le=20)
+    purpose: str = Field(default="exam_preparation", pattern="^(exam_preparation|exam_work)$")
+    seed: str | None = Field(default=None, max_length=128)
+
+
+class ExamGroupCertificateAssign(BaseModel):
+    """Register an externally issued X.509 certificate; private keys stay client-side."""
+    certificate_pem: str = Field(min_length=100, max_length=20000)
+    private_pki_id: uuid.UUID
+    reason: str = Field(min_length=10, max_length=1000)
 
 
 class MessageCreate(BaseModel):
@@ -210,15 +271,16 @@ class ScoringProfileCreate(BaseModel):
         "length": 0.10,
     })
     search_weights: dict[str, float] = Field(default_factory=lambda: {
-        "full_text": 0.40,
-        "semantic": 0.60,
+        "full_text": 0.35,
+        "bm25": 0.20,
+        "semantic": 0.45,
     })
     semantic_profile: str = Field(default="economy", pattern="^(economy|quality)$")
 
     def validate_weights(self) -> None:
         """Perform the validate weights operation."""
         expected_grading = {"jaccard", "keywords", "semantic", "trained_scoring", "fact_entailment", "contradiction", "length"}
-        if set(self.grading_weights) != expected_grading or set(self.search_weights) != {"full_text", "semantic"}:
+        if set(self.grading_weights) != expected_grading or set(self.search_weights) != {"full_text", "bm25", "semantic"}:
             raise ValueError("Weight keys do not match the supported scoring signals")
         for group in (self.grading_weights, self.search_weights):
             if any(value < 0 or value > 1 for value in group.values()) or sum(group.values()) <= 0:
@@ -232,6 +294,8 @@ class ExaminationCreate(BaseModel):
     instructions: str = ""
     kind: str = Field(default="practice", pattern="^(practice|real)$")
     closes_at: datetime | None = None
+    group_mode: bool = False
+    rule_set_id: uuid.UUID | None = None
 
 
 class QuestionCreate(BaseModel):
@@ -241,6 +305,59 @@ class QuestionCreate(BaseModel):
     required_keywords: list[str] = Field(default_factory=list)
     expected_facts: list[str] = Field(default_factory=list)
     max_score: float = Field(gt=0, le=1000)
+    question_type: str = Field(default="free_text", pattern="^(free_text|single_choice|multiple_choice)$")
+    choices: list[str] = Field(default_factory=list)
+    correct_options: list[str] = Field(default_factory=list)
+    partial_credit: bool = False
+
+    def validate_question(self) -> None:
+        """Ensure choice questions have unique options and valid answers."""
+        if self.question_type == "free_text":
+            return
+        if len(self.choices) < 2 or len(set(self.choices)) != len(self.choices):
+            raise ValueError("Choice questions require at least two unique choices")
+        if not self.correct_options or not set(self.correct_options) <= set(self.choices):
+            raise ValueError("Every correct option must occur in choices")
+        if self.question_type == "single_choice" and len(self.correct_options) != 1:
+            raise ValueError("Single-choice questions require exactly one correct option")
+
+
+class ExaminationJsonCreate(BaseModel):
+    """Create an examination and its reviewed questions from one JSON document."""
+    title: str = Field(min_length=2, max_length=300)
+    instructions: str = ""
+    kind: str = Field(default="practice", pattern="^(practice|real)$")
+    group_mode: bool = False
+    rule_set_id: uuid.UUID | None = None
+    questions: list[QuestionCreate] = Field(min_length=1)
+
+    def validate_exam(self) -> None:
+        """Validate every embedded question before database import."""
+        for question in self.questions:
+            question.validate_question()
+
+
+class ExamRuleSetCreate(BaseModel):
+    """Define course-specific format, citation, topic, and weighted quality rules."""
+    course_id: uuid.UUID
+    name: str = Field(min_length=2, max_length=200)
+    version: int = Field(default=1, ge=1)
+    page_count_min: int = Field(default=1, ge=1, le=10000)
+    page_count_max: int = Field(default=20, ge=1, le=10000)
+    citation_style: str = Field(default="APA", max_length=50)
+    citation_check: str = Field(default="author_year_and_reference_list", max_length=200)
+    topic: str = Field(min_length=2, max_length=1000)
+    weights: dict[str, float] = Field(default_factory=lambda: {"context": 0.4, "design": 0.2, "wording": 0.2, "citations": 0.2})
+
+    def validate_rules(self) -> None:
+        """Validate page bounds and normalized scoring dimensions."""
+        if self.page_count_min > self.page_count_max:
+            raise ValueError("Minimum page count cannot exceed maximum")
+        expected = {"context", "design", "wording", "citations"}
+        if set(self.weights) != expected or any(value < 0 for value in self.weights.values()):
+            raise ValueError("Weights must define non-negative context, design, wording, and citations")
+        if abs(sum(self.weights.values()) - 1.0) > 0.000001:
+            raise ValueError("Rule weights must sum to 1.0")
 
 
 class ResearchQuestionCreate(BaseModel):
@@ -278,3 +395,20 @@ class TrainingApproval(BaseModel):
     """Represent trainingapproval."""
     approved: bool
     reason: str = Field(min_length=10, max_length=2000)
+
+
+class IntegrityCheckRequest(BaseModel):
+    """Configure an instructor-requested academic-integrity review."""
+    search_internet: bool = True
+    check_grammar: bool = True
+    check_apa: bool = True
+    check_facts: bool = True
+    maximum_queries: int = Field(default=5, ge=1, le=20)
+
+
+class EmailRequest(BaseModel):
+    """Describe an audited scoring or question email notification."""
+    recipient_user_id: uuid.UUID
+    kind: str = Field(pattern="^(scoring|question_answer)$")
+    subject: str = Field(min_length=2, max_length=200)
+    message: str = Field(min_length=2, max_length=10000)

@@ -20,6 +20,10 @@ class Conversation(UUIDMixin, Base):
     title: Mapped[str] = mapped_column(String(240))
     kind: Mapped[str] = mapped_column(String(20), default="direct")
     created_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    purpose: Mapped[str] = mapped_column(String(40), default="general", index=True)
+    topic: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    examination_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("examinations.id"), nullable=True, index=True)
+    random_assignment_seed: Mapped[str | None] = mapped_column(String(128), nullable=True)
 
 
 class ConversationMember(Base):
@@ -51,4 +55,17 @@ class ResearchInteraction(UUIDMixin, Base):
     sources: Mapped[list] = mapped_column(JSONB, default=list)
     visibility: Mapped[str] = mapped_column(String(20), default="private", index=True)
     training_opt_in: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class ExamGroup(UUIDMixin, Base):
+    """Bind a randomly assigned work group to an exam and X.509 identity."""
+    __tablename__ = "exam_groups"
+    __table_args__ = (UniqueConstraint("examination_id", "conversation_id"),)
+    examination_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("examinations.id", ondelete="CASCADE"), index=True)
+    conversation_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("conversations.id", ondelete="CASCADE"), unique=True)
+    label: Mapped[str] = mapped_column(String(120))
+    topic: Mapped[str] = mapped_column(String(300))
+    certificate_pem: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    certificate_sha256: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)

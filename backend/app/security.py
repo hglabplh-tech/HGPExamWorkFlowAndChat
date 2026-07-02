@@ -2,6 +2,11 @@
 """Utilities for security."""
 import secrets
 import uuid
+import base64
+import hmac
+import hashlib
+import struct
+import time
 from datetime import UTC, datetime, timedelta
 
 import jwt
@@ -39,6 +44,37 @@ def create_access_token(user: User) -> str:
     )
 
 
+def generate_totp_secret() -> str:
+    """Create a Base32 secret suitable for authenticator applications."""
+    return base64.b32encode(secrets.token_bytes(20)).decode("ascii").rstrip("=")
+
+
+def totp_uri(secret: str, email: str, issuer: str = "HcpXmlWorkflowChat") -> str:
+    """Build an otpauth URI for enrollment QR-code generation by clients."""
+    return f"otpauth://totp/{issuer}:{email}?secret={secret}&issuer={issuer}&algorithm=SHA1&digits=6&period=30"
+
+
+def verify_totp(secret: str, code: str, *, window: int = 1, now: int | None = None) -> bool:
+    """Verify a six-digit time-based one-time password with small clock tolerance."""
+    if not code or not code.isdigit() or len(code) != 6:
+        return False
+    timestamp = int(now if now is not None else time.time())
+    for offset in range(-window, window + 1):
+        if hmac.compare_digest(_totp_at(secret, timestamp // 30 + offset), code):
+            return True
+    return False
+
+
+def _totp_at(secret: str, counter: int) -> str:
+    """Calculate the RFC 6238 TOTP value for one counter."""
+    padding = "=" * (-len(secret) % 8)
+    key = base64.b32decode(secret + padding, casefold=True)
+    digest = hmac.new(key, struct.pack(">Q", counter), hashlib.sha1).digest()
+    offset = digest[-1] & 0x0F
+    value = struct.unpack(">I", digest[offset:offset + 4])[0] & 0x7FFFFFFF
+    return f"{value % 1_000_000:06d}"
+
+
 def decode_user_id(token: str) -> uuid.UUID:
     """Perform the decode user id operation."""
     try:
@@ -56,21 +92,23 @@ async def authenticate(
     basic_credentials: HTTPBasicCredentials | None = Depends(basic),
     bearer_credentials: HTTPAuthorizationCredentials | None = Depends(bearer),
     client_cert_fingerprint: str | None = Header(default=None, alias="X-Client-Cert-Fingerprint"),
+    totp_code: str | None = Header(default=None, alias="X-TOTP-Code"),
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """Perform the authenticate operation."""
     user: User | None = None
+    settings = get_settings()
     if bearer_credentials:
         try:
             user = await db.get(User, decode_user_id(bearer_credentials.credentials))
         except ValueError:
             pass
-    elif client_cert_fingerprint:
+    elif client_cert_fingerprint and settings.client_certificate_auth_enabled:
         normalized_fingerprint = client_cert_fingerprint.replace(":", "").lower()
         user = await db.scalar(
             select(User).where(User.client_cert_fingerprint == normalized_fingerprint)
         )
-    elif basic_credentials:
+    elif basic_credentials and settings.password_auth_enabled:
         user = await db.scalar(select(User).where(User.email == basic_credentials.username))
         if user:
             try:
@@ -78,6 +116,8 @@ async def authenticate(
             except Exception:
                 valid = False
             if not valid:
+                user = None
+            elif user.totp_enabled and not verify_totp(user.totp_secret or "", totp_code or ""):
                 user = None
     if not user or not user.active:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials")

@@ -57,6 +57,17 @@ def generate_exam_report(data: dict) -> bytes:
         ["Score", f"{data['total_score']:.2f} / {data['maximum_score']:.2f}"],
         ["Status", escape(data["status"])],
     ]
+    if data.get("exam_group"):
+        summary.insert(1, ["Exam group", escape(data["exam_group"])])
+    conversions = data.get("grade_conversions", {})
+    if conversions:
+        summary.extend([
+            ["Percentage", f"{conversions.get('percentage', 0):.2f}%"],
+            ["ECTS", escape(str(conversions.get("ects", "")))],
+            ["German scale", escape(str(conversions.get("germany", "")))],
+            ["British scale", escape(str(conversions.get("united_kingdom", "")))],
+            ["US scale", escape(f"{conversions.get('united_states', {}).get('letter', '')} / GPA {conversions.get('united_states', {}).get('gpa_4', '')}")],
+        ])
     table = Table(summary, colWidths=[38 * mm, 120 * mm], hAlign="LEFT")
     table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#EBE6DA")),
@@ -83,6 +94,25 @@ def generate_exam_report(data: dict) -> bytes:
 
     story.extend([
         Spacer(1, 8 * mm),
+        Paragraph("Academic integrity and writing review", styles["Heading1"]),
+    ])
+    integrity = data.get("academic_integrity_review")
+    if integrity:
+        similarity = integrity.get("internet_similarity", {})
+        apa = integrity.get("apa", {})
+        grammar = integrity.get("grammar", {})
+        story.extend([
+            Paragraph(f"Internet similarity status: {escape(str(similarity.get('status', 'unknown')))}; maximum lexical similarity: {float(similarity.get('maximum_similarity', 0)):.3f}", styles["Small"]),
+            Paragraph(f"APA-style citations detected: {int(apa.get('citation_count', 0))}; reference section: {bool(apa.get('has_reference_section', False))}", styles["Small"]),
+            Paragraph(f"Grammar review status: {escape(str(grammar.get('status', 'unknown')))}; issues: {int(grammar.get('issue_count', len(grammar.get('issues', []))))}", styles["Small"]),
+            Paragraph("Similarity is evidence for instructor review and is not an automatic plagiarism decision.", styles["Small"]),
+        ])
+    else:
+        story.append(Paragraph("No academic-integrity review was stored for this submission.", styles["Small"]))
+    if conversions:
+        story.append(Paragraph(escape(str(conversions.get("disclaimer", ""))), styles["Small"]))
+    story.extend([
+        Spacer(1, 8 * mm),
         Paragraph("Evidence and signatures", styles["Heading1"]),
         Paragraph(f"Exam SHA-256: {escape(data['exam_sha256'])}", styles["Small"]),
         Paragraph(f"Student certificate SHA-256: {escape(data['student_certificate_sha256'])}", styles["Small"]),
@@ -103,4 +133,3 @@ def generate_exam_report(data: dict) -> bytes:
     ])
     document.build(story, onFirstPage=footer, onLaterPages=footer)
     return buffer.getvalue()
-

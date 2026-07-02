@@ -73,6 +73,7 @@ def trained_scoring(reference: str, answer: str, discipline: str) -> float | Non
 def nli_components():
     """Perform the nli components operation."""
     model_name = get_settings().nli_model
+    get_settings().require_allowed_model(model_name)
     device = resolve_torch_device(get_settings().compute_device)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForSequenceClassification.from_pretrained(model_name).to(device).eval()

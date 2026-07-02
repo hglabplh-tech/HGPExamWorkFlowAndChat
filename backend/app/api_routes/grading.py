@@ -17,8 +17,8 @@ from sqlalchemy.orm import selectinload
 
 from ..database import get_db
 from ..config import get_settings
-from ..models import Conversation, ConversationMember, Course, DisciplineScoringProfile, Document, Enrollment, ExamQuestion, Examination, GradeEvent, Message, ModelTrainingRun, OCSPQuery, PrivatePKI, ResearchInteraction, Role, SignatureValidation, Submission, TrainingExample, TrustList, User, UserCertificate, VideoResource
-from ..schemas import CertificateRevoke, ConversationCreate, CourseCreate, CourseOut, DeletionRequest, DocumentCreate, ExamDraftRequest, ExaminationCreate, ExaminationRelease, GradeOverride, InstructorReturn, MessageCreate, PrivatePKICreate, PublicKeyUpdate, QuestionCreate, ResearchQuestionCreate, ResearchVisibilityUpdate, ScoringProfileCreate, SearchResponse, SignatureValidationRequest, SubmissionCreate, SubmissionOut, TrainingApproval, TrustListCreate, TrustListDecision, UserCertificateAssign, UserCreate, UserUpdate, VideoCreate
+from ..models import Conversation, ConversationMember, Course, DisciplineScoringProfile, Document, Enrollment, ExamQuestion, Examination, ExamRuleSet, GradeEvent, Message, ModelTrainingRun, OCSPQuery, PrivatePKI, ResearchInteraction, Role, SignatureValidation, Submission, TrainingExample, TrustList, User, UserCertificate, VideoResource
+from ..schemas import CertificateRevoke, ConversationCreate, CourseCreate, CourseOut, DeletionRequest, DocumentCreate, ExamDraftRequest, ExaminationCreate, ExaminationRelease, GradeOverride, IntegrityCheckRequest, InstructorReturn, MessageCreate, PrivatePKICreate, PublicKeyUpdate, QuestionCreate, ResearchQuestionCreate, ResearchVisibilityUpdate, ScoringProfileCreate, SearchResponse, SignatureValidationRequest, SubmissionCreate, SubmissionOut, TrainingApproval, TrustListCreate, TrustListDecision, UserCertificateAssign, UserCreate, UserUpdate, VideoCreate
 from ..security import authenticate, create_access_token, hash_password, require_nonce
 from ..services.audit import append_audit
 from ..services.asag import grade_answer
@@ -31,6 +31,8 @@ from ..services.private_pki import verify_private_chain, verify_root
 from ..services.ocsp import parse_ocsp_request, sign_ocsp_response
 from ..services.search import hybrid_search
 from ..services.trust import TrustValidator, parse_etsi_trust_list
+from ..services.academic_integrity import review_exam_text
+from ..services.exam_rules import evaluate_exam_rules
 
 
 from .common import (
@@ -40,6 +42,65 @@ from .common import (
 )
 
 router = APIRouter(prefix="/api/v1")
+
+
+@router.post("/submissions/{submission_id}/academic-integrity-check")
+async def academic_integrity_check(
+    submission_id: uuid.UUID,
+    data: IntegrityCheckRequest,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_nonce),
+):
+    """Review Internet similarity, grammar, APA citations, and existing fact signals."""
+    require_staff(user)
+    submission = await db.get(Submission, submission_id)
+    if not submission or submission.deleted_at:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Submission not found")
+    examination = await db.get(Examination, submission.examination_id)
+    await require_course_instructor(db, user, examination.course_id)
+    text_content = "\n\n".join(str(value) for value in submission.answers.values())
+    review = await review_exam_text(
+        text_content,
+        maximum_queries=data.maximum_queries,
+        search_internet=data.search_internet,
+        check_grammar=data.check_grammar,
+        check_apa=data.check_apa,
+    )
+    if data.check_facts:
+        signals = [item.get("signals", {}) for item in (submission.ai_grade or {}).get("questions", [])]
+        review["fact_check"] = {
+            "status": "available" if signals else "requires_ai_grade_first",
+            "per_question": [{"fact_entailment": item.get("fact_entailment"), "contradiction_safety": item.get("contradiction")} for item in signals],
+        }
+    if examination.rule_set_id:
+        rule_set = await db.get(ExamRuleSet, examination.rule_set_id)
+        if rule_set:
+            review["exam_rules"] = evaluate_exam_rules(text_content, rule_set.rules)
+    submission.academic_integrity_review = review
+    await append_audit(db, user.id, "academic_integrity_checked", "submission", submission.id, details={"internet_status": review["internet_similarity"]["status"], "decision": review["decision"]})
+    await db.commit()
+    return review
+
+
+@router.post("/submissions/{submission_id}/start-correction")
+async def start_correction(
+    submission_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_nonce),
+):
+    """Atomically claim a real submission and block further student replacements."""
+    require_staff(user)
+    submission = await db.get(Submission, submission_id)
+    if not submission or submission.deleted_at:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Submission not found")
+    examination = await db.get(Examination, submission.examination_id)
+    await require_course_instructor(db, user, examination.course_id)
+    if examination.kind != "real" or submission.state != "awaiting_grading":
+        raise HTTPException(status.HTTP_409_CONFLICT, "Submission cannot enter correction")
+    submission.state = "under_correction"
+    await append_audit(db, user.id, "correction_started", "submission", submission.id)
+    await db.commit()
+    return {"submission_id": submission.id, "state": submission.state, "replacements_blocked": True}
 
 @router.get("/submissions/{submission_id}")
 async def get_submission(submission_id: uuid.UUID, db: AsyncSession = Depends(get_db), user: User = Depends(authenticate)):

@@ -41,6 +41,25 @@ from .common import (
 
 router = APIRouter(prefix="/api/v1")
 
+
+@router.post("/training/start", status_code=202)
+async def start_training(
+    background: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_nonce),
+):
+    """Request an immediate audited training run without waiting for the scheduler."""
+    require_training_manager(user)
+    running = await db.scalar(select(ModelTrainingRun).where(ModelTrainingRun.status == "running"))
+    if running:
+        raise HTTPException(status.HTTP_409_CONFLICT, "A model training run is already active")
+    from backend.training_job import run
+
+    background.add_task(run)
+    await append_audit(db, user.id, "training_start_requested", "training", user.id)
+    await db.commit()
+    return {"status": "accepted", "execution": "background", "requested_by": user.id}
+
 @router.get("/courses", response_model=list[CourseOut])
 async def courses(db: AsyncSession = Depends(get_db), _: User = Depends(authenticate)):
     """Perform the courses operation."""

@@ -33,6 +33,7 @@ dependencies = [
   "chromadb>=0.5,<2",
   "sentence-transformers>=3,<6",
   "reportlab>=4,<5",
+  "pypdf>=5,<7",
 ]
 
 [project.optional-dependencies]
@@ -42,10 +43,10 @@ ml = [
   "datasets>=2.21,<4",
   "torch-xla>=2.3,<3; platform_system == 'Linux'",
 ]
-dev = ["pytest>=8,<9", "pytest-asyncio>=0.24,<1", "pytest-cov>=5,<7", "ruff>=0.6,<1"]
+dev = ["pytest>=8,<9", "pytest-asyncio>=0.24,<1", "pytest-cov>=5,<7", "pytest-json-report>=1.5,<2", "pytest-benchmark>=5,<6", "ruff>=0.6,<1"]
 
 [tool.setuptools.packages.find]
-include = ["backend*"]
+include = ["backend*", "ml*"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

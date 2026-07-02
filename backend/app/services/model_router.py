@@ -30,10 +30,12 @@ def select_models(query: str, profile: str | None = None, device: str | None = N
     complexity = query_complexity(query)
     economy = profile == "economy"
     embedding = settings.embedding_model_economy if economy else settings.embedding_model_quality
+    settings.require_allowed_model(embedding)
     reranker = None
     reason = "fast multilingual sentence embedding"
     if complexity >= 22:
         reranker = settings.reranker_model_mbert if economy else settings.reranker_model_xlm_roberta
+        settings.require_allowed_model(reranker)
         reason = "complex query: retrieve with sentence embeddings, then rerank with a multilingual cross-encoder"
     return ModelDecision(embedding, reranker, device or settings.compute_device, reason)
 
@@ -53,4 +55,3 @@ def resolve_torch_device(requested: str = "auto") -> str:
         return str(xm.xla_device())
     except ImportError:
         return "cpu"
-

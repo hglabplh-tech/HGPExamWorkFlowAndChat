@@ -17,7 +17,7 @@ from sqlalchemy.orm import selectinload
 
 from ..database import get_db
 from ..config import get_settings
-from ..models import Conversation, ConversationMember, Course, DisciplineScoringProfile, Document, Enrollment, ExamQuestion, Examination, GradeEvent, Message, ModelTrainingRun, OCSPQuery, PrivatePKI, ResearchInteraction, Role, SignatureValidation, Submission, TrainingExample, TrustList, User, UserCertificate, VideoResource
+from ..models import Conversation, ConversationMember, Course, DisciplineScoringProfile, Document, Enrollment, ExamGroup, ExamQuestion, Examination, GradeEvent, Message, ModelTrainingRun, OCSPQuery, PrivatePKI, ResearchInteraction, Role, SignatureValidation, Submission, TrainingExample, TrustList, User, UserCertificate, VideoResource
 from ..schemas import CertificateRevoke, ConversationCreate, CourseCreate, CourseOut, DeletionRequest, DocumentCreate, ExamDraftRequest, ExaminationCreate, ExaminationRelease, GradeOverride, InstructorReturn, MessageCreate, PrivatePKICreate, PublicKeyUpdate, QuestionCreate, ResearchQuestionCreate, ResearchVisibilityUpdate, ScoringProfileCreate, SearchResponse, SignatureValidationRequest, SubmissionCreate, SubmissionOut, TrainingApproval, TrustListCreate, TrustListDecision, UserCertificateAssign, UserCreate, UserUpdate, VideoCreate
 from ..security import authenticate, create_access_token, hash_password, require_nonce
 from ..services.audit import append_audit
@@ -31,23 +31,26 @@ from ..services.private_pki import verify_private_chain, verify_root
 from ..services.ocsp import parse_ocsp_request, sign_ocsp_response
 from ..services.search import hybrid_search
 from ..services.trust import TrustValidator, parse_etsi_trust_list
+from ..services.authorization import has_permission
+from ..services.grading_scales import convert_grades
+from ..services.multiple_choice import score_choice_answer
 
 
 def require_staff(user: User) -> None:
     """Perform the require staff operation."""
-    if user.role not in {Role.teacher, Role.staff, Role.admin}:
+    if not has_permission(user, "content.manage") and user.role != Role.teacher:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Staff permission required")
 
 
 def require_admin(user: User) -> None:
     """Perform the require admin operation."""
-    if user.role != Role.admin:
+    if not has_permission(user, "users.manage"):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Administrator permission required")
 
 
 def require_training_manager(user: User) -> None:
     """Perform the require training manager operation."""
-    if user.role not in {Role.staff, Role.admin}:
+    if not has_permission(user, "training.manage"):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Training-data manager permission required")
 
 
@@ -113,16 +116,22 @@ async def build_grade_proposal(db: AsyncSession, submission: Submission) -> dict
     results = []
     for question in questions:
         answer = str(submission.answers.get(str(question.id), ""))
-        result = await asyncio.to_thread(grade_answer, question, answer, profile)
+        if question.question_type in {"single_choice", "multiple_choice"}:
+            result = score_choice_answer(submission.answers.get(str(question.id), []), question.correct_options, question.max_score, question.partial_credit)
+        else:
+            result = await asyncio.to_thread(grade_answer, question, answer, profile)
         result["question_id"] = str(question.id)
         results.append(result)
+    total = round(sum(result["score"] for result in results), 3)
+    maximum = round(sum(result["max_score"] for result in results), 3)
     return {
         "profile_id": str(profile.id),
         "profile_version": profile.version,
         "discipline": profile.discipline,
         "questions": results,
-        "total": round(sum(result["score"] for result in results), 3),
-        "maximum": round(sum(result["max_score"] for result in results), 3),
+        "total": total,
+        "maximum": maximum,
+        "grade_conversions": convert_grades(total, maximum),
         "requires_teacher_review": any(result["requires_teacher_review"] for result in results),
         "status": "provisional",
     }
@@ -132,6 +141,7 @@ async def store_exam_report(db: AsyncSession, submission: Submission, examinatio
     """Perform the store exam report operation."""
     course = await db.get(Course, examination.course_id)
     student = await db.get(User, submission.student_id)
+    exam_group = await db.get(ExamGroup, submission.exam_group_id) if submission.exam_group_id else None
     questions = (await db.scalars(select(ExamQuestion).where(
         ExamQuestion.examination_id == examination.id,
     ).order_by(ExamQuestion.id))).all()
@@ -161,6 +171,7 @@ async def store_exam_report(db: AsyncSession, submission: Submission, examinatio
         "exam_title": examination.title,
         "exam_kind": examination.kind,
         "student_name": student.display_name,
+        "exam_group": f"{exam_group.label}: {exam_group.topic}" if exam_group else None,
         "course_title": f"{course.code} - {course.title}",
         "submitted_at": submission.submitted_at.isoformat(),
         "returned_at": submission.returned_at.isoformat() if submission.returned_at else None,
@@ -168,6 +179,8 @@ async def store_exam_report(db: AsyncSession, submission: Submission, examinatio
         "total_score": total,
         "maximum_score": maximum,
         "questions": question_rows,
+        "grade_conversions": convert_grades(total, maximum),
+        "academic_integrity_review": submission.academic_integrity_review,
         "exam_sha256": submission.content_sha256,
         "student_certificate_sha256": student_cert_hash,
         "student_signature_sha256": sha256_hex(submission.student_signature),

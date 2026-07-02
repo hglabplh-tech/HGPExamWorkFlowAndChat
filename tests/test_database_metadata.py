@@ -11,9 +11,19 @@ def test_required_workflow_tables_are_registered() -> None:
     required = {
         "users", "courses", "documents", "examinations", "exam_questions",
         "submissions", "grade_events", "conversations", "messages",
-        "audit_events", "training_examples", "trust_lists",
+        "audit_events", "training_examples", "trust_lists", "submission_confirmations",
+        "exam_groups", "exam_rule_sets", "thesauri",
     }
     assert required <= set(Base.metadata.tables)
+
+
+def test_thesaurus_columns_exist() -> None:
+    """Full-text thesauri are stored as JSON and can be activated globally."""
+    columns = set(Base.metadata.tables["thesauri"].columns.keys())
+    assert {
+        "name", "language", "source_format", "entries", "source_sha256",
+        "active", "created_by", "created_at",
+    } <= columns
 
 
 def test_submission_retention_and_signature_columns_exist() -> None:
@@ -23,4 +33,18 @@ def test_submission_retention_and_signature_columns_exist() -> None:
         "content_sha256", "student_signature", "student_certificate_pem",
         "retention_until", "legal_hold", "deleted_by", "deletion_reason",
         "instructor_signature", "instructor_certificate_pem", "report_sha256",
+        "correction_until", "supersedes_submission_id",
+        "academic_integrity_review",
+        "exam_group_id", "group_certificate_pem",
     } <= columns
+
+
+def test_user_permissions_are_persisted() -> None:
+    """Store explicit grants in addition to the user's base role."""
+    assert "permissions" in Base.metadata.tables["users"].columns
+
+
+def test_totp_columns_are_persisted() -> None:
+    """Users can opt into authenticator-app two-factor login."""
+    columns = set(Base.metadata.tables["users"].columns.keys())
+    assert {"totp_secret", "totp_enabled"} <= columns

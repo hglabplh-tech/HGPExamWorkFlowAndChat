@@ -26,6 +26,20 @@ class Examination(UUIDMixin, Base):
     released_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     closes_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     generation_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    group_mode: Mapped[bool] = mapped_column(Boolean, default=False)
+    rule_set_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("exam_rule_sets.id"), nullable=True)
+
+
+class ExamRuleSet(UUIDMixin, Base):
+    """Store a versioned, reviewable scoring and format rules file."""
+    __tablename__ = "exam_rule_sets"
+    __table_args__ = (UniqueConstraint("course_id", "name", "version"),)
+    course_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(200))
+    version: Mapped[int] = mapped_column(Integer)
+    rules: Mapped[dict] = mapped_column(JSONB)
+    created_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
 
 class ExamQuestion(UUIDMixin, Base):
@@ -37,6 +51,10 @@ class ExamQuestion(UUIDMixin, Base):
     required_keywords: Mapped[list] = mapped_column(JSONB, default=list)
     expected_facts: Mapped[list] = mapped_column(JSONB, default=list)
     max_score: Mapped[float] = mapped_column()
+    question_type: Mapped[str] = mapped_column(String(30), default="free_text", index=True)
+    choices: Mapped[list] = mapped_column(JSONB, default=list)
+    correct_options: Mapped[list] = mapped_column(JSONB, default=list)
+    partial_credit: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class DisciplineScoringProfile(UUIDMixin, Base):
@@ -85,6 +103,22 @@ class Submission(UUIDMixin, Base):
     report_pdf: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     report_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
     report_generated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    correction_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    supersedes_submission_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("submissions.id"), nullable=True)
+    academic_integrity_review: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    exam_group_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("exam_groups.id"), nullable=True, index=True)
+    group_certificate_pem: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+
+
+class SubmissionConfirmation(UUIDMixin, Base):
+    """Store a short-lived, one-use confirmation for a real exam file."""
+    __tablename__ = "submission_confirmations"
+    examination_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("examinations.id"), index=True)
+    student_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    content_sha256: Mapped[str] = mapped_column(String(64), index=True)
+    token_sha256: Mapped[str] = mapped_column(String(64), unique=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class GradeEvent(UUIDMixin, Base):

@@ -259,6 +259,114 @@ For a local/manual nightly run use:
 docker compose --profile tools run --rm trainer
 ```
 
+## Knowledge import, audio, and scheduled training
+
+Staff can upload PDF or UTF-8 text through `POST /api/v1/knowledge/upload`, merge or
+export versioned PostgreSQL bundles, or send a file and question together through
+`POST /api/v1/knowledge/upload-and-ask`. Imports are content-addressed with SHA-256:
+an existing hash is returned unchanged and only new content is inserted. Imported
+documents become training candidates and require staff approval before use.
+
+Full-text search can use an active JSON thesaurus. Staff can import Apache Solr-style
+synonym files through `POST /api/v1/thesauri/upload` with `source_format=solr_synonyms`
+or post normalized JSON to `POST /api/v1/thesauri`. Equivalent Solr lines such as
+`cpu, processor` expand in both directions; explicit mappings such as
+`usa => united states, america` expand only from the left side. The stored JSON can be
+listed with `GET /api/v1/thesauri` and exported with `GET /api/v1/thesauri/{id}.json`.
+`GET /api/v1/search` applies active thesauri by default and exposes the applied
+`query_expansion` terms in the response for auditability.
+
+Hybrid retrieval now combines PostgreSQL web-search ranking, dependency-free BM25,
+and semantic vector retrieval. Discipline profiles can weight the three channels as
+`full_text`, `bm25`, and `semantic`. Staff can export project vocabulary from approved
+knowledge through `GET /api/v1/knowledge/vocab.txt` or
+`GET /api/v1/knowledge/vocabulary.json`; the local mBERT and LSTM training scripts
+accept `--vocab-file` so model artifacts record the project vocabulary used.
+
+Knowledge imports run a trusted-source fact-check step before approval. The check
+uses `INTERNET_SEARCH_ENDPOINT`, `INTERNET_SEARCH_API_KEY`, and
+`TRUSTED_FACT_SOURCE_DOMAINS`; when no endpoint is configured the import is marked
+for manual review rather than silently trusted.
+
+The HTML5 frontend includes a GitHub-style administrator login with optional TOTP,
+TOTP enrollment controls, thesaurus import, vocabulary export links, chat bubbles,
+`@chatbot` room replies, score/research sharing fields, and a practice/real exam
+submission mask. Real-exam submission asks for confirmation, hashes the gathered
+answers and uploaded-file metadata, requests a confirmation token, and submits the
+signed evidence package through the existing REST submission flow.
+
+`POST /api/v1/audio/transcribe` uses an administrator-approved, freely available
+Whisper model on CPU. Its transcript can be used as a research question or an exam
+answer draft. Model IDs, timeouts, scoring weights, AdamW settings, authentication
+modes, signature algorithms, and certificate defaults are environment settings.
+Model availability is not permission to ingest arbitrary Internet material: staff
+must verify copyright, license, provenance, privacy, and consent.
+
+The Compose `training` profile runs at exact 48-hour intervals; the Kubernetes job
+runs at 02:00 every second calendar day. Only approved examples are used. The mBERT
+and CPU LSTM pipelines record loss/score progress and use dropout, deterministic
+sentence restructuring, shuffling, AdamW weight decay, smoothing/penalties, and
+gradient clipping to reduce shortcut learning.
+
+Run `python tools/run_test_reports.py` to create matching JSON and PDF reports with
+functional results, durations, and the bundled utility microbenchmarks.
+
+## Integrity review, notifications, and grading scales
+
+An instructor can call `POST /api/v1/submissions/{id}/academic-integrity-check`.
+The result stores separate Internet-similarity matches, basic APA author-year and
+reference-section checks, optional LanguageTool-compatible grammar findings, and
+the existing per-question fact-entailment/contradiction signals. Internet search
+uses an administrator-configured JSON search endpoint and API key; the application
+does not scrape search-engine pages. A similarity result is evidence for human
+review, never an automatic plagiarism finding.
+
+`POST /api/v1/training/start` requests immediate training in addition to the
+48-hour schedule. Imported documents remain training candidates until approved.
+mBERT and LSTM training use average validation/training loss for configurable early
+stopping. `POST /api/v1/notifications/email` sends audited scoring or question-answer
+notifications through an authenticated SMTP relay; message bodies are never placed
+in audit details.
+
+Users have a base role plus narrow explicit permissions. Reports show percentage,
+ECTS, an indicative German numeric grade, British classification, and US letter/GPA.
+European country entries expose ECTS as a common reference only. These values are
+not credential equivalencies: each institution's published scale and ECTS
+distribution table prevail.
+
+## Topic groups, group exams, rules, MCQ, and XML
+
+Instructors can call `POST /api/v1/courses/{course_id}/exam-groups/randomize` to
+create balanced, randomly assigned chatrooms for dedicated exam topics. Supplying
+the same seed reproduces an assignment for audit; omitting it creates a fresh secure
+seed. Each group is connected to its course and examination.
+
+For group examinations, an instructor registers an X.509 group certificate with
+`PUT /api/v1/exam-groups/{id}/certificate`. Its chain must validate against an
+enabled customer private PKI. The private key remains client-side. Submissions are
+accepted only from group members and must be signed by the registered certificate.
+
+Exam rule sets can be created as JSON or uploaded as a JSON rules file. They define
+page limits, topic, citation policy, and normalized weights for context, design,
+wording, and citations. Choice questions support single or multiple correct options
+and optional penalized partial credit. Course exams are always stored in PostgreSQL
+and can be exchanged through the versioned, entity-safe XML import/export endpoints;
+XML exports intentionally contain no student submissions or private evidence.
+
+Instructors can also create complete question-answer exams from a versioned JSON
+file or from the `/admin` examination builder. The builder has entry fields for
+question text, default/reference answer, points, keywords, facts, and choice options;
+the `+ Add question` button appends the next question, `Download JSON` saves the
+portable file, and `Create draft examination` imports it into PostgreSQL through
+`POST /api/v1/courses/{course_id}/examinations/from-json`. The same JSON can be
+uploaded with `POST /api/v1/courses/{course_id}/examinations/import.json` and
+exported again with `GET /api/v1/examinations/{id}/export.json`.
+
+Students can load released examinations by course in the main HTML5 page. Practice
+exams are submitted through the existing signed submission flow and receive ASAG
+feedback; real exams use the confirmation, hash, signature, and instructor-correction
+workflow before results are returned.
+
 ## Production work still required
 
 - Alembic migrations instead of automatic table creation
@@ -266,5 +374,5 @@ docker compose --profile tools run --rm trainer
 - background jobs for ASR, embeddings, Chroma indexing, and virus scanning
 - object storage for original documents and exam files
 - calibrated per-discipline grading against teacher-labelled evaluation sets
-- complete RAG answer generation, citations, ASR, and model monitoring
+- complete citation validation, ASR accuracy monitoring, and model-drift alerting
 - retention rules, consent, accessibility testing, backups, and monitoring

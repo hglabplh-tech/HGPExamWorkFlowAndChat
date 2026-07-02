@@ -10,8 +10,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..schemas import SearchHit, SearchResponse
 from ..config import get_settings
+from .bm25 import BM25Document, bm25_rank
 from .embeddings import encode
 from .search_ranking import HybridRanker
+from .thesaurus import expand_query
 
 
 def _semantic_search(query: str, course_id: uuid.UUID | None, limit: int, profile: str) -> list[SearchHit]:
@@ -45,9 +47,13 @@ async def hybrid_search(
     limit: int = 10,
     profile: str = "economy",
     weights: dict[str, float] | None = None,
+    thesaurus_entries: list[dict] | None = None,
 ) -> SearchResponse:
     """Perform the hybrid search operation."""
-    weights = weights or {"full_text": 0.4, "semantic": 0.6}
+    weights = weights or {"full_text": 0.35, "bm25": 0.20, "semantic": 0.45}
+    if "bm25" not in weights:
+        weights = {**weights, "bm25": 0.20}
+    lexical_query, expansion_terms = expand_query(query, thesaurus_entries or [])
     rows = (
         await db.execute(
             text("""
@@ -62,10 +68,28 @@ async def hybrid_search(
                   AND to_tsvector('simple', c.text) @@ websearch_to_tsquery('simple', :query)
                 ORDER BY score DESC LIMIT :limit
             """),
-            {"query": query, "course_id": str(course_id) if course_id else None, "limit": limit},
+            {"query": lexical_query, "course_id": str(course_id) if course_id else None, "limit": limit},
         )
     ).mappings().all()
     hits = [SearchHit(kind="document", **row) for row in rows]
+    bm25_rows = (
+        await db.execute(
+            text("""
+                SELECT d.id, d.title, c.text
+                FROM document_chunks c
+                JOIN documents d ON d.id = c.document_id
+                WHERE d.staff_approved = true
+                  AND (CAST(:course_id AS uuid) IS NULL OR d.course_id IS NULL OR d.course_id = CAST(:course_id AS uuid))
+                LIMIT 500
+            """),
+            {"course_id": str(course_id) if course_id else None},
+        )
+    ).mappings().all()
+    bm25_hits = bm25_rank(
+        lexical_query,
+        [BM25Document(id=row["id"], title=row["title"], text=row["text"]) for row in bm25_rows],
+        limit=limit,
+    )
 
     video_rows = (
         await db.execute(
@@ -88,6 +112,15 @@ async def hybrid_search(
     except Exception:
         semantic = []  # lexical search remains available while the derived index rebuilds
 
-    hits = HybridRanker.fuse({"full_text": hits, "semantic": semantic}, weights)
+    hits = HybridRanker.fuse({"full_text": hits, "bm25": bm25_hits, "semantic": semantic}, weights)
     warning = None if hits else "No approved sources cover this query yet; staff review is recommended."
-    return SearchResponse(query=query, results=hits[:limit], coverage_warning=warning)
+    return SearchResponse(
+        query=query,
+        results=hits[:limit],
+        coverage_warning=warning,
+        query_expansion={
+            "enabled": bool(thesaurus_entries),
+            "terms": expansion_terms,
+            "expanded_query": lexical_query if expansion_terms else query,
+        },
+    )

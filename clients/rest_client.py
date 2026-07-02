@@ -65,6 +65,39 @@ class HcpXmlWorkflowChatClient:
             "kind": "group",
         })
 
+    def randomize_exam_groups(self, course_id: str, examination_id: str, topics: list[str], group_size: int = 3, purpose: str = "exam_preparation", seed: str | None = None) -> dict:
+        """Create reproducible balanced topic groups for an examination."""
+        return self._write("POST", f"/api/v1/courses/{course_id}/exam-groups/randomize", {
+            "examination_id": examination_id, "topics": topics, "group_size": group_size,
+            "purpose": purpose, "seed": seed,
+        })
+
+    def assign_exam_group_certificate(self, group_id: str, certificate_pem: str, private_pki_id: str, reason: str) -> dict:
+        """Register a trusted X.509 certificate while retaining its private key locally."""
+        return self._write("PUT", f"/api/v1/exam-groups/{group_id}/certificate", {
+            "certificate_pem": certificate_pem, "private_pki_id": private_pki_id, "reason": reason,
+        })
+
+    def create_exam_rule_set(self, rules: dict) -> dict:
+        """Create a validated, versioned exam rule set."""
+        return self._write("POST", "/api/v1/exam-rule-sets", rules)
+
+    def export_exam_xml(self, examination_id: str) -> bytes:
+        """Download a course examination without submissions or private evidence."""
+        response = self.http.get(f"/api/v1/examinations/{examination_id}/export.xml")
+        response.raise_for_status()
+        return response.content
+
+    def import_exam_xml(self, course_id: str, xml_data: bytes, filename: str = "exam.xml") -> dict:
+        """Upload a versioned XML examination as a PostgreSQL draft."""
+        response = self.http.post(
+            f"/api/v1/courses/{course_id}/examinations/import.xml",
+            headers={"X-Request-Nonce": secrets.token_urlsafe(24)},
+            files={"file": (filename, xml_data, "application/xml")},
+        )
+        response.raise_for_status()
+        return response.json()
+
     def send_chat(
         self,
         conversation_id: str,

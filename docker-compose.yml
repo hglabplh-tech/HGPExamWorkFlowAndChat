@@ -42,6 +42,20 @@ services:
         condition: service_healthy
     volumes:
       - model_data:/models
+  training-scheduler:
+    build: .
+    env_file: .env
+    command: ["python", "-m", "backend.training_scheduler"]
+    environment:
+      NIGHTLY_TRAINING_MODE: train
+      TRAINING_INTERVAL_HOURS: "48"
+      MODEL_OUTPUT_DIR: /models
+    profiles: [training]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - model_data:/models
   ocsp-signer:
     build: .
     env_file: .env

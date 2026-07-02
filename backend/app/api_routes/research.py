@@ -17,7 +17,7 @@ from sqlalchemy.orm import selectinload
 
 from ..database import get_db
 from ..config import get_settings
-from ..models import Conversation, ConversationMember, Course, DisciplineScoringProfile, Document, Enrollment, ExamQuestion, Examination, GradeEvent, Message, ModelTrainingRun, OCSPQuery, PrivatePKI, ResearchInteraction, Role, SignatureValidation, Submission, TrainingExample, TrustList, User, UserCertificate, VideoResource
+from ..models import Conversation, ConversationMember, Course, DisciplineScoringProfile, Document, Enrollment, ExamQuestion, Examination, GradeEvent, Message, ModelTrainingRun, OCSPQuery, PrivatePKI, ResearchInteraction, Role, SignatureValidation, Submission, Thesaurus, TrainingExample, TrustList, User, UserCertificate, VideoResource
 from ..schemas import CertificateRevoke, ConversationCreate, CourseCreate, CourseOut, DeletionRequest, DocumentCreate, ExamDraftRequest, ExaminationCreate, ExaminationRelease, GradeOverride, InstructorReturn, MessageCreate, PrivatePKICreate, PublicKeyUpdate, QuestionCreate, ResearchQuestionCreate, ResearchVisibilityUpdate, ScoringProfileCreate, SearchResponse, SignatureValidationRequest, SubmissionCreate, SubmissionOut, TrainingApproval, TrustListCreate, TrustListDecision, UserCertificateAssign, UserCreate, UserUpdate, VideoCreate
 from ..security import authenticate, create_access_token, hash_password, require_nonce
 from ..services.audit import append_audit
@@ -45,6 +45,7 @@ router = APIRouter(prefix="/api/v1")
 async def search(
     q: str = Query(min_length=2, max_length=500),
     course_id: uuid.UUID | None = None,
+    use_thesaurus: bool = Query(default=True),
     db: AsyncSession = Depends(get_db),
     user: User = Depends(authenticate),
 ):
@@ -64,12 +65,18 @@ async def search(
                 DisciplineScoringProfile.discipline == course.discipline,
                 DisciplineScoringProfile.active.is_(True),
             ).order_by(DisciplineScoringProfile.version.desc()))
+    thesaurus_entries: list[dict] = []
+    if use_thesaurus:
+        thesauri = (await db.scalars(select(Thesaurus).where(Thesaurus.active.is_(True)))).all()
+        for thesaurus in thesauri:
+            thesaurus_entries.extend(thesaurus.entries)
     return await hybrid_search(
         db,
         q,
         course_id,
         profile=scoring_profile.semantic_profile if scoring_profile else "economy",
         weights=scoring_profile.search_weights if scoring_profile else None,
+        thesaurus_entries=thesaurus_entries,
     )
 
 
@@ -94,12 +101,17 @@ async def ask_research_question(
     if not course:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Course not found")
     profile = await active_scoring_profile(db, course)
+    thesaurus_entries: list[dict] = []
+    thesauri = (await db.scalars(select(Thesaurus).where(Thesaurus.active.is_(True)))).all()
+    for thesaurus in thesauri:
+        thesaurus_entries.extend(thesaurus.entries)
     answer, sources = await answer_research_question(
         db,
         course.id,
         data.question,
         profile.semantic_profile if profile else "economy",
         profile.search_weights if profile else None,
+        thesaurus_entries,
     )
     interaction = ResearchInteraction(
         course_id=course.id,

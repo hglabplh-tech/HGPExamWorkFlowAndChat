@@ -13,6 +13,7 @@ from .model_router import resolve_torch_device
 def components():
     """Perform the components operation."""
     settings = get_settings()
+    settings.require_allowed_model(settings.generation_model)
     device = resolve_torch_device(settings.compute_device)
     tokenizer = AutoTokenizer.from_pretrained(settings.generation_model)
     model = AutoModelForSeq2SeqLM.from_pretrained(settings.generation_model).to(device).eval()
@@ -27,4 +28,3 @@ def generate_text(prompt: str, maximum_tokens: int = 320) -> str:
     with torch.inference_mode():
         output = model.generate(**inputs, max_new_tokens=maximum_tokens, do_sample=False)
     return tokenizer.decode(output[0], skip_special_tokens=True).strip()
-

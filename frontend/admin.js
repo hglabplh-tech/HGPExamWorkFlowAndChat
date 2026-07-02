@@ -1,7 +1,22 @@
 /* Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License. */
-const token = sessionStorage.getItem("token");
+let token = sessionStorage.getItem("token");
 const headers = () => ({Authorization:`Bearer ${token}`});
 const nonce = () => crypto.getRandomValues(new Uint32Array(4)).join("-") + crypto.randomUUID();
+
+document.querySelector("#login-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const email=document.querySelector("#login-email").value;
+  const password=document.querySelector("#login-password").value;
+  const totp=document.querySelector("#login-totp").value.trim();
+  const auth=btoa(`${email}:${password}`);
+  const response=await fetch("/api/v1/auth/token",{method:"POST",headers:{Authorization:`Basic ${auth}`,...(totp?{"X-TOTP-Code":totp}:{})}});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok){document.querySelector("#login-status").textContent=data.detail||"Login failed";return;}
+  token=data.access_token;
+  sessionStorage.setItem("token",token);
+  document.querySelector("#login-status").textContent=`Signed in as ${data.display_name||email}`;
+  refresh(); refreshPki(); refreshScoring(); refreshThesauri();
+});
 
 async function refresh() {
   const target = document.querySelector("#trust-lists");
@@ -28,6 +43,15 @@ async function refreshScoring() {
   if(!response.ok){target.textContent=`Unable to load scoring profiles (${response.status})`;return;}
   const items=await response.json();
   target.innerHTML=items.map(item=>`<article class="result"><small>${item.discipline} · VERSION ${item.version}</small><h2>${item.active?"Active profile":"Historical profile"}</h2><p>Grading: ${escapeHtml(JSON.stringify(item.grading_weights))}</p><p>Search: ${escapeHtml(JSON.stringify(item.search_weights))}</p></article>`).join("")||'<div class="empty">No discipline profiles configured.</div>';
+}
+
+async function refreshThesauri() {
+  const target=document.querySelector("#thesaurus-list");
+  if(!token)return;
+  const response=await fetch("/api/v1/thesauri",{headers:headers()});
+  if(!response.ok){target.textContent=`Unable to load thesauri (${response.status})`;return;}
+  const items=await response.json();
+  target.innerHTML=items.map(item=>`<article class="result"><small>${escapeHtml(item.language)} · ${escapeHtml(item.source_format)}</small><h2>${escapeHtml(item.name)}</h2><p>${item.active?"active":"inactive"} · ${item.entries.length} entries</p><code>${item.source_sha256}</code></article>`).join("")||'<div class="empty">No thesaurus uploaded.</div>';
 }
 
 document.addEventListener("click",async event=>{
@@ -72,14 +96,107 @@ document.querySelector("#pki-form").addEventListener("submit", async event => {
 document.querySelector("#scoring-form").addEventListener("submit",async event=>{
   event.preventDefault();
   const number=id=>Number(document.querySelector(id).value);
-  const payload={discipline:document.querySelector("#score-discipline").value,semantic_profile:document.querySelector("#score-profile").value,grading_weights:{jaccard:number("#w-jaccard"),keywords:number("#w-keywords"),semantic:number("#w-semantic"),trained_scoring:number("#w-trained"),fact_entailment:number("#w-facts"),contradiction:number("#w-contradiction"),length:number("#w-length")},search_weights:{full_text:number("#w-fulltext"),semantic:number("#w-search-semantic")}};
+  const payload={discipline:document.querySelector("#score-discipline").value,semantic_profile:document.querySelector("#score-profile").value,grading_weights:{jaccard:number("#w-jaccard"),keywords:number("#w-keywords"),semantic:number("#w-semantic"),trained_scoring:number("#w-trained"),fact_entailment:number("#w-facts"),contradiction:number("#w-contradiction"),length:number("#w-length")},search_weights:{full_text:number("#w-fulltext"),bm25:number("#w-bm25"),semantic:number("#w-search-semantic")}};
   const response=await fetch("/api/v1/scoring-profiles",{method:"POST",headers:{...headers(),"Content-Type":"application/json","X-Request-Nonce":nonce()},body:JSON.stringify(payload)});
   const data=await response.json();
   document.querySelector("#scoring-status").textContent=response.ok?`Created ${data.discipline} profile version ${data.version}`:(data.detail||"Configuration failed");
   if(response.ok)refreshScoring();
 });
 
+document.querySelector("#totp-setup").addEventListener("click",async()=>{
+  const response=await fetch("/api/v1/users/me/totp/setup",{method:"POST",headers:{...headers(),"X-Request-Nonce":nonce()}});
+  const data=await response.json();
+  document.querySelector("#totp-secret").textContent=response.ok?`Secret: ${data.secret}\nURI: ${data.otpauth_uri}`:(data.detail||"TOTP setup failed");
+});
+
+document.querySelector("#totp-verify-form").addEventListener("submit",async event=>{
+  event.preventDefault();
+  const response=await fetch("/api/v1/users/me/totp/verify",{method:"POST",headers:{...headers(),"Content-Type":"application/json","X-Request-Nonce":nonce()},body:JSON.stringify({code:document.querySelector("#totp-code").value})});
+  const data=await response.json().catch(()=>({}));
+  alert(response.ok?"TOTP is enabled":(data.detail||"TOTP verification failed"));
+});
+
+document.querySelector("#thesaurus-form").addEventListener("submit",async event=>{
+  event.preventDefault();
+  const form=new FormData();
+  form.append("file",document.querySelector("#thesaurus-file").files[0]);
+  form.append("name",document.querySelector("#thesaurus-name").value);
+  form.append("language",document.querySelector("#thesaurus-language").value);
+  form.append("source_format",document.querySelector("#thesaurus-format").value);
+  const response=await fetch("/api/v1/thesauri/upload",{method:"POST",headers:{...headers(),"X-Request-Nonce":nonce()},body:form});
+  const data=await response.json().catch(()=>({}));
+  document.querySelector("#thesaurus-status").textContent=response.ok?`Imported ${data.entries.length} entries`:(data.detail||"Import failed");
+  if(response.ok)refreshThesauri();
+});
+
+function addExamQuestion(values={}) {
+  const list=document.querySelector("#exam-question-list");
+  const index=list.children.length+1;
+  const node=document.createElement("fieldset");
+  node.className="question-card";
+  node.innerHTML=`<legend>Question ${index}</legend>
+    <label>Question text<textarea class="exam-prompt" rows="3" required>${escapeHtml(values.prompt||"")}</textarea></label>
+    <label>Default / reference answer<textarea class="exam-reference" rows="3" required>${escapeHtml(values.reference_answer||"")}</textarea></label>
+    <label>Points<input class="exam-points" type="number" min="0.1" max="1000" step="0.1" value="${values.max_score||10}"></label>
+    <label>Required keywords, comma separated<input class="exam-keywords" value="${escapeHtml((values.required_keywords||[]).join(", "))}"></label>
+    <label>Expected facts, one per line<textarea class="exam-facts" rows="2">${escapeHtml((values.expected_facts||[]).join("\n"))}</textarea></label>
+    <label>Type<select class="exam-question-type"><option value="free_text">Free text</option><option value="single_choice">Single choice</option><option value="multiple_choice">Multiple choice</option></select></label>
+    <label>Choices, one per line<textarea class="exam-choices" rows="2">${escapeHtml((values.choices||[]).join("\n"))}</textarea></label>
+    <label>Correct choices, one per line<textarea class="exam-correct" rows="2">${escapeHtml((values.correct_options||[]).join("\n"))}</textarea></label>
+    <label><input class="exam-partial" type="checkbox" ${values.partial_credit?"checked":""}> Penalized partial credit</label>
+    <button type="button" class="remove-question">Remove</button>`;
+  node.querySelector(".exam-question-type").value=values.question_type||"free_text";
+  list.appendChild(node);
+}
+
+function examPayload() {
+  const lines=value=>value.split(/\n+/).map(item=>item.trim()).filter(Boolean);
+  const csv=value=>value.split(",").map(item=>item.trim()).filter(Boolean);
+  return {
+    format:"hcp-xml-workflow-chat/exam-json-v1",
+    title:document.querySelector("#exam-title").value,
+    instructions:document.querySelector("#exam-instructions").value,
+    kind:document.querySelector("#exam-kind").value,
+    group_mode:document.querySelector("#exam-group-mode").checked,
+    questions:[...document.querySelectorAll(".question-card")].map(card=>({
+      prompt:card.querySelector(".exam-prompt").value,
+      reference_answer:card.querySelector(".exam-reference").value,
+      required_keywords:csv(card.querySelector(".exam-keywords").value),
+      expected_facts:lines(card.querySelector(".exam-facts").value),
+      max_score:Number(card.querySelector(".exam-points").value),
+      question_type:card.querySelector(".exam-question-type").value,
+      choices:lines(card.querySelector(".exam-choices").value),
+      correct_options:lines(card.querySelector(".exam-correct").value),
+      partial_credit:card.querySelector(".exam-partial").checked,
+    })),
+  };
+}
+
+document.querySelector("#add-exam-question").addEventListener("click",()=>addExamQuestion());
+document.querySelector("#exam-question-list").addEventListener("click",event=>{
+  const button=event.target.closest(".remove-question");
+  if(button)button.closest(".question-card").remove();
+});
+document.querySelector("#download-exam-json").addEventListener("click",()=>{
+  const blob=new Blob([JSON.stringify(examPayload(),null,2)],{type:"application/json"});
+  const link=document.createElement("a");
+  link.href=URL.createObjectURL(blob);
+  link.download=`${document.querySelector("#exam-title").value||"examination"}.json`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+});
+document.querySelector("#exam-builder-form").addEventListener("submit",async event=>{
+  event.preventDefault();
+  const payload=examPayload();
+  const courseId=document.querySelector("#exam-course-id").value.trim();
+  const response=await fetch(`/api/v1/courses/${courseId}/examinations/from-json`,{method:"POST",headers:{...headers(),"Content-Type":"application/json","X-Request-Nonce":nonce()},body:JSON.stringify(payload)});
+  const data=await response.json().catch(()=>({}));
+  document.querySelector("#exam-builder-status").textContent=response.ok?`Draft exam created: ${data.id} with ${data.questions} questions`:(data.detail||"Exam creation failed");
+});
+
 function escapeHtml(value) { const node=document.createElement("span"); node.textContent=value || ""; return node.innerHTML; }
+addExamQuestion();
 refresh();
 refreshPki();
 refreshScoring();
+refreshThesauri();

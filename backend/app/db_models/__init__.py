@@ -4,9 +4,9 @@ Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """
 from .base import Base, Role, UUIDMixin
 from .identity import Course, Enrollment, User
-from .knowledge import Document, DocumentChunk, VideoResource
-from .examinations import DisciplineScoringProfile, Examination, ExamQuestion, GradeEvent, Submission
-from .collaboration import Conversation, ConversationMember, Message, ResearchInteraction
+from .knowledge import Document, DocumentChunk, Thesaurus, VideoResource
+from .examinations import DisciplineScoringProfile, Examination, ExamQuestion, ExamRuleSet, GradeEvent, Submission, SubmissionConfirmation
+from .collaboration import Conversation, ConversationMember, ExamGroup, Message, ResearchInteraction
 from .training import ModelTrainingRun, TrainingExample
 from .audit import AuditEvent, RequestNonce
 from .trust import OCSPQuery, PrivatePKI, SignatureValidation, TrustList, UserCertificate

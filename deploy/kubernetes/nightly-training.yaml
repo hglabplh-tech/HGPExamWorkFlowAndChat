@@ -13,7 +13,7 @@ kind: CronJob
 metadata:
   name: hcp-xml-workflow-chat-nightly-training
 spec:
-  schedule: "0 2 * * *"
+  schedule: "0 2 */2 * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3

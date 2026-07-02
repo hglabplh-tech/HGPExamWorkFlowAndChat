@@ -21,6 +21,7 @@ def model_for_profile(profile: str) -> str:
 @lru_cache(maxsize=4)
 def encoder(model_name: str, requested_device: str) -> SentenceTransformer:
     """Perform the encoder operation."""
+    get_settings().require_allowed_model(model_name)
     return SentenceTransformer(model_name, device=resolve_torch_device(requested_device))
 
 

@@ -16,6 +16,7 @@ async def answer_research_question(
     question: str,
     semantic_profile: str,
     search_weights: dict[str, float] | None,
+    thesaurus_entries: list[dict] | None = None,
 ) -> tuple[str, list[dict]]:
     """Perform the answer research question operation."""
     retrieved = await hybrid_search(
@@ -25,6 +26,7 @@ async def answer_research_question(
         limit=8,
         profile=semantic_profile,
         weights=search_weights,
+        thesaurus_entries=thesaurus_entries,
     )
     shared = (
         await db.execute(

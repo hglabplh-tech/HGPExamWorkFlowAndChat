@@ -10,8 +10,21 @@ h1,h2 { font-family:Georgia,serif; } h1 { font-size:clamp(2rem,5vw,4.5rem); line
 h2 { font-size:18px; }.course { width:100%; padding:12px; margin:4px 0; border:0; border-radius:8px; text-align:left; background:transparent; }.course.active { background:white; color:var(--sea); }
 .workspace { padding:clamp(24px,5vw,72px); }.eyebrow { letter-spacing:.15em; color:var(--sea); font-size:12px; font-weight:700; }
 form { display:flex; gap:8px; } input { width:100%; border:1px solid #c9c0af; border-radius:8px; padding:13px; font:inherit; background:white; } button { border:0; border-radius:8px; padding:12px 18px; color:white; background:var(--accent); font-weight:700; cursor:pointer; }
+textarea,select { width:100%; border:1px solid #c9c0af; border-radius:8px; padding:13px; font:inherit; background:white; }
+.stack-form { display:grid; gap:10px; }
+.login-card { max-width:420px; margin:40px auto; padding:28px; border:1px solid #d8d1c2; border-radius:14px; background:white; box-shadow:0 10px 30px #17233b18; }
+.side-card { padding:12px; margin-bottom:18px; border-radius:12px; background:white; }
+.admin-panel,.exam-card { margin:28px 0; padding:24px; border-radius:14px; background:#fffaf0; border:1px solid #e2d7c4; }
+.question-builder { display:grid; gap:14px; }
+.question-card { display:grid; gap:10px; padding:16px; border:1px solid #d8d1c2; border-radius:12px; background:white; }
+.question-card legend { font-weight:700; color:var(--sea); }
 #results { margin-top:30px; display:grid; gap:12px; }.result,.empty { padding:20px; border-radius:12px; background:white; box-shadow:0 8px 25px #17233b10; }.result a { color:var(--sea); }
 #messages { min-height:220px; }.warning { border-left:4px solid var(--accent); }
+.chat-window { display:grid; gap:10px; margin:14px 0; max-height:52vh; overflow:auto; }
+.bubble { padding:12px 14px; border-radius:16px; background:white; box-shadow:0 6px 20px #17233b12; }
+.bubble.user { border-bottom-right-radius:4px; }
+.bubble.bot { background:#e8f4f2; border-bottom-left-radius:4px; }
+.bubble p { margin:.3em 0; }
 aside form { position:sticky; top:20px; flex-direction:column; }
 @media (max-width:900px) { main { grid-template-columns:1fr; } nav { display:none; } aside { border:0; } }
 .admin-layout { display:block; max-width:1000px; margin:auto; }.admin-form { display:grid; gap:14px; max-width:620px; }.admin-form label { display:grid; gap:6px; font-weight:700; }.admin-form select { padding:13px; border:1px solid #c9c0af; border-radius:8px; background:white; }

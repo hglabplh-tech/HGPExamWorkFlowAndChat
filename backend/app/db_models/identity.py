@@ -20,7 +20,10 @@ class User(UUIDMixin, Base):
     display_name: Mapped[str] = mapped_column(String(120))
     password_hash: Mapped[str]
     role: Mapped[Role] = mapped_column(Enum(Role), default=Role.student)
+    permissions: Mapped[list] = mapped_column(JSONB, default=list)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
+    totp_secret: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    totp_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     signing_public_key: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     client_cert_fingerprint: Mapped[str | None] = mapped_column(String(128), unique=True, nullable=True)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

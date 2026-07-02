@@ -10,7 +10,29 @@
 <body>
   <header><strong>HcpXmlWorkflowChat</strong><span>Trust administration</span></header>
   <main class="admin-layout">
+    <section class="login-card" id="login-card">
+      <p class="eyebrow">ADMIN LOGIN</p>
+      <h1>Sign in to HcpXmlWorkflowChat</h1>
+      <form id="login-form" class="stack-form">
+        <label>Email<input id="login-email" type="email" autocomplete="username" required></label>
+        <label>Password<input id="login-password" type="password" autocomplete="current-password" required></label>
+        <label>TOTP code<input id="login-totp" inputmode="numeric" pattern="[0-9]{6}" placeholder="123456"></label>
+        <button>Sign in</button>
+      </form>
+      <p id="login-status" aria-live="polite"></p>
+    </section>
     <section class="workspace">
+      <section class="admin-panel">
+        <p class="eyebrow">SECURITY</p>
+        <h1>Two-factor login</h1>
+        <p>Generate a TOTP key for the signed-in administrator, add it to an authenticator app, then verify the six-digit code.</p>
+        <button id="totp-setup">Generate TOTP key</button>
+        <pre id="totp-secret"></pre>
+        <form id="totp-verify-form" class="admin-form">
+          <label>Authenticator code<input id="totp-code" inputmode="numeric" pattern="[0-9]{6}"></label>
+          <button>Enable TOTP</button>
+        </form>
+      </section>
       <p class="eyebrow">CERTIFICATES AND SIGNATURES</p>
       <h1>Trusted lists</h1>
       <p>Upload a signed ETSI TS 119 612 v5/v6 private trusted list. Official EU trust is synchronized by the configured validation service and cannot be declared through an upload.</p>
@@ -47,13 +69,43 @@
         <label>Fact-entailment weight<input id="w-facts" type="number" min="0" max="1" step="0.01" value="0.20"></label>
         <label>Contradiction-safety weight<input id="w-contradiction" type="number" min="0" max="1" step="0.01" value="0.10"></label>
         <label>Answer-length weight<input id="w-length" type="number" min="0" max="1" step="0.01" value="0.10"></label>
-        <label>Full-text search weight<input id="w-fulltext" type="number" min="0" max="1" step="0.01" value="0.40"></label>
-        <label>Semantic search weight<input id="w-search-semantic" type="number" min="0" max="1" step="0.01" value="0.60"></label>
+        <label>PostgreSQL full-text search weight<input id="w-fulltext" type="number" min="0" max="1" step="0.01" value="0.35"></label>
+        <label>BM25 search weight<input id="w-bm25" type="number" min="0" max="1" step="0.01" value="0.20"></label>
+        <label>Semantic search weight<input id="w-search-semantic" type="number" min="0" max="1" step="0.01" value="0.45"></label>
         <label>Model profile<select id="score-profile"><option value="economy">Economy</option><option value="quality">Quality</option></select></label>
         <button>Create new version</button>
       </form>
       <div id="scoring-status" aria-live="polite"></div>
       <div id="scoring-list"></div>
+      <hr>
+      <p class="eyebrow">EXAMINATION CREATION</p>
+      <h1>Question-answer exam builder</h1>
+      <p>Only instructors, staff, or administrators can create examinations. The builder creates a versioned JSON exam file and imports it into PostgreSQL as a draft.</p>
+      <form id="exam-builder-form" class="admin-form">
+        <label>Course ID<input id="exam-course-id" required placeholder="Course UUID"></label>
+        <label>Title<input id="exam-title" required placeholder="Programming Apple Silicon M3"></label>
+        <label>Instructions<textarea id="exam-instructions" rows="3" placeholder="Answer all questions."></textarea></label>
+        <label>Kind<select id="exam-kind"><option value="practice">Practice / test exam with ASAG feedback</option><option value="real">Real exam corrected by instructor</option></select></label>
+        <label><input id="exam-group-mode" type="checkbox"> Group examination</label>
+        <div id="exam-question-list" class="question-builder"></div>
+        <button type="button" id="add-exam-question">+ Add question</button>
+        <button type="button" id="download-exam-json">Download JSON</button>
+        <button>Create draft examination</button>
+      </form>
+      <div id="exam-builder-status" aria-live="polite"></div>
+      <hr>
+      <p class="eyebrow">SEARCH LANGUAGE</p>
+      <h1>Thesaurus and vocabulary</h1>
+      <form id="thesaurus-form" class="admin-form">
+        <label>Name<input id="thesaurus-name" required placeholder="computer-science-en"></label>
+        <label>Language<input id="thesaurus-language" value="simple"></label>
+        <label>Format<select id="thesaurus-format"><option value="solr_synonyms">Apache Solr synonyms</option><option value="json">Normalized JSON</option></select></label>
+        <label>Thesaurus file<input id="thesaurus-file" type="file" accept=".txt,.json,text/plain,application/json" required></label>
+        <button>Import thesaurus</button>
+      </form>
+      <p><a href="/api/v1/knowledge/vocab.txt" id="vocab-link">Download vocab.txt</a> · <a href="/api/v1/knowledge/vocabulary.json" id="vocab-json-link">Download vocabulary.json</a></p>
+      <div id="thesaurus-status" aria-live="polite"></div>
+      <div id="thesaurus-list"></div>
     </section>
   </main>
   <script src="/static/admin.js"></script>
