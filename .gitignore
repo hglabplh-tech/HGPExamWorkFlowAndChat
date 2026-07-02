@@ -24,3 +24,9 @@ private-pki/
 *.csr
 *.srl
 deploy/kubernetes/secret.yaml
+clients/native/android/
+clients/native/ios/
+clients/native/node_modules/
+clients/native/package-lock.json
+clients/native/src-tauri/target/
+clients/native/www/

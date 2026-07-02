@@ -96,12 +96,12 @@ async def create_user(data: UserCreate, db: AsyncSession = Depends(get_db), admi
         permissions = validate_permissions(data.permissions)
     except ValueError as error:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(error)) from error
-    user = User(email=data.email, display_name=data.display_name, password_hash=hash_password(data.password), role=role, permissions=permissions)
+    user = User(email=data.email, display_name=data.display_name, matriculation_number=data.matriculation_number, password_hash=hash_password(data.password), role=role, permissions=permissions)
     db.add(user)
     await db.flush()
     await append_audit(db, admin.id, "user_created", "user", user.id, details={"role": role.value})
     await db.commit()
-    return {"id": user.id, "email": user.email, "role": user.role, "permissions": user.permissions}
+    return {"id": user.id, "email": user.email, "display_name": user.display_name, "matriculation_number": user.matriculation_number, "role": user.role, "permissions": user.permissions}
 
 
 @router.get("/users")
@@ -109,7 +109,7 @@ async def list_users(db: AsyncSession = Depends(get_db), admin: User = Depends(a
     """Perform the list users operation."""
     require_admin(admin)
     users = (await db.scalars(select(User).order_by(User.email))).all()
-    return [{"id": user.id, "email": user.email, "display_name": user.display_name, "role": user.role, "permissions": user.permissions, "active": user.active} for user in users]
+    return [{"id": user.id, "email": user.email, "display_name": user.display_name, "matriculation_number": user.matriculation_number, "role": user.role, "permissions": user.permissions, "active": user.active} for user in users]
 
 
 @router.patch("/users/{user_id}")

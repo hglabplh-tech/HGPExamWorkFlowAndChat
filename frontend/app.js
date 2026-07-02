@@ -3,6 +3,10 @@ const state = { token: sessionStorage.getItem("token"), courseId: null };
 const results = document.querySelector("#results");
 const nonce = () => crypto.getRandomValues(new Uint32Array(4)).join("-") + crypto.randomUUID();
 const authHeaders = () => ({Authorization:`Bearer ${state.token}`});
+const apiBase = () => (window.HCP_CLIENT_CONFIG && window.HCP_CLIENT_CONFIG.apiBase) || "";
+const apiUrl = path => `${apiBase()}${path}`;
+let recorder = null;
+let recordedChunks = [];
 
 document.querySelector("#login-form").addEventListener("submit", async event => {
   event.preventDefault();
@@ -15,7 +19,7 @@ document.querySelector("#login-form").addEventListener("submit", async event => 
   state.token=data.access_token;
   sessionStorage.setItem("token",state.token);
   document.querySelector("#login-status").textContent=`Signed in as ${data.display_name||email}`;
-  loadConversations();
+  loadCourses(); loadConversations();
 });
 
 document.querySelector("#search-form").addEventListener("submit", async (event) => {
@@ -32,12 +36,31 @@ document.querySelector("#search-form").addEventListener("submit", async (event) 
 });
 
 function escapeHtml(value) { const node=document.createElement("span"); node.textContent=value || ""; return node.innerHTML; }
+async function loadCourses(){
+  if(!state.token)return;
+  const response=await fetch("/api/v1/courses",{headers:authHeaders()});
+  const courses=await response.json().catch(()=>[]);
+  const target=document.querySelector("#course-list");
+  if(!response.ok){target.innerHTML='<div class="result warning">Could not load courses.</div>';return;}
+  target.innerHTML=courses.map(course=>`<button class="course" data-id="${course.id}">${escapeHtml(course.title)} · ${escapeHtml(course.code)}</button>`).join("")||'<div class="empty">No courses available.</div>';
+}
+
+document.querySelector("#course-list").addEventListener("click",event=>{
+  const button=event.target.closest(".course");
+  if(!button)return;
+  document.querySelectorAll(".course").forEach(item=>item.classList.remove("active"));
+  button.classList.add("active");
+  state.courseId=button.dataset.id;
+  document.querySelector(".hero .eyebrow").textContent=`${button.textContent} · EXAM PREPARATION`;
+});
+
 async function loadConversations(){
   if(!state.token)return;
   const response=await fetch("/api/v1/conversations",{headers:authHeaders()});
   if(!response.ok)return;
   const items=await response.json();
   document.querySelector("#conversation-select").innerHTML='<option value="">Select a chat room</option>'+items.map(item=>`<option value="${item.id}">${escapeHtml(item.title)}${item.topic?` · ${escapeHtml(item.topic)}`:""}</option>`).join("");
+  document.querySelector("#chatroom-list").innerHTML=items.map(item=>`<button class="chatroom" data-id="${item.id}">${escapeHtml(item.title)}</button>`).join("")||'<div class="empty">No private or group chats.</div>';
 }
 
 async function loadMessages(){
@@ -46,10 +69,20 @@ async function loadMessages(){
   const response=await fetch(`/api/v1/conversations/${id}/messages`,{headers:authHeaders()});
   if(!response.ok)return;
   const messages=await response.json();
-  document.querySelector("#messages").innerHTML=messages.map(item=>`<article class="bubble ${item.sender_name==="Chatbot"?"bot":"user"}"><small>${escapeHtml(item.sender_name)}</small><p>${escapeHtml(item.body)}</p>${item.shared_type?`<em>Shared ${escapeHtml(item.shared_type)}: ${escapeHtml(item.shared_id)}</em>`:""}</article>`).join("")||'<div class="empty">No messages yet.</div>';
+  document.querySelector("#messages").innerHTML=messages.map(item=>`<article class="bubble ${item.sender_name==="Chatbot"?"bot":"user"}"><small>${escapeHtml(item.sender_name)}</small><p>${escapeHtml(item.body)}</p>${renderAttachments(item.attachments||[])}${item.shared_type?`<em>Shared ${escapeHtml(item.shared_type)}: ${escapeHtml(item.shared_id)}</em>`:""}</article>`).join("")||'<div class="empty">No messages yet.</div>';
+}
+
+function renderAttachments(items){
+  return items.length?`<ul class="attachments">${items.map(item=>`<li>${escapeHtml(item.kind||"file")}: ${escapeHtml(item.filename)}${item.transcript?`<br><em>${escapeHtml(item.transcript)}</em>`:""}</li>`).join("")}</ul>`:"";
 }
 
 document.querySelector("#conversation-select").addEventListener("change",loadMessages);
+document.querySelector("#chatroom-list").addEventListener("click",event=>{
+  const button=event.target.closest(".chatroom");
+  if(!button)return;
+  document.querySelector("#conversation-select").value=button.dataset.id;
+  loadMessages();
+});
 
 document.querySelector("#chat-form").addEventListener("submit", async event => {
   event.preventDefault();
@@ -58,16 +91,29 @@ document.querySelector("#chat-form").addEventListener("submit", async event => {
     document.querySelector("#messages").insertAdjacentHTML("beforeend", '<p><b>Chat</b><br>Select a chat room and sign in first.</p>');
     return;
   }
-  const payload={body:document.querySelector("#chat-message").value,shared_type:document.querySelector("#share-type").value||null,shared_id:document.querySelector("#share-id").value||null};
-  const response=await fetch(`/api/v1/conversations/${conversationId}/messages`,{method:"POST",headers:{...authHeaders(),"Content-Type":"application/json","X-Request-Nonce":nonce()},body:JSON.stringify(payload)});
+  const files=[...document.querySelector("#chat-files").files];
+  let response;
+  if(files.length){
+    const form=new FormData();
+    form.append("body",document.querySelector("#chat-message").value);
+    if(document.querySelector("#share-type").value)form.append("shared_type",document.querySelector("#share-type").value);
+    if(document.querySelector("#share-id").value)form.append("shared_id",document.querySelector("#share-id").value);
+    files.forEach(file=>form.append("files",file));
+    response=await fetch(`/api/v1/conversations/${conversationId}/messages/upload`,{method:"POST",headers:{...authHeaders(),"X-Request-Nonce":nonce()},body:form});
+  }else{
+    const payload={body:document.querySelector("#chat-message").value,shared_type:document.querySelector("#share-type").value||null,shared_id:document.querySelector("#share-id").value||null};
+    response=await fetch(`/api/v1/conversations/${conversationId}/messages`,{method:"POST",headers:{...authHeaders(),"Content-Type":"application/json","X-Request-Nonce":nonce()},body:JSON.stringify(payload)});
+  }
   if(!response.ok){const data=await response.json().catch(()=>({}));alert(data.detail||"Message failed");return;}
   document.querySelector("#chat-message").value="";
+  document.querySelector("#chat-files").value="";
   loadMessages();
 });
 
 async function loadExams(){
   if(!state.token){document.querySelector("#exam-status").textContent="Sign in first.";return;}
-  const courseId=document.querySelector("#student-course-id").value.trim();
+  const courseId=state.courseId;
+  if(!courseId){document.querySelector("#exam-status").textContent="Select a course first.";return;}
   const response=await fetch(`/api/v1/courses/${courseId}/examinations`,{headers:authHeaders()});
   const items=await response.json().catch(()=>[]);
   if(!response.ok){document.querySelector("#exam-status").textContent=items.detail||"Could not load examinations";return;}
@@ -86,6 +132,7 @@ function renderSelectedExam(){
     <legend>Question ${index+1} · ${question.max_score} points</legend>
     <p>${escapeHtml(question.prompt)}</p>
     ${question.choices?.length?question.choices.map(choice=>`<label><input name="q-${question.id}" value="${escapeHtml(choice)}" type="${question.question_type==="multiple_choice"?"checkbox":"radio"}"> ${escapeHtml(choice)}</label>`).join(""):`<textarea class="student-answer" rows="4" placeholder="Your answer"></textarea>`}
+    <button type="button" class="score-question">Submit question</button>
   </fieldset>`).join("");
   updateAnswersJson();
 }
@@ -108,6 +155,79 @@ document.querySelector("#load-exams").addEventListener("click",loadExams);
 document.querySelector("#exam-select").addEventListener("change",renderSelectedExam);
 document.querySelector("#exam-question-fields").addEventListener("input",updateAnswersJson);
 document.querySelector("#exam-question-fields").addEventListener("change",updateAnswersJson);
+document.querySelector("#exam-question-fields").addEventListener("click",async event=>{
+  const button=event.target.closest(".score-question");
+  if(!button)return;
+  updateAnswersJson();
+  const exam=JSON.parse(document.querySelector("#exam-answers").value||"{}");
+  const card=button.closest(".question-card");
+  const questionId=card.dataset.questionId;
+  const examinationId=document.querySelector("#exam-id").value;
+  const response=await fetch(`/api/v1/examinations/${examinationId}/questions/${questionId}/score-draft`,{method:"POST",headers:{...authHeaders(),"Content-Type":"application/json","X-Request-Nonce":nonce()},body:JSON.stringify({answer:exam[questionId]})});
+  const data=await response.json().catch(()=>({}));
+  const target=document.querySelector("#score-results");
+  target.insertAdjacentHTML("afterbegin",response.ok?`<article class="result"><small>${questionId}</small><h2>${data.score} / ${data.max_score}</h2><p>${escapeHtml(data.feedback||JSON.stringify(data.signals||{}))}</p></article>`:`<article class="result warning">${escapeHtml(data.detail||"Scoring failed")}</article>`);
+});
+
+document.querySelector("#chat-plus").addEventListener("click",()=>document.querySelector("#chat-files").click());
+document.querySelector("#chat-files").addEventListener("change",event=>{
+  const files=[...event.target.files].map(file=>file.name).join(", ");
+  if(files)document.querySelector("#chat-message").value+=` [attached: ${files}]`;
+});
+document.querySelector("#chat-mic").addEventListener("click",async()=>{
+  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SpeechRecognition){
+    const blob=await recordOnePhrase();
+    if(!blob)return;
+    const form=new FormData();
+    form.append("file",new File([blob],"dictation.webm",{type:blob.type||"audio/webm"}));
+    const response=await fetch("/api/v1/audio/transcribe",{method:"POST",headers:authHeaders(),body:form});
+    const data=await response.json().catch(()=>({}));
+    document.querySelector("#chat-message").value+=` ${response.ok?data.transcript:(data.detail||"")}`;
+    return;
+  }
+  const recognition=new SpeechRecognition();
+  recognition.lang=navigator.language||"en-US";
+  recognition.onresult=event=>{document.querySelector("#chat-message").value+=` ${event.results[0][0].transcript}`;};
+  recognition.start();
+});
+
+document.querySelector("#chat-audio-send").addEventListener("click",async()=>{
+  const conversationId=document.querySelector("#conversation-select").value;
+  if(!state.token||!conversationId){alert("Select a chat room and sign in first.");return;}
+  const blob=await recordOnePhrase();
+  if(!blob)return;
+  const form=new FormData();
+  form.append("body",document.querySelector("#chat-message").value||"Audio message");
+  form.append("files",new File([blob],"spoken-message.webm",{type:blob.type||"audio/webm"}));
+  const response=await fetch(`/api/v1/conversations/${conversationId}/messages/upload`,{method:"POST",headers:{...authHeaders(),"X-Request-Nonce":nonce()},body:form});
+  if(!response.ok){const data=await response.json().catch(()=>({}));alert(data.detail||"Audio send failed");return;}
+  loadMessages();
+});
+
+async function recordOnePhrase(){
+  if(!navigator.mediaDevices||!window.MediaRecorder){alert("Audio recording is not available in this browser.");return null;}
+  if(recorder&&recorder.state==="recording"){recorder.stop();return null;}
+  const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+  recordedChunks=[];
+  recorder=new MediaRecorder(stream);
+  const done=new Promise(resolve=>{
+    recorder.ondataavailable=event=>{if(event.data.size)recordedChunks.push(event.data);};
+    recorder.onstop=()=>{stream.getTracks().forEach(track=>track.stop());resolve(new Blob(recordedChunks,{type:"audio/webm"}));};
+  });
+  recorder.start();
+  alert("Recording started. Press OK, then speak. Recording stops automatically after 5 seconds.");
+  setTimeout(()=>{if(recorder.state==="recording")recorder.stop();},5000);
+  return done;
+}
+
+document.querySelector("#chat-emoji").addEventListener("click",()=>{document.querySelector("#emoji-picker").hidden=!document.querySelector("#emoji-picker").hidden;});
+document.querySelector("#emoji-picker").addEventListener("click",event=>{
+  const button=event.target.closest("button");
+  if(!button)return;
+  document.querySelector("#chat-message").value+=button.textContent;
+  document.querySelector("#emoji-picker").hidden=true;
+});
 
 document.querySelector("#exam-form").addEventListener("submit", async event=>{
   event.preventDefault();
@@ -138,5 +258,5 @@ document.querySelector("#exam-form").addEventListener("submit", async event=>{
   document.querySelector("#exam-status").textContent=response.ok?`Submitted: ${data.id}`:(data.detail||"Submission failed");
 });
 
-loadConversations();
+loadCourses(); loadConversations();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("/static/sw.js");

@@ -21,6 +21,8 @@ def test_journey_endpoints_are_registered() -> None:
         "/api/v1/courses/{course_id}/examinations/from-json",
         "/api/v1/courses/{course_id}/examinations/import.json",
         "/api/v1/examinations/{examination_id}/export.json",
+        "/api/v1/examinations/{examination_id}/questions/{question_id}/score-draft",
+        "/api/v1/conversations/{conversation_id}/messages/upload",
     } <= paths
 
 

@@ -18,7 +18,7 @@ from sqlalchemy.orm import selectinload
 from ..database import get_db
 from ..config import get_settings
 from ..models import Conversation, ConversationMember, Course, DisciplineScoringProfile, Document, Enrollment, ExamQuestion, Examination, ExamRuleSet, GradeEvent, Message, ModelTrainingRun, OCSPQuery, PrivatePKI, ResearchInteraction, Role, SignatureValidation, Submission, TrainingExample, TrustList, User, UserCertificate, VideoResource
-from ..schemas import CertificateRevoke, ConversationCreate, CourseCreate, CourseOut, DeletionRequest, DocumentCreate, ExamDraftRequest, ExaminationCreate, ExaminationJsonCreate, ExaminationRelease, ExamRuleSetCreate, GradeOverride, InstructorReturn, MessageCreate, PrivatePKICreate, PublicKeyUpdate, QuestionCreate, ResearchQuestionCreate, ResearchVisibilityUpdate, ScoringProfileCreate, SearchResponse, SignatureValidationRequest, SubmissionCreate, SubmissionOut, TrainingApproval, TrustListCreate, TrustListDecision, UserCertificateAssign, UserCreate, UserUpdate, VideoCreate
+from ..schemas import CertificateRevoke, ConversationCreate, CourseCreate, CourseOut, DeletionRequest, DocumentCreate, ExamDraftRequest, ExaminationCreate, ExaminationJsonCreate, ExaminationRelease, ExamRuleSetCreate, GradeOverride, InstructorReturn, MessageCreate, PrivatePKICreate, PublicKeyUpdate, QuestionCreate, QuestionDraftScore, ResearchQuestionCreate, ResearchVisibilityUpdate, ScoringProfileCreate, SearchResponse, SignatureValidationRequest, SubmissionCreate, SubmissionOut, TrainingApproval, TrustListCreate, TrustListDecision, UserCertificateAssign, UserCreate, UserUpdate, VideoCreate
 from ..security import authenticate, create_access_token, hash_password, require_nonce
 from ..services.audit import append_audit
 from ..services.asag import grade_answer
@@ -33,6 +33,7 @@ from ..services.search import hybrid_search
 from ..services.trust import TrustValidator, parse_etsi_trust_list
 from ..services.exam_xml import export_exam_xml, import_exam_xml
 from ..services.exam_json import export_exam_json, import_exam_json
+from ..services.multiple_choice import score_choice_answer
 
 
 from .common import (
@@ -254,6 +255,36 @@ async def create_question(examination_id: uuid.UUID, data: QuestionCreate, db: A
     db.add(item)
     await db.commit()
     return {"id": item.id, "max_score": item.max_score}
+
+
+@router.post("/examinations/{examination_id}/questions/{question_id}/score-draft")
+async def score_practice_question(
+    examination_id: uuid.UUID,
+    question_id: uuid.UUID,
+    data: QuestionDraftScore,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_nonce),
+):
+    """Score one answered practice question without submitting the whole exam."""
+    examination = await db.get(Examination, examination_id)
+    if not examination or examination.kind != "practice" or examination.state != "released":
+        raise HTTPException(status.HTTP_409_CONFLICT, "Interactive scoring is available only for released practice examinations")
+    await require_course_access(db, user, examination.course_id)
+    question = await db.get(ExamQuestion, question_id)
+    if not question or question.examination_id != examination.id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found")
+    if question.question_type in {"single_choice", "multiple_choice"}:
+        result = score_choice_answer(data.answer, question.correct_options, question.max_score, question.partial_credit)
+    else:
+        course = await db.get(Course, examination.course_id)
+        profile = await active_scoring_profile(db, course)
+        if not profile:
+            raise HTTPException(status.HTTP_409_CONFLICT, "No active scoring profile exists for this discipline")
+        result = await asyncio.to_thread(grade_answer, question, str(data.answer), profile)
+    result["question_id"] = str(question.id)
+    await append_audit(db, user.id, "practice_question_scored", "exam_question", question.id, details={"examination_id": str(examination.id), "score": result.get("score")})
+    await db.commit()
+    return result
 
 
 @router.get("/examinations/{examination_id}/export.xml")

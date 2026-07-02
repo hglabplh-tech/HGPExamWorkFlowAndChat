@@ -22,6 +22,56 @@
       <p id="login-status" aria-live="polite"></p>
     </section>
     <section class="workspace">
+      <details class="top-menu admin-menu" open>
+        <summary>☰ Menu</summary>
+        <a href="#admin-courses">Courses</a>
+        <a href="#admin-chatrooms">Defined chatrooms</a>
+        <a href="#admin-import-export">Import/export</a>
+        <a href="#user-definition">User definition</a>
+      </details>
+      <section id="admin-courses" class="admin-panel">
+        <p class="eyebrow">COURSES</p>
+        <h1>Courses added to the system</h1>
+        <button id="load-admin-courses">Load courses</button>
+        <div id="admin-course-list"></div>
+      </section>
+      <section id="admin-chatrooms" class="admin-panel">
+        <p class="eyebrow">CHATROOMS</p>
+        <h1>Defined chatrooms</h1>
+        <button id="load-admin-chatrooms">Load chatrooms</button>
+        <div id="admin-chatroom-list"></div>
+      </section>
+      <section id="user-definition" class="admin-panel">
+        <p class="eyebrow">USER DEFINITION</p>
+        <h1>Create user</h1>
+        <form id="user-create-form" class="admin-form">
+          <label>User ID<input id="user-id" placeholder="generated after create" readonly></label>
+          <label>User name<input id="user-name" required></label>
+          <label>User password <span class="password-line"><input id="user-password" type="password" required minlength="12"><button type="button" class="eye" data-target="user-password">👁</button></span></label>
+          <label>Password confirmation <span class="password-line"><input id="user-password-confirm" type="password" required minlength="12"><button type="button" class="eye" data-target="user-password-confirm">👁</button></span></label>
+          <label>User email<input id="user-email" type="email" required></label>
+          <label>Matriculation number<input id="user-matriculation"></label>
+          <label>Role<select id="user-role"><option value="student">Student</option><option value="teacher">Instructor</option><option value="staff">Staff</option><option value="admin">Administrator</option></select></label>
+          <fieldset class="rights-group">
+            <legend>User rights granted</legend>
+            <label><input type="checkbox" value="users.manage"> users.manage</label>
+            <label><input type="checkbox" value="courses.instruct"> courses.instruct</label>
+            <label><input type="checkbox" value="content.manage"> content.manage</label>
+            <label><input type="checkbox" value="grading.manage"> grading.manage</label>
+            <label><input type="checkbox" value="training.manage"> training.manage</label>
+            <label><input type="checkbox" value="trust.manage"> trust.manage</label>
+            <label><input type="checkbox" value="reports.read_all"> reports.read_all</label>
+            <label><input type="checkbox" value="email.send"> email.send</label>
+          </fieldset>
+          <div class="button-row"><button>Create</button><button type="button" id="cancel-user-create">Cancel</button><button type="button" id="user-help">Help</button></div>
+        </form>
+        <dialog id="user-help-dialog">
+          <h2>User creation help</h2>
+          <p>Enter a display name, email, optional matriculation number, and a password of at least twelve characters. Select a base role and only the additional rights the person really needs. Press Create to store the user in PostgreSQL. Cancel clears the mask.</p>
+          <button onclick="this.closest('dialog').close()">Close</button>
+        </dialog>
+        <div id="user-create-status" aria-live="polite"></div>
+      </section>
       <section class="admin-panel">
         <p class="eyebrow">SECURITY</p>
         <h1>Two-factor login</h1>
@@ -32,6 +82,11 @@
           <label>Authenticator code<input id="totp-code" inputmode="numeric" pattern="[0-9]{6}"></label>
           <button>Enable TOTP</button>
         </form>
+      </section>
+      <section id="admin-import-export" class="admin-panel">
+        <p class="eyebrow">IMPORT / EXPORT</p>
+        <h1>Knowledge and exam exchange</h1>
+        <p><a href="/api/v1/knowledge/export.json">Export knowledge JSON</a> · <a href="/api/v1/knowledge/vocab.txt">Export vocab.txt</a></p>
       </section>
       <p class="eyebrow">CERTIFICATES AND SIGNATURES</p>
       <h1>Trusted lists</h1>
@@ -108,6 +163,7 @@
       <div id="thesaurus-list"></div>
     </section>
   </main>
+  <script src="/static/client-config.js"></script>
   <script src="/static/admin.js"></script>
 </body>
 </html>

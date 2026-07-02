@@ -18,6 +18,7 @@ class User(UUIDMixin, Base):
     __tablename__ = "users"
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
     display_name: Mapped[str] = mapped_column(String(120))
+    matriculation_number: Mapped[str | None] = mapped_column(String(80), unique=True, nullable=True)
     password_hash: Mapped[str]
     role: Mapped[Role] = mapped_column(Enum(Role), default=Role.student)
     permissions: Mapped[list] = mapped_column(JSONB, default=list)

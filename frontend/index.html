@@ -10,9 +10,17 @@
   <title>HcpXmlWorkflowChat</title>
 </head>
 <body>
-  <header><strong>HcpXmlWorkflowChat</strong><span>Courses · knowledge · people</span></header>
+  <header>
+    <details class="top-menu" open>
+      <summary>☰ Menu</summary>
+      <a href="#courses">Courses</a>
+      <a href="#chat-panel">Chatrooms</a>
+      <a href="/admin" id="admin-link">Admin: import/export/users</a>
+    </details>
+    <strong>HcpXmlWorkflowChat</strong><span>Courses · knowledge · people</span>
+  </header>
   <main>
-    <nav aria-label="Course list">
+    <nav aria-label="Course list" id="courses">
       <section class="side-card">
         <h2>Login</h2>
         <form id="login-form" class="stack-form">
@@ -24,8 +32,7 @@
         <p id="login-status"></p>
       </section>
       <h2>Your courses</h2>
-      <button class="course active">Biology · BIO101</button>
-      <button class="course">Mathematics · MAT201</button>
+      <div id="course-list"><div class="empty">Sign in to load courses.</div></div>
     </nav>
     <section class="workspace">
       <div class="hero">
@@ -41,13 +48,18 @@
       </div>
       <section class="exam-card">
         <p class="eyebrow">EXAMINATION</p>
-        <h2>Practice or real examination</h2>
+        <h2>Examination execution</h2>
         <div class="stack-form">
-          <label>Course ID<input id="student-course-id" placeholder="Course UUID"></label>
           <button type="button" id="load-exams">Load examinations</button>
           <label>Available examination<select id="exam-select"><option value="">Select an examination</option></select></label>
         </div>
-        <div id="exam-question-fields" class="question-builder"></div>
+        <section class="exam-execution-grid">
+          <div id="exam-question-fields" class="question-builder"></div>
+          <aside class="score-panel">
+            <h2>Scoring window</h2>
+            <div id="score-results" class="score-results"><div class="empty">Scores appear here after a practice-question submit.</div></div>
+          </aside>
+        </section>
         <form id="exam-form" class="stack-form">
           <label>Examination ID<input id="exam-id" placeholder="UUID"></label>
           <label>Answers as JSON<textarea id="exam-answers" rows="5" placeholder='{"question-id":"answer"}'></textarea></label>
@@ -60,18 +72,30 @@
         <div id="exam-status" aria-live="polite"></div>
       </section>
     </section>
-    <aside>
+    <aside id="chat-panel" class="chat-shell">
       <h2>Course room</h2>
+      <div id="chatroom-list" class="chatroom-list"></div>
       <select id="conversation-select"><option value="">Select a chat room</option></select>
       <div id="messages" class="chat-window"><p><b>Welcome</b><br>Ask classmates, compare approaches, and prepare together. Mention <code>@chatbot</code> for an AI answer.</p></div>
       <form id="chat-form" class="stack-form">
-        <input id="chat-message" placeholder="Write @chatbot, @{user}, or to the group…">
+        <div class="chat-compose">
+          <button type="button" id="chat-plus" title="Attach files">＋</button>
+          <input id="chat-files" type="file" multiple hidden>
+          <input id="chat-message" placeholder="Write @chatbot, @{user}, or to the group…">
+          <button type="button" id="chat-mic" title="Dictate">🎙</button>
+          <button type="button" id="chat-audio-send" title="Record and send audio">📤</button>
+          <button type="button" id="chat-emoji" title="Insert emoji">😊</button>
+        </div>
+        <div id="emoji-picker" class="emoji-picker" hidden>
+          <button type="button">😀</button><button type="button">🙂</button><button type="button">👍</button><button type="button">🎓</button><button type="button">📚</button><button type="button">💡</button><button type="button">✅</button><button type="button">❓</button>
+        </div>
         <select id="share-type"><option value="">No shared item</option><option value="research_result">Research result</option><option value="practice_score">Practice score</option></select>
         <input id="share-id" placeholder="Research or score ID to share">
         <button>Send</button>
       </form>
     </aside>
   </main>
+  <script src="/static/client-config.js"></script>
   <script src="/static/app.js"></script>
 </body>
 </html>

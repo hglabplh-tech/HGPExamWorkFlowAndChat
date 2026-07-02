@@ -1,0 +1,52 @@
+{
+  "build": {
+    "beforeBuildCommand": "npm run bundle:prod",
+    "beforeDevCommand": "npm run bundle",
+    "devPath": "../www",
+    "distDir": "../www"
+  },
+  "package": {
+    "productName": "HcpXmlWorkflowChat",
+    "version": "0.1.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "open": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "category": "Education",
+      "copyright": "Copyright (c) 2026 Harald Glab-Plhak",
+      "identifier": "com.hcpxmlworkflowchat.client",
+      "targets": ["msi", "nsis", "dmg"],
+      "macOS": {
+        "entitlements": null,
+        "exceptionDomain": "",
+        "frameworks": [],
+        "providerShortName": null,
+        "signingIdentity": null
+      },
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
+    },
+    "security": {
+      "csp": "default-src 'self' https: data: blob:; script-src 'self'; style-src 'self' 'unsafe-inline'; media-src 'self' blob: data:; connect-src 'self' https:;"
+    },
+    "windows": [
+      {
+        "title": "HcpXmlWorkflowChat",
+        "width": 1280,
+        "height": 820,
+        "minWidth": 900,
+        "minHeight": 640
+      }
+    ]
+  }
+}

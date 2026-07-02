@@ -154,6 +154,7 @@ class UserCreate(BaseModel):
     email: str
     display_name: str
     password: str = Field(min_length=12, max_length=1024)
+    matriculation_number: str | None = Field(default=None, max_length=80)
     role: str = "student"
     permissions: list[str] = Field(default_factory=list)
 
@@ -161,6 +162,7 @@ class UserCreate(BaseModel):
 class UserUpdate(BaseModel):
     """Represent userupdate."""
     display_name: str | None = None
+    matriculation_number: str | None = Field(default=None, max_length=80)
     active: bool | None = None
     role: str | None = None
     permissions: list[str] | None = None
@@ -170,6 +172,11 @@ class UserUpdate(BaseModel):
 class TotpVerify(BaseModel):
     """Verify and activate a user's TOTP authenticator setup."""
     code: str = Field(pattern=r"^\d{6}$")
+
+
+class QuestionDraftScore(BaseModel):
+    """Score one practice-exam answer before final submission."""
+    answer: str | list[str]
 
 
 class DeletionRequest(BaseModel):
@@ -208,6 +215,7 @@ class ExamGroupCertificateAssign(BaseModel):
 class MessageCreate(BaseModel):
     """Represent messagecreate."""
     body: str = Field(default="", max_length=4000)
+    attachments: list[dict] = Field(default_factory=list)
     shared_type: str | None = None
     shared_id: uuid.UUID | None = None
 

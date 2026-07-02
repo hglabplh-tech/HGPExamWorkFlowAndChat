@@ -44,6 +44,16 @@ def test_user_permissions_are_persisted() -> None:
     assert "permissions" in Base.metadata.tables["users"].columns
 
 
+def test_user_matriculation_number_is_persisted() -> None:
+    """Administrative user masks can store the student's matriculation number."""
+    assert "matriculation_number" in Base.metadata.tables["users"].columns
+
+
+def test_chat_message_attachments_are_persisted() -> None:
+    """Chat uploads store safe metadata/transcripts for receivers."""
+    assert "attachments" in Base.metadata.tables["messages"].columns
+
+
 def test_totp_columns_are_persisted() -> None:
     """Users can opt into authenticator-app two-factor login."""
     columns = set(Base.metadata.tables["users"].columns.keys())

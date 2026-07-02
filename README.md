@@ -17,6 +17,7 @@ Copyright © 2026 Harald Glab-Plhak. Distributed under the MIT License.
 - `backend/app/services/`: scoring, search, evidence, trust, reporting, and ML utilities
 - `backend/app/workflows/`: pure exam-state and chat-visibility policies
 - `clients/`: independent Python REST client
+- `clients/native/`: Capacitor Android/iOS and Tauri Windows wrappers for the HTML5 client
 - `ml/`: BERT fine-tuning and educational LSTM training
 - `data/sample_courses/`: two reviewable example course definitions
 - `data/training/`: synthetic ASAG examples for pipeline development
@@ -60,6 +61,24 @@ the in-process WebSocket room broadcaster with Redis/NATS pub-sub, move startup
 schema changes to an Alembic migration Job, and use shared model/object storage.
 The GitHub workflows test Python 3.11/3.12 with coverage, build the image, and publish tagged
 releases to GHCR with provenance and an SBOM.
+
+## Native client apps
+
+The HTML5 client can be packaged as Android, iOS, macOS DMG, and Windows apps
+without duplicating the UI. The native wrappers live in `clients/native/`;
+Android and iOS use Capacitor, while macOS and Windows use Tauri. Build the
+static bundle with the cloud API origin:
+
+```sh
+export HCP_API_BASE="https://study.example.edu"
+make client-bundle
+```
+
+Then use the platform-specific commands documented in
+`docs/client-app-builds.md`, for example `make client-android-sync`,
+`make client-ios-sync`, `make client-macos-dmg-silicon`,
+`make client-macos-dmg-intel`, `make client-macos-dmg-universal`, or
+`make client-windows-build` after installing the required local SDKs.
 
 ## Sample courses and tests
 
@@ -366,6 +385,25 @@ Students can load released examinations by course in the main HTML5 page. Practi
 exams are submitted through the existing signed submission flow and receive ASAG
 feedback; real exams use the confirmation, hash, signature, and instructor-correction
 workflow before results are returned.
+
+The HTML5 masks now share a top-left menu frame. The course menu lists selectable
+courses, chatrooms can be selected from the chat section, and administrator-only
+links lead to import/export and user definition. The user-definition mask captures
+user ID, name, email, optional matriculation number, password plus visible/hidden
+confirmation fields, base role, explicit rights checkboxes, and create/cancel/help
+actions. The examination execution mask loads examinations for the selected course,
+renders each question with its points and answer field or multiple-choice checklist,
+and shows practice ASAG results in a scoring window after each per-question submit.
+The chat mask follows a WhatsApp-style layout with chatroom list, left/right bubbles,
+plus-file attachment picker, and browser microphone dictation where available.
+When browser speech recognition is unavailable, the microphone button records a
+short phrase and sends it to the project's ASR endpoint. A neighboring audio-send
+button sends the spoken phrase as an audio attachment to the selected chat. Messages
+can also carry uploaded files; if the message mentions `@chatbot`, supported text,
+PDF, JSON, Markdown, CSV, or audio attachments are extracted/transcribed and used as
+additional context for the chatbot's research or grading-style response. The emoji
+button opens a lightweight browser-side picker for quick insertion into the message
+field.
 
 ## Production work still required
 

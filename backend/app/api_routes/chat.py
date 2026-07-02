@@ -11,7 +11,7 @@ import secrets
 from datetime import UTC, datetime
 
 import httpx
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, Header, HTTPException, Query, Response, status
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, File, Form, Header, HTTPException, Query, Response, UploadFile, status
 from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -34,6 +34,8 @@ from ..services.search import hybrid_search
 from ..services.trust import TrustValidator, parse_etsi_trust_list
 from ..services.private_pki import certificate_details
 from ..services.group_assignment import assign_random_groups
+from ..services.audio import transcribe_audio
+from ..services.ingestion import ContentExtractor, answer_from_uploaded_text
 
 
 from .common import (
@@ -198,6 +200,41 @@ async def validate_chat_share(db: AsyncSession, user: User, conversation_id: uui
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Unsupported shared resource type")
 
 
+async def chatbot_answer_for_message(db: AsyncSession, conversation: Conversation, body: str, extra_context: str = "") -> str:
+    """Answer a chatbot mention using uploaded context first and course RAG otherwise."""
+    question = body.replace("@chatbot", "").strip() or "Please interpret the uploaded material."
+    if extra_context.strip():
+        result = answer_from_uploaded_text(question, extra_context)
+        return result["answer"] or "I could not extract enough text from the uploaded file."
+    course = await db.get(Course, conversation.course_id)
+    profile = await active_scoring_profile(db, course) if course else None
+    answer, _ = await answer_research_question(
+        db, conversation.course_id, question,
+        profile.semantic_profile if profile else "economy",
+        profile.search_weights if profile else None,
+    )
+    return answer
+
+
+async def attachment_from_upload(file: UploadFile) -> tuple[dict, str]:
+    """Create bounded attachment metadata and optional extracted context."""
+    data = await file.read()
+    metadata = {"filename": file.filename or "upload", "content_type": file.content_type or "application/octet-stream", "size": len(data), "sha256": sha256_hex(data)}
+    if (file.content_type or "").startswith("audio/"):
+        transcript = await transcribe_audio(data)
+        metadata["transcript"] = transcript
+        metadata["kind"] = "audio"
+        return metadata, transcript
+    try:
+        extracted = await asyncio.to_thread(ContentExtractor.extract, data, file.content_type or "application/octet-stream", file.filename or "")
+        metadata["kind"] = "document"
+        metadata["text_preview"] = extracted.text[:1000]
+        return metadata, extracted.text
+    except (ValueError, UnicodeError):
+        metadata["kind"] = "binary"
+        return metadata, ""
+
+
 @router.post("/conversations/{conversation_id}/messages", status_code=201)
 async def post_message(
     conversation_id: uuid.UUID,
@@ -214,17 +251,7 @@ async def post_message(
     db.add(item)
     chatbot_reply = None
     if "@chatbot" in data.body.casefold() and conversation:
-        profile = None
-        course = await db.get(Course, conversation.course_id)
-        if course:
-            profile = await active_scoring_profile(db, course)
-        answer, sources = await answer_research_question(
-            db,
-            conversation.course_id,
-            data.body.replace("@chatbot", "").strip() or data.body,
-            profile.semantic_profile if profile else "economy",
-            profile.search_weights if profile else None,
-        )
+        answer = await chatbot_answer_for_message(db, conversation, data.body)
         bot = await ensure_chatbot_user(db)
         chatbot_reply = Message(
             conversation_id=conversation_id,
@@ -235,6 +262,39 @@ async def post_message(
         db.add(chatbot_reply)
     await db.commit()
     return {"id": item.id, "created_at": item.created_at, "chatbot_reply_id": chatbot_reply.id if chatbot_reply else None}
+
+
+@router.post("/conversations/{conversation_id}/messages/upload", status_code=201)
+async def post_message_upload(
+    conversation_id: uuid.UUID,
+    body: str = Form(default=""),
+    shared_type: str | None = Form(default=None),
+    shared_id: uuid.UUID | None = Form(default=None),
+    files: list[UploadFile] = File(default=[]),
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_nonce),
+):
+    """Send files or audio to a chat; chatbot uses extracted/transcribed content."""
+    if not await db.get(ConversationMember, (conversation_id, user.id)):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Conversation membership required")
+    await validate_chat_share(db, user, conversation_id, shared_type, shared_id)
+    attachments, contexts = [], []
+    for file in files:
+        attachment, context = await attachment_from_upload(file)
+        attachments.append(attachment)
+        if context:
+            contexts.append(context)
+    conversation = await db.get(Conversation, conversation_id)
+    item = Message(conversation_id=conversation_id, sender_id=user.id, body=body, attachments=attachments, shared_type=shared_type, shared_id=shared_id)
+    db.add(item)
+    chatbot_reply = None
+    if conversation and "@chatbot" in body.casefold():
+        bot = await ensure_chatbot_user(db)
+        answer = await chatbot_answer_for_message(db, conversation, body, "\n\n".join(contexts))
+        chatbot_reply = Message(conversation_id=conversation_id, sender_id=bot.id, body=answer, shared_type="research_result")
+        db.add(chatbot_reply)
+    await db.commit()
+    return {"id": item.id, "attachments": attachments, "chatbot_reply_id": chatbot_reply.id if chatbot_reply else None}
 
 
 @router.get("/conversations/{conversation_id}/messages")
@@ -255,7 +315,7 @@ async def conversation_messages(
     user_ids = {item.sender_id for item in items}
     users = (await db.scalars(select(User).where(User.id.in_(user_ids)))).all() if user_ids else []
     names = {item.id: item.display_name for item in users}
-    return [{"id": item.id, "sender_id": item.sender_id, "sender_name": names.get(item.sender_id, "User"), "body": item.body, "shared_type": item.shared_type, "shared_id": item.shared_id, "created_at": item.created_at} for item in reversed(items)]
+    return [{"id": item.id, "sender_id": item.sender_id, "sender_name": names.get(item.sender_id, "User"), "body": item.body, "attachments": item.attachments, "shared_type": item.shared_type, "shared_id": item.shared_id, "created_at": item.created_at} for item in reversed(items)]
 
 
 @router.get("/conversations/{conversation_id}/shared-submissions/{submission_id}")

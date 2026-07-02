@@ -1,0 +1,33 @@
+{
+  "name": "hcp-xml-workflow-chat-native",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Native Android, iOS, macOS, and Windows wrappers for the HcpXmlWorkflowChat HTML5 client.",
+  "copyright": "Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.",
+  "scripts": {
+    "bundle": "python ../../tools/build_client_bundle.py",
+    "bundle:prod": "python ../../tools/build_client_bundle.py",
+    "android:add": "npx cap add android",
+    "android:sync": "npm run bundle:prod && npx cap sync android",
+    "android:open": "npx cap open android",
+    "android:build": "npm run android:sync && cd android && ./gradlew assembleRelease",
+    "ios:add": "npx cap add ios",
+    "ios:sync": "npm run bundle:prod && npx cap sync ios",
+    "ios:open": "npx cap open ios",
+    "macos:build:silicon": "npm run bundle:prod && npx tauri build --target aarch64-apple-darwin --bundles dmg",
+    "macos:build:intel": "npm run bundle:prod && npx tauri build --target x86_64-apple-darwin --bundles dmg",
+    "macos:build:universal": "npm run bundle:prod && npx tauri build --target universal-apple-darwin --bundles dmg",
+    "windows:dev": "npm run bundle:prod && npx tauri dev",
+    "windows:build": "npm run bundle:prod && npx tauri build"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/ios": "^6.2.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0",
+    "@tauri-apps/cli": "^1.6.0",
+    "typescript": "^5.5.0"
+  }
+}

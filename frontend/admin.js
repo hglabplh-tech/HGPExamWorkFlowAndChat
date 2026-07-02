@@ -2,6 +2,8 @@
 let token = sessionStorage.getItem("token");
 const headers = () => ({Authorization:`Bearer ${token}`});
 const nonce = () => crypto.getRandomValues(new Uint32Array(4)).join("-") + crypto.randomUUID();
+const apiBase = () => (window.HCP_CLIENT_CONFIG && window.HCP_CLIENT_CONFIG.apiBase) || "";
+const apiUrl = path => `${apiBase()}${path}`;
 
 document.querySelector("#login-form").addEventListener("submit", async event => {
   event.preventDefault();
@@ -15,7 +17,43 @@ document.querySelector("#login-form").addEventListener("submit", async event => 
   token=data.access_token;
   sessionStorage.setItem("token",token);
   document.querySelector("#login-status").textContent=`Signed in as ${data.display_name||email}`;
-  refresh(); refreshPki(); refreshScoring(); refreshThesauri();
+  refresh(); refreshPki(); refreshScoring(); refreshThesauri(); loadAdminCourses(); loadAdminChatrooms();
+});
+
+async function loadAdminCourses(){
+  const target=document.querySelector("#admin-course-list");
+  if(!token)return;
+  const response=await fetch("/api/v1/courses",{headers:headers()});
+  const items=await response.json().catch(()=>[]);
+  target.innerHTML=response.ok?items.map(item=>`<button class="course" data-id="${item.id}">${escapeHtml(item.title)} · ${escapeHtml(item.code)}</button>`).join(""):'<div class="result warning">Unable to load courses.</div>';
+}
+
+async function loadAdminChatrooms(){
+  const target=document.querySelector("#admin-chatroom-list");
+  if(!token)return;
+  const response=await fetch("/api/v1/conversations",{headers:headers()});
+  const items=await response.json().catch(()=>[]);
+  target.innerHTML=response.ok?items.map(item=>`<article class="result"><small>${escapeHtml(item.kind)} · ${escapeHtml(item.purpose)}</small><h2>${escapeHtml(item.title)}</h2><p>${escapeHtml(item.topic||"")}</p></article>`).join(""):'<div class="result warning">Unable to load chatrooms.</div>';
+}
+
+document.querySelector("#load-admin-courses").addEventListener("click",loadAdminCourses);
+document.querySelector("#load-admin-chatrooms").addEventListener("click",loadAdminChatrooms);
+document.querySelectorAll(".eye").forEach(button=>button.addEventListener("click",()=>{
+  const input=document.querySelector(`#${button.dataset.target}`);
+  input.type=input.type==="password"?"text":"password";
+}));
+document.querySelector("#cancel-user-create").addEventListener("click",()=>document.querySelector("#user-create-form").reset());
+document.querySelector("#user-help").addEventListener("click",()=>document.querySelector("#user-help-dialog").showModal());
+document.querySelector("#user-create-form").addEventListener("submit",async event=>{
+  event.preventDefault();
+  const password=document.querySelector("#user-password").value;
+  if(password!==document.querySelector("#user-password-confirm").value){document.querySelector("#user-create-status").textContent="Passwords do not match.";return;}
+  const permissions=[...document.querySelectorAll(".rights-group input:checked")].map(item=>item.value);
+  const payload={display_name:document.querySelector("#user-name").value,email:document.querySelector("#user-email").value,password,matriculation_number:document.querySelector("#user-matriculation").value||null,role:document.querySelector("#user-role").value,permissions};
+  const response=await fetch("/api/v1/users",{method:"POST",headers:{...headers(),"Content-Type":"application/json","X-Request-Nonce":nonce()},body:JSON.stringify(payload)});
+  const data=await response.json().catch(()=>({}));
+  document.querySelector("#user-create-status").textContent=response.ok?`Created user ${data.email}`:(data.detail||"User creation failed");
+  if(response.ok)document.querySelector("#user-id").value=data.id;
 });
 
 async function refresh() {
@@ -200,3 +238,5 @@ refresh();
 refreshPki();
 refreshScoring();
 refreshThesauri();
+loadAdminCourses();
+loadAdminChatrooms();
