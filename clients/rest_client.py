@@ -13,8 +13,8 @@ from cryptography.hazmat.primitives import serialization
 from backend.app.services.evidence import certificate_sha256, grading_signature_message, sha256_hex, signature_message
 
 
-class HcpXmlWorkflowChatClient:
-    """Synchronous REST client for the HcpXmlWorkflowChat service."""
+class HGPExamWorkFlowAndChatClient:
+    """Synchronous REST client for the HGPExamWorkFlowAndChat service."""
     def __init__(self, base_url: str, email: str, password: str, ca_file: str | bool = True):
         """Perform the init operation."""
         self.http = httpx.Client(base_url=base_url, verify=ca_file, timeout=20)
@@ -238,9 +238,9 @@ class HcpXmlWorkflowChatClient:
         return response.json()
 
 
-StudyClient = HcpXmlWorkflowChatClient
+StudyClient = HGPExamWorkFlowAndChatClient
 
 
 if __name__ == "__main__":
-    client = HcpXmlWorkflowChatClient("https://localhost", "admin@example.org", "change-me", ca_file=False)
+    client = HGPExamWorkFlowAndChatClient("https://localhost", "admin@example.org", "change-me", ca_file=False)
     print(client.search("photosynthesis"))

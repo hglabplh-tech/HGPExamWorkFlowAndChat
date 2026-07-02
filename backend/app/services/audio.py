@@ -13,7 +13,7 @@ from ..config import get_settings
 @lru_cache(maxsize=1)
 def inference_pool() -> ThreadPoolExecutor:
     """Create a bounded OS-scheduled worker pool for blocking model inference."""
-    return ThreadPoolExecutor(max_workers=get_settings().training_thread_workers, thread_name_prefix="hcp-inference")
+    return ThreadPoolExecutor(max_workers=get_settings().training_thread_workers, thread_name_prefix="hgp-exam-inference")
 
 
 @lru_cache(maxsize=2)

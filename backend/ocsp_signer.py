@@ -17,7 +17,7 @@ from cryptography.x509.oid import OCSPExtensionOID
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 
-app = FastAPI(title="HcpXmlWorkflowChat private OCSP signer")
+app = FastAPI(title="HGPExamWorkFlowAndChat private OCSP signer")
 
 
 class SignRequest(BaseModel):

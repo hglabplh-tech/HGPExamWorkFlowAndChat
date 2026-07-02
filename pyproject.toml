@@ -4,7 +4,7 @@ requires = ["setuptools>=75", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "hcp-xml-workflow-chat"
+name = "hgp-exam-work-flow-and-chat"
 version = "0.1.0"
 description = "Course chat, curated knowledge, hybrid search, and assisted grading"
 readme = "README.md"

@@ -49,7 +49,7 @@ def generate_totp_secret() -> str:
     return base64.b32encode(secrets.token_bytes(20)).decode("ascii").rstrip("=")
 
 
-def totp_uri(secret: str, email: str, issuer: str = "HcpXmlWorkflowChat") -> str:
+def totp_uri(secret: str, email: str, issuer: str = "HGPExamWorkFlowAndChat") -> str:
     """Build an otpauth URI for enrollment QR-code generation by clients."""
     return f"otpauth://totp/{issuer}:{email}?secret={secret}&issuer={issuer}&algorithm=SHA1&digits=6&period=30"
 

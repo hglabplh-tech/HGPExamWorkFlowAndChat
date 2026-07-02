@@ -1,8 +1,8 @@
 {
-  "name": "hcp-xml-workflow-chat-native",
+  "name": "hgp-exam-work-flow-and-chat-native",
   "version": "0.1.0",
   "private": true,
-  "description": "Native Android, iOS, macOS, and Windows wrappers for the HcpXmlWorkflowChat HTML5 client.",
+  "description": "Native Android, iOS, macOS, and Windows wrappers for the HGPExamWorkFlowAndChat HTML5 client.",
   "copyright": "Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.",
   "scripts": {
     "bundle": "python ../../tools/build_client_bundle.py",

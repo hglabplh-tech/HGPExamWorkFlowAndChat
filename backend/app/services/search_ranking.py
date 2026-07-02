@@ -1,4 +1,4 @@
-"""Pure hybrid-search ranking utilities for HcpXmlWorkflowChat.
+"""Pure hybrid-search ranking utilities for HGPExamWorkFlowAndChat.
 
 Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """

@@ -80,7 +80,7 @@ async def curate() -> dict[str, int]:
 def uuid_for_pair(left, right):
     """Perform the uuid for pair operation."""
     import uuid
-    return uuid.uuid5(uuid.NAMESPACE_URL, f"hcp-xml-workflow-chat:{left}:{right}")
+    return uuid.uuid5(uuid.NAMESPACE_URL, f"hgp-exam-work-flow-and-chat:{left}:{right}")
 
 
 def discipline_slug(value: str) -> str:

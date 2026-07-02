@@ -1,6 +1,6 @@
 <!-- Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License. -->
 
-# HcpXmlWorkflowChat
+# HGPExamWorkFlowAndChat
 
 A cloud-ready Python service for course chat, curated documents and videos,
 hybrid search, secure examination submissions, assisted grading, and independent

@@ -2,8 +2,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.hcpxmlworkflowchat.client',
-  appName: 'HcpXmlWorkflowChat',
+  appId: 'com.hgpexamworkflowandchat.client',
+  appName: 'HGPExamWorkFlowAndChat',
   webDir: 'www',
   bundledWebRuntime: false,
   server: {

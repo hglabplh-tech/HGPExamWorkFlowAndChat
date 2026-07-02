@@ -112,7 +112,7 @@ class KnowledgeImporter:
         documents = (await db.scalars(select(Document))).all()
         course_codes = {course.id: course.code for course in courses}
         return {
-            "format": "hcp-xml-workflow-chat/knowledge-v1",
+            "format": "hgp-exam-work-flow-and-chat/knowledge-v1",
             "exported_at": datetime.now(UTC).isoformat(),
             "courses": [{"code": x.code, "title": x.title, "discipline": x.discipline, "description": x.description} for x in courses],
             "documents": [{
@@ -127,7 +127,7 @@ class KnowledgeImporter:
     async def import_bundle(cls, db: AsyncSession, raw: bytes, *, fact_check: bool = True) -> dict[str, int]:
         """Merge a versioned JSON bundle using course code and content hash identities."""
         bundle = json.loads(raw)
-        if bundle.get("format") != "hcp-xml-workflow-chat/knowledge-v1":
+        if bundle.get("format") != "hgp-exam-work-flow-and-chat/knowledge-v1":
             raise ValueError("Unsupported knowledge bundle format")
         inserted_courses = inserted_documents = skipped = 0
         course_ids: dict[str, uuid.UUID] = {}

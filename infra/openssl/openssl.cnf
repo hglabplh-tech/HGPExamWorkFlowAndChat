@@ -5,7 +5,7 @@ prompt = no
 
 [ dn ]
 C = DE
-O = HcpXmlWorkflowChat Private PKI
+O = HGPExamWorkFlowAndChat Private PKI
 CN = replace-me
 
 [ root_ca ]

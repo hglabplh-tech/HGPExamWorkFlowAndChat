@@ -4,7 +4,7 @@
 import json
 
 
-FORMAT = "hcp-xml-workflow-chat/exam-json-v1"
+FORMAT = "hgp-exam-work-flow-and-chat/exam-json-v1"
 
 
 def export_exam_json(course_code: str, exam: object, questions: list[object]) -> dict:

@@ -5,7 +5,7 @@ Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 
 import httpx
 
-from clients.rest_client import HcpXmlWorkflowChatClient
+from clients.rest_client import HGPExamWorkFlowAndChatClient
 
 
 def test_client_logs_in_and_adds_a_fresh_nonce(monkeypatch) -> None:
@@ -25,7 +25,7 @@ def test_client_logs_in_and_adds_a_fresh_nonce(monkeypatch) -> None:
         "Client",
         lambda **kwargs: original_client(transport=transport, base_url=kwargs["base_url"]),
     )
-    client = HcpXmlWorkflowChatClient("https://service.example", "a@example.org", "secret")
+    client = HGPExamWorkFlowAndChatClient("https://service.example", "a@example.org", "secret")
     assert client.create_course("CS", "Course", "Computing") == {"id": "course"}
     assert requests[-1].headers["Authorization"] == "Bearer test-token"
     assert len(requests[-1].headers["X-Request-Nonce"]) >= 24

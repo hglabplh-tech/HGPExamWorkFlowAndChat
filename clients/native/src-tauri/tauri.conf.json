@@ -6,7 +6,7 @@
     "distDir": "../www"
   },
   "package": {
-    "productName": "HcpXmlWorkflowChat",
+    "productName": "HGPExamWorkFlowAndChat",
     "version": "0.1.0"
   },
   "tauri": {
@@ -21,7 +21,7 @@
       "active": true,
       "category": "Education",
       "copyright": "Copyright (c) 2026 Harald Glab-Plhak",
-      "identifier": "com.hcpxmlworkflowchat.client",
+      "identifier": "com.hgpexamworkflowandchat.client",
       "targets": ["msi", "nsis", "dmg"],
       "macOS": {
         "entitlements": null,
@@ -41,7 +41,7 @@
     },
     "windows": [
       {
-        "title": "HcpXmlWorkflowChat",
+        "title": "HGPExamWorkFlowAndChat",
         "width": 1280,
         "height": 820,
         "minWidth": 900,

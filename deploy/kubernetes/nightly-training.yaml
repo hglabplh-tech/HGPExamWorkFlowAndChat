@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: hcp-xml-workflow-chat-models
+  name: hgp-exam-work-flow-and-chat-models
 spec:
   accessModes: [ReadWriteMany]
   resources:
@@ -11,7 +11,7 @@ spec:
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: hcp-xml-workflow-chat-nightly-training
+  name: hgp-exam-work-flow-and-chat-nightly-training
 spec:
   schedule: "0 2 */2 * *"
   concurrencyPolicy: Forbid
@@ -28,11 +28,11 @@ spec:
             seccompProfile: { type: RuntimeDefault }
           containers:
             - name: trainer
-              image: ghcr.io/OWNER/hcp-xml-workflow-chat:0.1.0
+              image: ghcr.io/OWNER/hgp-exam-work-flow-and-chat:0.1.0
               command: ["python", "-m", "backend.training_job"]
               envFrom:
-                - configMapRef: { name: hcp-xml-workflow-chat }
-                - secretRef: { name: hcp-xml-workflow-chat }
+                - configMapRef: { name: hgp-exam-work-flow-and-chat }
+                - secretRef: { name: hgp-exam-work-flow-and-chat }
               env:
                 - { name: NIGHTLY_TRAINING_MODE, value: train }
                 - { name: MODEL_OUTPUT_DIR, value: /models }
@@ -48,6 +48,6 @@ spec:
                 - { name: tmp, mountPath: /tmp }
           volumes:
             - name: models
-              persistentVolumeClaim: { claimName: hcp-xml-workflow-chat-models }
+              persistentVolumeClaim: { claimName: hgp-exam-work-flow-and-chat-models }
             - name: tmp
               emptyDir: {}

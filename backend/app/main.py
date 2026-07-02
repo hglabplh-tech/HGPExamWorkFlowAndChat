@@ -30,7 +30,7 @@ async def lifespan(_: FastAPI):
     await engine.dispose()
 
 
-app = FastAPI(title="HcpXmlWorkflowChat API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="HGPExamWorkFlowAndChat API", version="0.1.0", lifespan=lifespan)
 app.include_router(api_router)
 app.include_router(chat_router)
 app.mount("/static", StaticFiles(directory=FRONTEND), name="static")

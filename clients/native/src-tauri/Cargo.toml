@@ -1,7 +1,7 @@
 [package]
-name = "hcp-xml-workflow-chat-client"
+name = "hgp-exam-work-flow-and-chat-client"
 version = "0.1.0"
-description = "Windows desktop client for HcpXmlWorkflowChat"
+description = "Windows desktop client for HGPExamWorkFlowAndChat"
 authors = ["Harald Glab-Plhak"]
 license = "MIT"
 edition = "2021"

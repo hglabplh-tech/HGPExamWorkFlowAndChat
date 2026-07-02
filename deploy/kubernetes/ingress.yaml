@@ -2,14 +2,14 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: hcp-xml-workflow-chat
+  name: hgp-exam-work-flow-and-chat
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: 100m
 spec:
   ingressClassName: nginx
   tls:
     - hosts: [study.example.org]
-      secretName: hcp-xml-workflow-chat-tls
+      secretName: hgp-exam-work-flow-and-chat-tls
   rules:
     - host: study.example.org
       http:
@@ -17,5 +17,5 @@ spec:
           - path: /
             pathType: Prefix
             backend:
-              service: { name: hcp-xml-workflow-chat-api, port: { name: http } }
+              service: { name: hgp-exam-work-flow-and-chat-api, port: { name: http } }
 

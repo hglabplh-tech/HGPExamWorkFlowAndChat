@@ -25,7 +25,7 @@ def generate_exam_report(data: dict) -> bytes:
         canvas.saveState()
         canvas.setFont("Helvetica", 8)
         canvas.setFillColor(colors.HexColor("#667085"))
-        canvas.drawString(18 * mm, 12 * mm, f"HcpXmlWorkflowChat - Evidence report {data['submission_id']}")
+        canvas.drawString(18 * mm, 12 * mm, f"HGPExamWorkFlowAndChat - Evidence report {data['submission_id']}")
         canvas.drawRightString(A4[0] - 18 * mm, 12 * mm, f"Page {document.page}")
         canvas.restoreState()
 
@@ -37,7 +37,7 @@ def generate_exam_report(data: dict) -> bytes:
         topMargin=18 * mm,
         bottomMargin=20 * mm,
         title=f"Examination report - {data['exam_title']}",
-        author="HcpXmlWorkflowChat",
+        author="HGPExamWorkFlowAndChat",
     )
     story = [
         Paragraph("EXAMINATION REPORT", styles["Small"]),

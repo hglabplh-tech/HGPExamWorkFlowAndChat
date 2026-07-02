@@ -24,7 +24,7 @@ async def build_vocabulary_bundle(db: AsyncSession, *, min_frequency: int = 1, l
         if frequency >= min_frequency
     ]
     return {
-        "format": "hcp-xml-workflow-chat/vocabulary-v1",
+        "format": "hgp-exam-work-flow-and-chat/vocabulary-v1",
         "generated_at": datetime.now(UTC).isoformat(),
         "min_frequency": min_frequency,
         "document_count": len(rows),

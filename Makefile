@@ -15,7 +15,7 @@ run:
 	python -m uvicorn backend.app.main:app --reload
 
 build:
-	docker build -t hcp-xml-workflow-chat:local .
+	docker build -t hgp-exam-work-flow-and-chat:local .
 
 up:
 	docker compose up --build

@@ -191,7 +191,7 @@ function examPayload() {
   const lines=value=>value.split(/\n+/).map(item=>item.trim()).filter(Boolean);
   const csv=value=>value.split(",").map(item=>item.trim()).filter(Boolean);
   return {
-    format:"hcp-xml-workflow-chat/exam-json-v1",
+    format:"hgp-exam-work-flow-and-chat/exam-json-v1",
     title:document.querySelector("#exam-title").value,
     instructions:document.querySelector("#exam-instructions").value,
     kind:document.querySelector("#exam-kind").value,

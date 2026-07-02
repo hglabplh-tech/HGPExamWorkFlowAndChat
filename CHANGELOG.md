@@ -4,7 +4,7 @@
 
 ## Unreleased
 
-- Renamed the project to HcpXmlWorkflowChat.
+- Renamed the project to HGPExamWorkFlowAndChat.
 - Split the REST API and PostgreSQL models into small domain modules.
 - Added pure hybrid-ranking and workflow-policy utilities with layer tests.
 - Added synthetic Apple M3 programming and German-history course/training examples.

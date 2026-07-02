@@ -28,7 +28,7 @@ def test_tauri_windows_targets_are_configured() -> None:
     """Desktop packaging is configured for Windows installers and macOS DMG."""
     config = json.loads((ROOT / "clients" / "native" / "src-tauri" / "tauri.conf.json").read_text(encoding="utf-8"))
     assert set(config["tauri"]["bundle"]["targets"]) == {"msi", "nsis", "dmg"}
-    assert config["package"]["productName"] == "HcpXmlWorkflowChat"
+    assert config["package"]["productName"] == "HGPExamWorkFlowAndChat"
     assert "macOS" in config["tauri"]["bundle"]
 
 

@@ -10,7 +10,7 @@ from defusedxml import ElementTree as SafeElementTree
 from defusedxml.common import DefusedXmlException
 
 
-FORMAT = "hcp-xml-workflow-chat/exam-v1"
+FORMAT = "hgp-exam-work-flow-and-chat/exam-v1"
 
 
 def export_exam_xml(course_code: str, exam: object, questions: list[object], rules: dict | None = None) -> bytes:

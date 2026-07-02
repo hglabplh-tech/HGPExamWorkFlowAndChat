@@ -4,5 +4,5 @@
 fn main() {
     tauri::Builder::default()
         .run(tauri::generate_context!())
-        .expect("failed to run HcpXmlWorkflowChat Windows client");
+        .expect("failed to run HGPExamWorkFlowAndChat Windows client");
 }

@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: hcp-xml-workflow-chat
+  name: hgp-exam-work-flow-and-chat
 data:
   ACCESS_TOKEN_MINUTES: "15"
   NONCE_TTL_SECONDS: "3600"
@@ -12,7 +12,7 @@ data:
   COMPUTE_DEVICE: "cpu"
   PUBLIC_BASE_URL: "https://study.example.org"
   CHROMA_URL: "http://chroma.example.svc:8000"
-  OCSP_SIGNER_URL: "http://hcp-xml-workflow-chat-ocsp:8010"
+  OCSP_SIGNER_URL: "http://hgp-exam-work-flow-and-chat-ocsp:8010"
   MODEL_OUTPUT_DIR: "/models"
   NIGHTLY_TRAINING_MODE: "dataset"
   TRAINING_INTERVAL_HOURS: "48"

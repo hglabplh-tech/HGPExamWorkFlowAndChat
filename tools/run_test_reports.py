@@ -27,7 +27,7 @@ def build_pdf(report: dict, destination: Path) -> None:
         canvas.saveState()
         canvas.setFont("Helvetica", 8)
         canvas.setFillColor(colors.HexColor("#667085"))
-        canvas.drawString(18 * mm, 10 * mm, "HcpXmlWorkflowChat - automated test evidence")
+        canvas.drawString(18 * mm, 10 * mm, "HGPExamWorkFlowAndChat - automated test evidence")
         canvas.drawRightString(A4[0] - 18 * mm, 10 * mm, f"Page {doc.page}")
         canvas.restoreState()
     summary = report.get("summary", {})
@@ -39,7 +39,7 @@ def build_pdf(report: dict, destination: Path) -> None:
         ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
         ("PADDING", (0, 0), (-1, -1), 6),
     ]))
-    story = [Paragraph("HcpXmlWorkflowChat Test Report", styles["Title"]),
+    story = [Paragraph("HGPExamWorkFlowAndChat Test Report", styles["Title"]),
              Paragraph(f"Generated {datetime.now(UTC).isoformat()}", styles["Normal"]), Spacer(1, 6 * mm), table,
              Spacer(1, 8 * mm), Paragraph("Test details", styles["Heading1"])]
     for test in report.get("tests", []):

@@ -2,7 +2,7 @@
 
 # Contributing
 
-Thank you for helping improve HcpXmlWorkflowChat.
+Thank you for helping improve HGPExamWorkFlowAndChat.
 
 1. Open an issue for substantial behavior or architecture changes.
 2. Create a focused branch and include tests for changed behavior.
