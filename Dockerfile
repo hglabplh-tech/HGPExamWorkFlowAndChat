@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 LABEL org.opencontainers.image.title="HGPExamWorkFlowAndChat" \
       org.opencontainers.image.description="Course collaboration, hybrid search, assisted grading, and secure exam workflows" \
