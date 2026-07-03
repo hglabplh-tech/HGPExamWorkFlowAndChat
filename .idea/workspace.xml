@@ -4,15 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6dcf1ec0-ee83-4509-bb62-c3e495e5bdad" name="Changes" comment="add FEATURES.md update chromadb rebuild and cleanup im imports and local unused defs">
-      <change beforePath="$PROJECT_DIR$/backend/app/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/db_models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/db_models/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/email_delivery.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/email_delivery.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/admin.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/admin.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/admin.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/admin.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_api_contract.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_api_contract.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_database_metadata.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_database_metadata.py" afterDir="false" />
+    <list default="true" id="6dcf1ec0-ee83-4509-bb62-c3e495e5bdad" name="Changes" comment="add descriptions">
+      <change afterPath="$PROJECT_DIR$/backend/app/api_routes/system.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/db_models/system.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/infra/migrations/012_mail_server_settings.sql" afterDir="false" />
     </list>
     <list id="ddda333b-02b2-478d-872f-da0899d48821" name="out" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/hcp-xml-workflow-chat.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/hgp-exam-work-flow-and-chat.iml" afterDir="false" />
@@ -27,23 +22,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.000000007097716" />
-      <entry key="MS500" value="1.0254502405721573" />
-      <entry key="S2" value="1.8584227152071793" />
-      <entry key="S5" value="3.7035013634761564" />
-      <entry key="S10" value="6.227920620266006" />
-      <entry key="S30" value="11.85256859360403" />
-      <entry key="S60" value="14.797883965883956" />
-      <entry key="M2" value="16.708672512018907" />
-      <entry key="M5" value="18.03269801323486" />
-      <entry key="M10" value="18.507419526318373" />
-      <entry key="M15" value="18.669592419581555" />
-      <entry key="M30" value="18.83377669664504" />
-      <entry key="H1" value="18.9170096496198" />
-      <entry key="H2" value="19.06364607328995" />
-      <entry key="H4" value="21.185949939831556" />
-      <entry key="D1" value="52.5530439050123" />
-      <entry key="W1" value="74.16314510416068" />
+      <entry key="MS100" value="1.0014904875087505" />
+      <entry key="MS500" value="1.2720606104177008" />
+      <entry key="S2" value="1.722214854987717" />
+      <entry key="S5" value="1.87794362405616" />
+      <entry key="S10" value="1.9376916936693283" />
+      <entry key="S30" value="2.202493182214477" />
+      <entry key="S60" value="2.935504686640318" />
+      <entry key="M2" value="3.9400488231960153" />
+      <entry key="M5" value="4.995888275437855" />
+      <entry key="M10" value="5.461887826097697" />
+      <entry key="M15" value="5.6327265925905525" />
+      <entry key="M30" value="5.812034566195914" />
+      <entry key="H1" value="5.942613507434395" />
+      <entry key="H2" value="6.803873390935682" />
+      <entry key="H4" value="10.45412754019822" />
+      <entry key="D1" value="46.55674040316196" />
+      <entry key="W1" value="77.46845373618216" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -52,36 +47,36 @@
       <entry key="S5" value="0.0" />
       <entry key="S10" value="0.0" />
       <entry key="S30" value="0.0" />
-      <entry key="S60" value="1.6643155148833436E-249" />
-      <entry key="M2" value="4.079602327290421E-125" />
-      <entry key="M5" value="1.754878819727757E-50" />
-      <entry key="M10" value="1.3247183926132212E-25" />
-      <entry key="M15" value="2.59865750205876E-17" />
-      <entry key="M30" value="5.097702916077754E-9" />
-      <entry key="H1" value="7.139819966972384E-5" />
-      <entry key="H2" value="0.008449745538755814" />
-      <entry key="H4" value="0.09192249745712865" />
-      <entry key="D1" value="0.6717953125220086" />
-      <entry key="W1" value="0.9447558005060186" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="4.1348095499177585E-206" />
+      <entry key="M5" value="7.023962823507366E-83" />
+      <entry key="M10" value="8.380908556658617E-42" />
+      <entry key="M15" value="4.125982688144674E-28" />
+      <entry key="M30" value="2.0312515078504385E-14" />
+      <entry key="H1" value="1.4252198103627513E-7" />
+      <entry key="H2" value="3.775208352346597E-4" />
+      <entry key="H4" value="0.019429895399478092" />
+      <entry key="D1" value="0.518495602171951" />
+      <entry key="W1" value="0.9104357372950558" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.7845841036220641" />
-      <entry key="MS500" value="0.9769863324291511" />
-      <entry key="S2" value="1.8359117798147297" />
-      <entry key="S5" value="3.685768088525717" />
-      <entry key="S10" value="6.212835874168383" />
-      <entry key="S30" value="11.842380877002098" />
-      <entry key="S60" value="14.791365843603193" />
-      <entry key="M2" value="16.704943916280538" />
-      <entry key="M5" value="18.031075355207577" />
-      <entry key="M10" value="18.506584579142295" />
-      <entry key="M15" value="18.669030402116235" />
-      <entry key="M30" value="18.83349296478262" />
-      <entry key="H1" value="18.91693832280286" />
-      <entry key="H2" value="19.072014296265806" />
-      <entry key="H4" value="21.27778020917132" />
-      <entry key="D1" value="53.22475575652361" />
-      <entry key="W1" value="75.10788369708509" />
+      <entry key="MS100" value="0.8777120532352694" />
+      <entry key="MS500" value="1.2303210780153893" />
+      <entry key="S2" value="1.704968465334633" />
+      <entry key="S5" value="1.8700952174521919" />
+      <entry key="S10" value="1.9335821420642085" />
+      <entry key="S30" value="2.200585908042185" />
+      <entry key="S60" value="2.9337554055012416" />
+      <entry key="M2" value="3.938630127521582" />
+      <entry key="M5" value="4.995092718437426" />
+      <entry key="M10" value="5.461439799347882" />
+      <entry key="M15" value="5.6324156345457626" />
+      <entry key="M30" value="5.811872649733606" />
+      <entry key="H1" value="5.942530739875432" />
+      <entry key="H2" value="6.804205532497727" />
+      <entry key="H4" value="10.473516965564544" />
+      <entry key="D1" value="47.07516807875904" />
+      <entry key="W1" value="78.37887238907358" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo"><![CDATA[{
@@ -183,7 +178,23 @@
       <option name="project" value="LOCAL" />
       <updated>1783082257405</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="add email conf">
+      <option name="closed" value="true" />
+      <created>1783114422184</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1783114422184</updated>
+    </task>
+    <task id="LOCAL-00009" summary="add descriptions">
+      <option name="closed" value="true" />
+      <created>1783114546003</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1783114546003</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -197,6 +208,8 @@
     <MESSAGE value="totp logic changed completely new with registration and auth per TOTP per email or SMS" />
     <MESSAGE value="add FEATURES.md" />
     <MESSAGE value="add FEATURES.md update chromadb rebuild and cleanup im imports and local unused defs" />
-    <option name="LAST_COMMIT_MESSAGE" value="add FEATURES.md update chromadb rebuild and cleanup im imports and local unused defs" />
+    <MESSAGE value="add email conf" />
+    <MESSAGE value="add descriptions" />
+    <option name="LAST_COMMIT_MESSAGE" value="add descriptions" />
   </component>
 </project>
