@@ -1,0 +1,282 @@
+<!-- Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License. -->
+
+# Running guide
+
+This guide explains how to run `HGPExamWorkFlowAndChat` in Docker and how to
+operate the main development and administration workflows.
+
+## Docker quick start
+
+```sh
+cd /Users/hglabplh/Documents/Codex/2026-06-30/HGPExamWorkFlowAndChat
+cp .env.example .env
+```
+
+Edit `.env` for Docker:
+
+```env
+DATABASE_URL=postgresql+asyncpg://study:study@postgres:5432/study
+CHROMA_URL=http://chroma:8000
+JWT_SECRET=replace-with-at-least-32-random-characters
+PUBLIC_BASE_URL=https://localhost
+```
+
+Create local TLS files if needed:
+
+```sh
+mkdir -p certs
+openssl req -x509 -newkey rsa:4096 -nodes \
+  -keyout certs/server.key \
+  -out certs/server.crt \
+  -days 365 \
+  -subj "/CN=localhost"
+```
+
+Start:
+
+```sh
+docker compose up --build
+```
+
+Bootstrap the first administrator:
+
+```sh
+docker compose exec api python -m backend.app.bootstrap admin@example.org "a-long-password" --name "Administrator" --role admin
+```
+
+Open:
+
+- Web app: `https://localhost`
+- Admin app: `https://localhost/admin`
+- API docs: `https://localhost/docs`
+- Health: `https://localhost/health`
+- Readiness: `https://localhost/ready`
+
+## Daily Docker commands
+
+Show services:
+
+```sh
+docker compose ps
+```
+
+Follow API logs:
+
+```sh
+docker compose logs -f api
+```
+
+Stop while keeping data:
+
+```sh
+docker compose down
+```
+
+Stop and remove PostgreSQL, ChromaDB, and model volumes:
+
+```sh
+docker compose down -v
+```
+
+Use `down -v` only when you intentionally want to delete local Docker data.
+
+## Admin configuration after login
+
+Open `https://localhost/admin` and sign in as an administrator.
+
+Useful menu entries:
+
+- `User definition`: create administrator, instructor, staff, and student users.
+- `TOTP configuration`: initialize two-factor login for the signed-in account.
+- `SMTP / IMAP configuration`: configure outbound SMTP and stored IMAP settings.
+- `Import/export`: export knowledge and vocabulary files.
+- `Rebuild ChromaDB`: rebuild the vector index from PostgreSQL.
+- `Trusted lists` and `Private PKI`: configure certificate trust sources.
+
+The SMTP/IMAP page stores:
+
+- SMTP host, port, username, password, STARTTLS/SSL mode, sender address, and
+  support address.
+- IMAP host, port, username, password, and SSL mode.
+
+Saved SMTP settings override `.env` for application email delivery. Empty
+password fields keep the previously saved password.
+
+## Authentication flow
+
+1. An administrator creates the user.
+2. The user starts registration from the login page.
+3. The system sends email and optional SMS verification codes.
+4. The user verifies the codes and receives a 30-minute activation link.
+5. The user activates the account.
+6. The user enters email/password, presses `Send TOTP`, enters the TOTP, and
+   logs in.
+7. The backend creates a persistent active-session row and returns a bearer
+   token.
+8. State-changing REST calls send `Authorization: Bearer ...` and a unique
+   `X-Request-Nonce`.
+
+## Rebuild ChromaDB from PostgreSQL
+
+From the admin UI:
+
+1. Open `Rebuild ChromaDB`.
+2. Choose `Economy` or `Quality`.
+3. Press `Rebuild ChromaDB`.
+
+REST endpoint:
+
+```text
+POST /api/v1/knowledge/rebuild-chroma?profile=economy
+```
+
+Example:
+
+```sh
+curl -k -X POST "https://localhost/api/v1/knowledge/rebuild-chroma?profile=economy" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-Request-Nonce: $(uuidgen)"
+```
+
+## Import and export knowledge
+
+Useful endpoints:
+
+```text
+POST /api/v1/knowledge/upload
+POST /api/v1/knowledge/upload-and-ask
+GET  /api/v1/knowledge/export.json
+POST /api/v1/knowledge/import-bundle
+GET  /api/v1/knowledge/vocab.txt
+GET  /api/v1/knowledge/vocabulary.json
+POST /api/v1/thesauri/upload
+POST /api/v1/thesauri
+```
+
+PostgreSQL is canonical. ChromaDB can always be rebuilt from approved
+PostgreSQL knowledge data.
+
+## Training jobs
+
+Run one training job:
+
+```sh
+docker compose --profile tools run --rm trainer
+```
+
+Run the scheduler:
+
+```sh
+docker compose --profile training up training-scheduler
+```
+
+The default interval is `TRAINING_INTERVAL_HOURS=48`, so scheduled training
+runs every two days.
+
+## Local development without Caddy
+
+Use localhost values in `.env`:
+
+```env
+DATABASE_URL=postgresql+asyncpg://study:study@localhost:5432/study
+CHROMA_URL=http://localhost:8001
+```
+
+Start data services:
+
+```sh
+docker compose up postgres chroma
+```
+
+Install dependencies:
+
+```sh
+python -m pip install -e '.[dev,ml]'
+```
+
+Run the API:
+
+```sh
+python -m uvicorn backend.app.main:app --reload
+```
+
+Or:
+
+```sh
+make run
+```
+
+Never expose the raw Uvicorn development port directly to the public internet.
+
+## Tests and reports
+
+Run tests:
+
+```sh
+python -m pytest -q
+```
+
+Run the project check:
+
+```sh
+make check
+```
+
+Generate report artifacts:
+
+```sh
+python tools/run_test_reports.py
+```
+
+## Native clients
+
+Build the static client bundle:
+
+```sh
+export HCP_API_BASE="https://study.example.edu"
+make client-bundle
+```
+
+Platform builds:
+
+```sh
+make client-android-sync
+make client-ios-sync
+make client-macos-dmg-silicon
+make client-macos-dmg-intel
+make client-macos-dmg-universal
+make client-windows-build
+```
+
+See `docs/client-app-builds.md` for platform prerequisites.
+
+## Production notes
+
+- Put the API behind Caddy, Kubernetes ingress, or another TLS 1.2/1.3 reverse
+  proxy.
+- Do not expose Uvicorn directly.
+- Store secrets in a real secrets manager.
+- Use managed PostgreSQL or a hardened PostgreSQL deployment with backups.
+- Treat ChromaDB as a derived index.
+- Move schema creation from API startup to reviewed migration jobs.
+- Use Redis or NATS for WebSocket fan-out before running multiple API replicas.
+- Review legal hold, retention, audit, and deletion workflows operationally.
+
+## Troubleshooting
+
+Certificate warning: the local self-signed certificate is not trusted by the
+browser. Trust it locally or use a real certificate.
+
+SMTP/TOTP failure: check `/admin`, `SMTP / IMAP configuration`, and API logs:
+
+```sh
+docker compose logs -f api
+```
+
+Database connection failure inside Docker: use `postgres` as host in
+`DATABASE_URL`.
+
+ChromaDB failure inside Docker: use `http://chroma:8000` as `CHROMA_URL`.
+
+Rejected state-changing request: include both the bearer token and a fresh
+`X-Request-Nonce`.
