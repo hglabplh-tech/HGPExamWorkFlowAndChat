@@ -5,7 +5,6 @@ import uuid
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..models import ResearchInteraction
 from .generation import generate_text
 from .search import hybrid_search
 

@@ -1,37 +1,26 @@
 # Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """Utilities for content."""
 import csv
-import base64
 import hashlib
 import io
 import json
 import uuid
 import asyncio
-from datetime import UTC, datetime
 
-import httpx
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, File, Form, Header, HTTPException, Query, Response, UploadFile, status
-from sqlalchemy import and_, func, or_, select, update
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Query, Response, UploadFile, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from ..database import get_db
 from ..config import get_settings
-from ..models import Conversation, ConversationMember, Course, DisciplineScoringProfile, Document, Enrollment, ExamQuestion, Examination, GradeEvent, Message, ModelTrainingRun, OCSPQuery, PrivatePKI, ResearchInteraction, Role, SignatureValidation, Submission, Thesaurus, TrainingExample, TrustList, User, UserCertificate, VideoResource
-from ..schemas import CertificateRevoke, ConversationCreate, CourseCreate, CourseOut, DeletionRequest, DocumentCreate, ExamDraftRequest, ExaminationCreate, ExaminationRelease, GradeOverride, InstructorReturn, MessageCreate, PrivatePKICreate, PublicKeyUpdate, QuestionCreate, ResearchQuestionCreate, ResearchVisibilityUpdate, ScoringProfileCreate, SearchResponse, SignatureValidationRequest, SubmissionCreate, SubmissionOut, ThesaurusJsonImport, ThesaurusOut, TrainingApproval, TrustListCreate, TrustListDecision, UserCertificateAssign, UserCreate, UserUpdate, VideoCreate
-from ..security import authenticate, create_access_token, hash_password, require_nonce
+from ..models import Document, Thesaurus, TrainingExample, User, VideoResource
+from ..schemas import DocumentCreate, ThesaurusJsonImport, ThesaurusOut, VideoCreate
+from ..security import authenticate, require_nonce
 from ..services.audit import append_audit
 from ..services.academic_integrity import fact_check_knowledge_text
-from ..services.asag import grade_answer
-from ..services.evidence import certificate_matches_public_key, certificate_sha256, grading_signature_message, sha256_hex, signature_message, validate_public_key_pem, verify_certificate_signature
-from ..services.indexing import index_approved_document, make_chunks
-from ..services.model_router import select_models
-from ..services.research import answer_research_question, create_exam_draft
-from ..services.reports import generate_exam_report
-from ..services.private_pki import verify_private_chain, verify_root
-from ..services.ocsp import parse_ocsp_request, sign_ocsp_response
-from ..services.search import hybrid_search
-from ..services.trust import TrustValidator, parse_etsi_trust_list
+from ..services.evidence import sha256_hex
+from ..services.indexing import index_approved_document, make_chunks, rebuild_chroma_from_documents
 from ..services.audio import transcribe_audio
 from ..services.ingestion import ContentExtractor, KnowledgeImporter, answer_from_uploaded_text
 from ..services.thesaurus import parse_thesaurus_payload
@@ -39,9 +28,7 @@ from ..services.vocabulary import build_vocabulary_bundle, vocabulary_text
 
 
 from .common import (
-    active_scoring_profile, build_grade_proposal, require_active_signing_certificate,
-    require_admin, require_course_access, require_course_instructor, require_staff,
-    require_training_manager, store_exam_report,
+    require_staff,
 )
 
 router = APIRouter(prefix="/api/v1")
@@ -216,6 +203,30 @@ async def export_knowledge(db: AsyncSession = Depends(get_db), user: User = Depe
     """Export PostgreSQL courses and knowledge as a versioned JSON bundle."""
     require_staff(user)
     return await KnowledgeImporter.export_bundle(db)
+
+
+@router.post("/knowledge/rebuild-chroma")
+async def rebuild_chroma_index(
+    profile: str = Query(default="economy", pattern="^(economy|quality)$"),
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_nonce),
+):
+    """Rebuild the derived ChromaDB vector index from approved PostgreSQL documents."""
+    require_staff(user)
+    documents = (await db.scalars(select(Document).options(selectinload(Document.chunks)).where(
+        Document.staff_approved.is_(True),
+    ).order_by(Document.title))).all()
+    created_chunks = 0
+    for document in documents:
+        if not document.chunks:
+            document.chunks = make_chunks(document)
+            created_chunks += len(document.chunks)
+    if created_chunks:
+        await db.flush()
+    result = await asyncio.to_thread(rebuild_chroma_from_documents, list(documents), profile)
+    await append_audit(db, user.id, "chroma_rebuilt", "knowledge", user.id, details={**result, "created_chunks": created_chunks})
+    await db.commit()
+    return {**result, "created_chunks": created_chunks}
 
 
 @router.get("/knowledge/vocabulary.json")

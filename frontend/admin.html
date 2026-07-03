@@ -28,6 +28,7 @@
         <a href="#admin-courses">Courses</a>
         <a href="#admin-chatrooms">Defined chatrooms</a>
         <a href="#admin-import-export">Import/export</a>
+        <a href="#chroma-admin">Rebuild ChromaDB</a>
         <a href="#user-definition">User definition</a>
         <a href="#user-definition">Create user entry</a>
         <a href="#totp-config">TOTP configuration</a>
@@ -91,6 +92,16 @@
         <p class="eyebrow">IMPORT / EXPORT</p>
         <h1>Knowledge and exam exchange</h1>
         <p><a href="/api/v1/knowledge/export.json">Export knowledge JSON</a> · <a href="/api/v1/knowledge/vocab.txt">Export vocab.txt</a></p>
+      </section>
+      <section id="chroma-admin" class="admin-panel">
+        <p class="eyebrow">VECTOR INDEX</p>
+        <h1>Rebuild ChromaDB from PostgreSQL</h1>
+        <p>Recreates the derived approved-knowledge vector collection from PostgreSQL documents. PostgreSQL remains canonical.</p>
+        <form id="chroma-rebuild-form" class="admin-form">
+          <label>Embedding profile<select id="chroma-profile"><option value="economy">Economy</option><option value="quality">Quality</option></select></label>
+          <button>Rebuild ChromaDB</button>
+        </form>
+        <div id="chroma-status" aria-live="polite"></div>
       </section>
       <p class="eyebrow">CERTIFICATES AND SIGNATURES</p>
       <h1>Trusted lists</h1>

@@ -1,36 +1,18 @@
 # Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """Utilities for common."""
-import csv
-import base64
-import hashlib
-import io
 import json
 import uuid
 import asyncio
 from datetime import UTC, datetime
 
-import httpx
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, Header, HTTPException, Query, Response, status
-from sqlalchemy import and_, func, or_, select, update
+from fastapi import HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
-from ..database import get_db
-from ..config import get_settings
-from ..models import Conversation, ConversationMember, Course, DisciplineScoringProfile, Document, Enrollment, ExamGroup, ExamQuestion, Examination, GradeEvent, Message, ModelTrainingRun, OCSPQuery, PrivatePKI, ResearchInteraction, Role, SignatureValidation, Submission, TrainingExample, TrustList, User, UserCertificate, VideoResource
-from ..schemas import CertificateRevoke, ConversationCreate, CourseCreate, CourseOut, DeletionRequest, DocumentCreate, ExamDraftRequest, ExaminationCreate, ExaminationRelease, GradeOverride, InstructorReturn, MessageCreate, PrivatePKICreate, PublicKeyUpdate, QuestionCreate, ResearchQuestionCreate, ResearchVisibilityUpdate, ScoringProfileCreate, SearchResponse, SignatureValidationRequest, SubmissionCreate, SubmissionOut, TrainingApproval, TrustListCreate, TrustListDecision, UserCertificateAssign, UserCreate, UserUpdate, VideoCreate
-from ..security import authenticate, create_access_token, hash_password, require_nonce
-from ..services.audit import append_audit
+from ..models import Course, DisciplineScoringProfile, Enrollment, ExamGroup, ExamQuestion, Examination, PrivatePKI, Role, Submission, User, UserCertificate
 from ..services.asag import grade_answer
-from ..services.evidence import certificate_matches_public_key, certificate_sha256, grading_signature_message, sha256_hex, signature_message, validate_public_key_pem, verify_certificate_signature
-from ..services.indexing import index_approved_document, make_chunks
-from ..services.model_router import select_models
-from ..services.research import answer_research_question, create_exam_draft
+from ..services.evidence import certificate_sha256, sha256_hex
 from ..services.reports import generate_exam_report
-from ..services.private_pki import verify_private_chain, verify_root
-from ..services.ocsp import parse_ocsp_request, sign_ocsp_response
-from ..services.search import hybrid_search
-from ..services.trust import TrustValidator, parse_etsi_trust_list
 from ..services.authorization import has_permission
 from ..services.grading_scales import convert_grades
 from ..services.multiple_choice import score_choice_answer

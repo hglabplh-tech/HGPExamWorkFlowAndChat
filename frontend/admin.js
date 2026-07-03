@@ -165,6 +165,16 @@ document.querySelector("#scoring-form").addEventListener("submit",async event=>{
   if(response.ok)refreshScoring();
 });
 
+document.querySelector("#chroma-rebuild-form").addEventListener("submit",async event=>{
+  event.preventDefault();
+  const target=document.querySelector("#chroma-status");
+  target.textContent="Rebuilding ChromaDB from PostgreSQL…";
+  const profile=document.querySelector("#chroma-profile").value;
+  const response=await fetch(`/api/v1/knowledge/rebuild-chroma?profile=${encodeURIComponent(profile)}`,{method:"POST",headers:{...headers(),"X-Request-Nonce":nonce()}});
+  const data=await response.json().catch(()=>({}));
+  target.textContent=response.ok?`Rebuilt ${data.collection}: ${data.documents_indexed} documents, ${data.chunks_indexed} chunks, ${data.created_chunks} chunks created.`:(data.detail||"ChromaDB rebuild failed");
+});
+
 document.querySelector("#totp-setup").addEventListener("click",async()=>{
   const response=await fetch("/api/v1/users/me/totp/setup",{method:"POST",headers:{...headers(),"X-Request-Nonce":nonce()}});
   const data=await response.json();

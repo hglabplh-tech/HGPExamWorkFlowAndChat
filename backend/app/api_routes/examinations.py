@@ -1,46 +1,29 @@
 # Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """Utilities for examinations."""
-import csv
-import base64
-import hashlib
-import io
 import json
 import uuid
 import asyncio
 from datetime import UTC, datetime
 
-import httpx
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, File, Header, HTTPException, Query, Response, UploadFile, status
-from sqlalchemy import and_, func, or_, select, update
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from ..database import get_db
-from ..config import get_settings
-from ..models import ActiveUserSession, Conversation, ConversationMember, Course, DisciplineScoringProfile, Document, Enrollment, ExamQuestion, Examination, ExamRuleSet, GradeEvent, Message, ModelTrainingRun, OCSPQuery, PrivatePKI, ResearchInteraction, Role, SignatureValidation, Submission, TrainingExample, TrustList, User, UserCertificate, VideoResource
-from ..schemas import CertificateRevoke, ConversationCreate, CourseCreate, CourseOut, DeletionRequest, DocumentCreate, ExamDraftRequest, ExaminationCreate, ExaminationJsonCreate, ExaminationRelease, ExamRuleSetCreate, GradeOverride, InstructorReturn, MessageCreate, PrivatePKICreate, PublicKeyUpdate, QuestionCreate, QuestionDraftScore, ResearchQuestionCreate, ResearchVisibilityUpdate, ScoringProfileCreate, SearchResponse, SignatureValidationRequest, SubmissionCreate, SubmissionOut, TrainingApproval, TrustListCreate, TrustListDecision, UserCertificateAssign, UserCreate, UserUpdate, VideoCreate
-from ..security import authenticate, create_access_token, current_active_session, hash_password, require_nonce
+from ..models import ActiveUserSession, Course, Enrollment, ExamQuestion, Examination, ExamRuleSet, Role, Submission, User
+from ..schemas import ExamDraftRequest, ExaminationCreate, ExaminationJsonCreate, ExaminationRelease, ExamRuleSetCreate, QuestionCreate, QuestionDraftScore
+from ..security import authenticate, current_active_session, require_nonce
 from ..services.audit import append_audit
 from ..services.asag import grade_answer
-from ..services.evidence import certificate_matches_public_key, certificate_sha256, grading_signature_message, sha256_hex, signature_message, validate_public_key_pem, verify_certificate_signature
-from ..services.indexing import index_approved_document, make_chunks
-from ..services.model_router import select_models
-from ..services.research import answer_research_question, create_exam_draft
-from ..services.reports import generate_exam_report
-from ..services.private_pki import verify_private_chain, verify_root
-from ..services.ocsp import parse_ocsp_request, sign_ocsp_response
-from ..services.search import hybrid_search
+from ..services.research import create_exam_draft
 from ..services.research_history import record_history_entry
-from ..services.trust import TrustValidator, parse_etsi_trust_list
 from ..services.exam_xml import export_exam_xml, import_exam_xml
 from ..services.exam_json import export_exam_json, import_exam_json
 from ..services.multiple_choice import score_choice_answer
 
 
 from .common import (
-    active_scoring_profile, build_grade_proposal, require_active_signing_certificate,
-    require_admin, require_course_access, require_course_instructor, require_staff,
-    require_training_manager, store_exam_report,
+    active_scoring_profile, require_course_access, require_course_instructor, require_staff,
 )
 
 router = APIRouter(prefix="/api/v1")

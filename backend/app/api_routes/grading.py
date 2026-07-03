@@ -1,44 +1,28 @@
 # Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """Utilities for grading."""
-import csv
 import base64
-import hashlib
-import io
 import json
 import uuid
-import asyncio
 from datetime import UTC, datetime
 
-import httpx
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, Header, HTTPException, Query, Response, status
-from sqlalchemy import and_, func, or_, select, update
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from ..database import get_db
 from ..config import get_settings
-from ..models import Conversation, ConversationMember, Course, DisciplineScoringProfile, Document, Enrollment, ExamQuestion, Examination, ExamRuleSet, GradeEvent, Message, ModelTrainingRun, OCSPQuery, PrivatePKI, ResearchInteraction, Role, SignatureValidation, Submission, TrainingExample, TrustList, User, UserCertificate, VideoResource
-from ..schemas import CertificateRevoke, ConversationCreate, CourseCreate, CourseOut, DeletionRequest, DocumentCreate, ExamDraftRequest, ExaminationCreate, ExaminationRelease, GradeOverride, IntegrityCheckRequest, InstructorReturn, MessageCreate, PrivatePKICreate, PublicKeyUpdate, QuestionCreate, ResearchQuestionCreate, ResearchVisibilityUpdate, ScoringProfileCreate, SearchResponse, SignatureValidationRequest, SubmissionCreate, SubmissionOut, TrainingApproval, TrustListCreate, TrustListDecision, UserCertificateAssign, UserCreate, UserUpdate, VideoCreate
-from ..security import authenticate, create_access_token, hash_password, require_nonce
+from ..models import Examination, ExamRuleSet, GradeEvent, Role, Submission, User
+from ..schemas import GradeOverride, IntegrityCheckRequest, InstructorReturn
+from ..security import authenticate, require_nonce
 from ..services.audit import append_audit
-from ..services.asag import grade_answer
-from ..services.evidence import certificate_matches_public_key, certificate_sha256, grading_signature_message, sha256_hex, signature_message, validate_public_key_pem, verify_certificate_signature
-from ..services.indexing import index_approved_document, make_chunks
-from ..services.model_router import select_models
-from ..services.research import answer_research_question, create_exam_draft
-from ..services.reports import generate_exam_report
-from ..services.private_pki import verify_private_chain, verify_root
-from ..services.ocsp import parse_ocsp_request, sign_ocsp_response
-from ..services.search import hybrid_search
-from ..services.trust import TrustValidator, parse_etsi_trust_list
+from ..services.evidence import certificate_matches_public_key, certificate_sha256, grading_signature_message, sha256_hex, verify_certificate_signature
 from ..services.academic_integrity import review_exam_text
 from ..services.exam_rules import evaluate_exam_rules
 
 
 from .common import (
-    active_scoring_profile, build_grade_proposal, require_active_signing_certificate,
-    require_admin, require_course_access, require_course_instructor, require_staff,
-    require_training_manager, store_exam_report,
+    build_grade_proposal, require_active_signing_certificate,
+    require_course_instructor, require_staff,
+    store_exam_report,
 )
 
 router = APIRouter(prefix="/api/v1")

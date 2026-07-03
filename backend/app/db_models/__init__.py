@@ -11,4 +11,13 @@ from .training import ModelTrainingRun, TrainingExample
 from .audit import AuditEvent, RequestNonce
 from .trust import OCSPQuery, PrivatePKI, SignatureValidation, TrustList, UserCertificate
 
-__all__ = [name for name in globals() if not name.startswith("_")]
+__all__ = [
+    "ActiveUserSession", "AuditEvent", "Base", "Conversation",
+    "ConversationMember", "Course", "DisciplineScoringProfile", "Document",
+    "DocumentChunk", "Enrollment", "ExamGroup", "ExamQuestion", "ExamRuleSet",
+    "Examination", "GradeEvent", "Message", "ModelTrainingRun", "OCSPQuery",
+    "PrivatePKI", "RequestNonce", "ResearchHistory", "ResearchHistoryEntry",
+    "ResearchInteraction", "Role", "SignatureValidation", "Submission",
+    "SubmissionConfirmation", "Thesaurus", "TrainingExample", "TrustList",
+    "UUIDMixin", "User", "UserCertificate", "VideoResource",
+]

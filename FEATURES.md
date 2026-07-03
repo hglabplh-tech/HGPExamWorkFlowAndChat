@@ -23,6 +23,8 @@ grading service.
 - Infrastructure: Caddy TLS proxy, PostgreSQL setup, migrations, OCSP config.
 - Canonical data store: PostgreSQL; ChromaDB is treated as a rebuildable
   semantic index.
+- Static hygiene: unused imports, unused locals, and accidental redefinitions
+  are checked with Ruff.
 
 ## 2. Authentication, registration, and active sessions
 
@@ -209,6 +211,7 @@ semantic/full-text indexes.
 - PostgreSQL full-text search.
 - BM25 ranking channel.
 - ChromaDB semantic search channel.
+- Admin-triggered ChromaDB rebuild from approved PostgreSQL documents.
 - Sentence-transformer embeddings.
 - Weighted hybrid ranking with explainable score components.
 - Discipline-specific search weights.
@@ -247,6 +250,8 @@ semantic/full-text indexes.
 - PDF/text upload and upload-and-ask flows.
 - Smart ingestion avoids duplicate content by hash.
 - Approved documents are chunked and indexed.
+- ChromaDB can be fully rebuilt from PostgreSQL through an admin REST request;
+  missing chunks are created before re-indexing.
 - YouTube resources can be imported/exported with discipline, question tags, and
   keywords.
 - Knowledge import bundle support.
@@ -263,6 +268,7 @@ semantic/full-text indexes.
 - `GET /api/v1/knowledge/vocabulary.json`
 - `GET /api/v1/knowledge/vocab.txt`
 - `POST /api/v1/knowledge/import-bundle`
+- `POST /api/v1/knowledge/rebuild-chroma`
 - `POST /api/v1/documents/{document_id}/approve`
 - `POST /api/v1/videos`
 - `POST /api/v1/videos/{video_id}/approve`
@@ -582,6 +588,7 @@ chatrooms, trust, PKI, scoring, exams, and search language resources.
 - User definition / create user entry.
 - TOTP configuration.
 - Import/export links.
+- ChromaDB rebuild panel with economy/quality embedding profile selector.
 - Trust-list upload and enable/disable.
 - Private PKI upload and enable/disable.
 - Discipline scoring profile editor.
@@ -612,6 +619,7 @@ and UI masks verifiable.
 - User and exam mask tests.
 - Native client build tests.
 - Performance tests and JSON/PDF reporting helper.
+- Ruff-based unused import/local/redefinition cleanup check.
 
 **Files**
 
@@ -657,7 +665,9 @@ and UI masks verifiable.
 
 - SMTP and SMS delivery require deployment configuration.
 - EU qualified-signature validation depends on an external DSS service.
-- ChromaDB is a derived index and must be rebuilt from PostgreSQL if needed.
+- ChromaDB is a derived index. It can be rebuilt from PostgreSQL through the
+  admin UI or `POST /api/v1/knowledge/rebuild-chroma`, but the Chroma service
+  itself must be reachable and healthy.
 - In-process WebSocket broadcasting should be replaced with Redis/NATS before
   multi-replica scaling.
 - Legal holds, backups, immutable storage, and certified retention require
