@@ -12,9 +12,10 @@ from .api_routes.examinations import router as examinations_router
 from .api_routes.grading import router as grading_router
 from .api_routes.research import router as research_router
 from .api_routes.submissions import router as submissions_router
+from .api_routes.system import router as system_router
 from .api_routes.trust import router as trust_router
 from .api_routes.users import router as users_router
 
 router = APIRouter()
-for child in (auth_router, users_router, trust_router, courses_router, examinations_router, content_router, research_router, submissions_router, chat_router, grading_router):
+for child in (auth_router, users_router, trust_router, courses_router, examinations_router, content_router, research_router, submissions_router, chat_router, grading_router, system_router):
     router.include_router(child)

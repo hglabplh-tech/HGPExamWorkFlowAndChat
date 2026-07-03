@@ -13,7 +13,7 @@ def test_required_workflow_tables_are_registered() -> None:
         "submissions", "grade_events", "conversations", "messages",
         "audit_events", "training_examples", "trust_lists", "submission_confirmations",
         "exam_groups", "exam_rule_sets", "thesauri", "active_user_sessions",
-        "research_histories", "research_history_entries",
+        "research_histories", "research_history_entries", "mail_server_settings",
     }
     assert required <= set(Base.metadata.tables)
 
@@ -89,3 +89,14 @@ def test_research_history_tables_are_persisted() -> None:
     entry_columns = set(Base.metadata.tables["research_history_entries"].columns.keys())
     assert {"user_id", "active_session_id", "label", "stored", "deleted_at", "updated_at"} <= history_columns
     assert {"history_id", "kind", "input_text", "refined_text", "output_summary", "payload"} <= entry_columns
+
+
+def test_mail_server_settings_columns_are_persisted() -> None:
+    """Administrators can store SMTP and IMAP settings through the admin mask."""
+    columns = set(Base.metadata.tables["mail_server_settings"].columns.keys())
+    assert {
+        "smtp_host", "smtp_port", "smtp_username", "smtp_password",
+        "smtp_starttls", "smtp_ssl", "email_from", "support_email",
+        "imap_host", "imap_port", "imap_username", "imap_password",
+        "imap_ssl", "active", "updated_by", "updated_at",
+    } <= columns

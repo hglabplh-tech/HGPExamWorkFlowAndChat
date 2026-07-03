@@ -22,7 +22,7 @@ document.querySelector("#login-form").addEventListener("submit", async event => 
   token=data.access_token;
   sessionStorage.setItem("token",token);
   document.querySelector("#login-status").textContent=`Signed in as ${data.display_name||email}`;
-  refresh(); refreshPki(); refreshScoring(); refreshThesauri(); loadAdminCourses(); loadAdminChatrooms();
+  refresh(); refreshPki(); refreshScoring(); refreshThesauri(); loadMailConfig(); loadAdminCourses(); loadAdminChatrooms();
 });
 
 document.querySelector("#send-login-totp").addEventListener("click",async()=>{
@@ -116,6 +116,29 @@ async function refreshThesauri() {
   target.innerHTML=items.map(item=>`<article class="result"><small>${escapeHtml(item.language)} · ${escapeHtml(item.source_format)}</small><h2>${escapeHtml(item.name)}</h2><p>${item.active?"active":"inactive"} · ${item.entries.length} entries</p><code>${item.source_sha256}</code></article>`).join("")||'<div class="empty">No thesaurus uploaded.</div>';
 }
 
+async function loadMailConfig() {
+  if(!token)return;
+  const target=document.querySelector("#mail-config-status");
+  const response=await fetch("/api/v1/admin/mail-settings",{headers:headers()});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok){target.textContent=data.detail||"Unable to load mail configuration.";return;}
+  document.querySelector("#mail-active").checked=data.active;
+  document.querySelector("#smtp-host").value=data.smtp_host||"";
+  document.querySelector("#smtp-port").value=data.smtp_port||587;
+  document.querySelector("#smtp-username").value=data.smtp_username||"";
+  document.querySelector("#smtp-password").placeholder=data.smtp_password_set?"saved password will be kept if empty":"password";
+  document.querySelector("#smtp-starttls").checked=data.smtp_starttls;
+  document.querySelector("#smtp-ssl").checked=data.smtp_ssl;
+  document.querySelector("#email-from").value=data.email_from||"";
+  document.querySelector("#support-email").value=data.support_email||"";
+  document.querySelector("#imap-host").value=data.imap_host||"";
+  document.querySelector("#imap-port").value=data.imap_port||993;
+  document.querySelector("#imap-username").value=data.imap_username||"";
+  document.querySelector("#imap-password").placeholder=data.imap_password_set?"saved password will be kept if empty":"password";
+  document.querySelector("#imap-ssl").checked=data.imap_ssl;
+  target.textContent="Mail configuration loaded.";
+}
+
 document.addEventListener("click",async event=>{
   const button=event.target.closest(".trust-decision,.pki-decision");
   if(!button)return;
@@ -173,6 +196,32 @@ document.querySelector("#chroma-rebuild-form").addEventListener("submit",async e
   const response=await fetch(`/api/v1/knowledge/rebuild-chroma?profile=${encodeURIComponent(profile)}`,{method:"POST",headers:{...headers(),"X-Request-Nonce":nonce()}});
   const data=await response.json().catch(()=>({}));
   target.textContent=response.ok?`Rebuilt ${data.collection}: ${data.documents_indexed} documents, ${data.chunks_indexed} chunks, ${data.created_chunks} chunks created.`:(data.detail||"ChromaDB rebuild failed");
+});
+
+document.querySelector("#load-mail-config").addEventListener("click",loadMailConfig);
+document.querySelector("#mail-config-form").addEventListener("submit",async event=>{
+  event.preventDefault();
+  const value=id=>document.querySelector(id).value.trim()||null;
+  const payload={
+    active:document.querySelector("#mail-active").checked,
+    smtp_host:value("#smtp-host"),
+    smtp_port:Number(document.querySelector("#smtp-port").value||587),
+    smtp_username:value("#smtp-username"),
+    smtp_password:value("#smtp-password"),
+    smtp_starttls:document.querySelector("#smtp-starttls").checked,
+    smtp_ssl:document.querySelector("#smtp-ssl").checked,
+    email_from:value("#email-from"),
+    support_email:value("#support-email"),
+    imap_host:value("#imap-host"),
+    imap_port:Number(document.querySelector("#imap-port").value||993),
+    imap_username:value("#imap-username"),
+    imap_password:value("#imap-password"),
+    imap_ssl:document.querySelector("#imap-ssl").checked,
+  };
+  const response=await fetch("/api/v1/admin/mail-settings",{method:"PUT",headers:{...headers(),"Content-Type":"application/json","X-Request-Nonce":nonce()},body:JSON.stringify(payload)});
+  const data=await response.json().catch(()=>({}));
+  document.querySelector("#mail-config-status").textContent=response.ok?`Mail configuration saved. SMTP: ${data.smtp_host||"not configured"}; IMAP: ${data.imap_host||"not configured"}.`:(data.detail||"Mail configuration failed");
+  if(response.ok){document.querySelector("#smtp-password").value="";document.querySelector("#imap-password").value="";loadMailConfig();}
 });
 
 document.querySelector("#totp-setup").addEventListener("click",async()=>{
@@ -272,5 +321,6 @@ refresh();
 refreshPki();
 refreshScoring();
 refreshThesauri();
+loadMailConfig();
 loadAdminCourses();
 loadAdminChatrooms();

@@ -10,12 +10,13 @@ from .collaboration import Conversation, ConversationMember, ExamGroup, Message,
 from .training import ModelTrainingRun, TrainingExample
 from .audit import AuditEvent, RequestNonce
 from .trust import OCSPQuery, PrivatePKI, SignatureValidation, TrustList, UserCertificate
+from .system import MailServerSettings
 
 __all__ = [
     "ActiveUserSession", "AuditEvent", "Base", "Conversation",
     "ConversationMember", "Course", "DisciplineScoringProfile", "Document",
     "DocumentChunk", "Enrollment", "ExamGroup", "ExamQuestion", "ExamRuleSet",
-    "Examination", "GradeEvent", "Message", "ModelTrainingRun", "OCSPQuery",
+    "Examination", "GradeEvent", "MailServerSettings", "Message", "ModelTrainingRun", "OCSPQuery",
     "PrivatePKI", "RequestNonce", "ResearchHistory", "ResearchHistoryEntry",
     "ResearchInteraction", "Role", "SignatureValidation", "Submission",
     "SubmissionConfirmation", "Thesaurus", "TrainingExample", "TrustList",

@@ -448,3 +448,39 @@ class EmailRequest(BaseModel):
     kind: str = Field(pattern="^(scoring|question_answer)$")
     subject: str = Field(min_length=2, max_length=200)
     message: str = Field(min_length=2, max_length=10000)
+
+
+class MailServerSettingsIn(BaseModel):
+    """Represent administrator-entered SMTP and IMAP configuration."""
+    smtp_host: str | None = Field(default=None, max_length=255)
+    smtp_port: int = Field(default=587, ge=1, le=65535)
+    smtp_username: str | None = Field(default=None, max_length=255)
+    smtp_password: str | None = Field(default=None, max_length=1024)
+    smtp_starttls: bool = True
+    smtp_ssl: bool = False
+    email_from: str | None = Field(default=None, max_length=320)
+    support_email: str | None = Field(default=None, max_length=320)
+    imap_host: str | None = Field(default=None, max_length=255)
+    imap_port: int = Field(default=993, ge=1, le=65535)
+    imap_username: str | None = Field(default=None, max_length=255)
+    imap_password: str | None = Field(default=None, max_length=1024)
+    imap_ssl: bool = True
+    active: bool = True
+
+
+class MailServerSettingsOut(BaseModel):
+    """Return SMTP and IMAP configuration without exposing saved passwords."""
+    smtp_host: str | None
+    smtp_port: int
+    smtp_username: str | None
+    smtp_password_set: bool
+    smtp_starttls: bool
+    smtp_ssl: bool
+    email_from: str | None
+    support_email: str | None
+    imap_host: str | None
+    imap_port: int
+    imap_username: str | None
+    imap_password_set: bool
+    imap_ssl: bool
+    active: bool

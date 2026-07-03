@@ -5,12 +5,12 @@ Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 
 from pathlib import Path
 
-from backend.app.api_routes import auth, chat, content, courses, examinations, grading, research, submissions, trust, users
+from backend.app.api_routes import auth, chat, content, courses, examinations, grading, research, submissions, system, trust, users
 
 
 def test_journey_endpoints_are_registered() -> None:
     """Ensure the aggregate router exposes the principal application journeys."""
-    domain_routers = (auth, chat, content, courses, examinations, grading, research, submissions, trust, users)
+    domain_routers = (auth, chat, content, courses, examinations, grading, research, submissions, system, trust, users)
     paths = {route.path for module in domain_routers for route in module.router.routes}
     assert {
         "/api/v1/courses", "/api/v1/search", "/api/v1/research/questions",
@@ -34,6 +34,7 @@ def test_journey_endpoints_are_registered() -> None:
         "/api/v1/research/histories/{history_id}/activate",
         "/api/v1/research/histories/{history_id}",
         "/api/v1/research/histories/{history_id}/entries",
+        "/api/v1/admin/mail-settings",
     } <= paths
 
 

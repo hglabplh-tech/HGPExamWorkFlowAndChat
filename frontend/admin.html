@@ -32,6 +32,7 @@
         <a href="#user-definition">User definition</a>
         <a href="#user-definition">Create user entry</a>
         <a href="#totp-config">TOTP configuration</a>
+        <a href="#mail-config">SMTP / IMAP configuration</a>
         <button type="button" id="admin-logout" class="link-button">Logout</button>
       </details>
       <section id="admin-courses" class="admin-panel">
@@ -92,6 +93,29 @@
         <p class="eyebrow">IMPORT / EXPORT</p>
         <h1>Knowledge and exam exchange</h1>
         <p><a href="/api/v1/knowledge/export.json">Export knowledge JSON</a> · <a href="/api/v1/knowledge/vocab.txt">Export vocab.txt</a></p>
+      </section>
+      <section id="mail-config" class="admin-panel">
+        <p class="eyebrow">MAIL SERVICES</p>
+        <h1>SMTP / IMAP configuration</h1>
+        <p>Configure outbound SMTP for registration, TOTP, scoring, and question-answer notifications. IMAP settings are stored for later inbound-mail workflows.</p>
+        <form id="mail-config-form" class="admin-form">
+          <label><input id="mail-active" type="checkbox" checked> Use database mail configuration</label>
+          <label>SMTP host<input id="smtp-host" placeholder="smtp.example.edu"></label>
+          <label>SMTP port<input id="smtp-port" type="number" min="1" max="65535" value="587"></label>
+          <label>SMTP username<input id="smtp-username" autocomplete="username"></label>
+          <label>SMTP password<input id="smtp-password" type="password" autocomplete="new-password" placeholder="leave empty to keep saved password"></label>
+          <label><input id="smtp-starttls" type="checkbox" checked> Use STARTTLS</label>
+          <label><input id="smtp-ssl" type="checkbox"> Use implicit SMTP SSL</label>
+          <label>Sender address<input id="email-from" type="email" placeholder="no-reply@example.edu"></label>
+          <label>Support address<input id="support-email" type="email" placeholder="support@example.edu"></label>
+          <label>IMAP host<input id="imap-host" placeholder="imap.example.edu"></label>
+          <label>IMAP port<input id="imap-port" type="number" min="1" max="65535" value="993"></label>
+          <label>IMAP username<input id="imap-username" autocomplete="username"></label>
+          <label>IMAP password<input id="imap-password" type="password" autocomplete="new-password" placeholder="leave empty to keep saved password"></label>
+          <label><input id="imap-ssl" type="checkbox" checked> Use IMAP SSL</label>
+          <div class="button-row"><button>Save mail configuration</button><button type="button" id="load-mail-config">Reload</button></div>
+        </form>
+        <div id="mail-config-status" aria-live="polite"></div>
       </section>
       <section id="chroma-admin" class="admin-panel">
         <p class="eyebrow">VECTOR INDEX</p>
