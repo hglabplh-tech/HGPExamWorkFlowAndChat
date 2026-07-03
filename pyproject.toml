@@ -39,7 +39,7 @@ dependencies = [
 [project.optional-dependencies]
 ml = [
   "torch>=2.3,<3",
-  "transformers>=4.44,<5",
+  "transformers>=4.44,<6",
   "datasets>=2.21,<4",
   "torch-xla>=2.3,<3; platform_system == 'Linux'",
 ]
