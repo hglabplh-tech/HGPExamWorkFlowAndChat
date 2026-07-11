@@ -4,15 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6dcf1ec0-ee83-4509-bb62-c3e495e5bdad" name="Changes" comment="dentally skipped files">
-      <change afterPath="$PROJECT_DIR$/hgp_exam_work_flow_and_chat.egg-info/PKG-INFO" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hgp_exam_work_flow_and_chat.egg-info/SOURCES.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hgp_exam_work_flow_and_chat.egg-info/dependency_links.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hgp_exam_work_flow_and_chat.egg-info/requires.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hgp_exam_work_flow_and_chat.egg-info/top_level.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/requirements-docker-constraints.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/FUNDING.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/FUNDING.yml" afterDir="false" />
+    <list default="true" id="6dcf1ec0-ee83-4509-bb62-c3e495e5bdad" name="Changes" comment="fixed files checkin">
+      <change afterPath="$PROJECT_DIR$/outputs/test-reports/asag-effectiveness.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/outputs/test-reports/chat-exchange.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/outputs/test-reports/effectiveness-report.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/outputs/test-reports/hybrid-search-effectiveness.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_effectiveness_reports.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <list id="ddda333b-02b2-478d-872f-da0899d48821" name="out" comment="">
@@ -28,23 +25,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0002111814470331" />
-      <entry key="MS500" value="1.2314140896107189" />
-      <entry key="S2" value="2.6266690346960133" />
-      <entry key="S5" value="4.027545098188201" />
-      <entry key="S10" value="4.853774435765571" />
-      <entry key="S30" value="5.5746513230526755" />
-      <entry key="S60" value="5.811519753547236" />
-      <entry key="M2" value="6.289626316128639" />
-      <entry key="M5" value="7.957374033227183" />
-      <entry key="M10" value="9.435224724236607" />
-      <entry key="M15" value="10.137868822469233" />
-      <entry key="M30" value="10.982978166378517" />
-      <entry key="H1" value="11.502859988297574" />
-      <entry key="H2" value="12.547647097116194" />
-      <entry key="H4" value="16.255923982308783" />
-      <entry key="D1" value="52.40900124357562" />
-      <entry key="W1" value="83.43330199083191" />
+      <entry key="MS100" value="1.0000212005896998" />
+      <entry key="MS500" value="1.1825028340194332" />
+      <entry key="S2" value="3.185704650312742" />
+      <entry key="S5" value="6.128981658292412" />
+      <entry key="S10" value="8.333255388976475" />
+      <entry key="S30" value="10.554900704150674" />
+      <entry key="S60" value="11.272891919754088" />
+      <entry key="M2" value="12.001715344200193" />
+      <entry key="M5" value="13.820385205480672" />
+      <entry key="M10" value="15.357268979648907" />
+      <entry key="M15" value="16.082908473035204" />
+      <entry key="M30" value="16.95370165635743" />
+      <entry key="H1" value="17.487670001847775" />
+      <entry key="H2" value="18.53950291143106" />
+      <entry key="H4" value="22.250879945338916" />
+      <entry key="D1" value="58.40658183327514" />
+      <entry key="W1" value="89.43276282248047" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -54,35 +51,35 @@
       <entry key="S10" value="0.0" />
       <entry key="S30" value="0.0" />
       <entry key="S60" value="0.0" />
-      <entry key="M2" value="4.203984378272312E-207" />
-      <entry key="M5" value="2.8149095043905335E-83" />
-      <entry key="M10" value="5.305572075083452E-42" />
-      <entry key="M15" value="3.0419691998214023E-28" />
-      <entry key="M30" value="1.7441241927745304E-14" />
-      <entry key="H1" value="1.3206529418338983E-7" />
-      <entry key="H2" value="3.6340788954477817E-4" />
-      <entry key="H4" value="0.01906326020240972" />
-      <entry key="D1" value="0.5168519938273939" />
-      <entry key="W1" value="0.9100228844445597" />
+      <entry key="M2" value="4.073867264798473E-207" />
+      <entry key="M5" value="2.779730868399514E-83" />
+      <entry key="M10" value="5.272315305821071E-42" />
+      <entry key="M15" value="3.029243955333044E-28" />
+      <entry key="M30" value="1.740472336847975E-14" />
+      <entry key="H1" value="1.319269622498742E-7" />
+      <entry key="H2" value="3.6321751368825E-4" />
+      <entry key="H4" value="0.019058266282331406" />
+      <entry key="D1" value="0.5168294251157964" />
+      <entry key="W1" value="0.9100172076526879" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.9203846877167899" />
-      <entry key="MS500" value="1.2115685557749383" />
-      <entry key="S2" value="2.6141085898663254" />
-      <entry key="S5" value="4.017817398681537" />
-      <entry key="S10" value="4.84730332289462" />
-      <entry key="S30" value="5.571997347913999" />
-      <entry key="S60" value="5.810101456992671" />
-      <entry key="M2" value="6.288762676194884" />
-      <entry key="M5" value="7.956762690963651" />
-      <entry key="M10" value="9.434794036832335" />
-      <entry key="M15" value="10.137541341174433" />
-      <entry key="M30" value="10.982789937265702" />
-      <entry key="H1" value="11.502758670619892" />
-      <entry key="H2" value="12.547954505177664" />
-      <entry key="H4" value="16.274941376234594" />
-      <entry key="D1" value="52.92578449930685" />
-      <entry key="W1" value="84.34330765192304" />
+      <entry key="MS100" value="0.933053188024043" />
+      <entry key="MS500" value="1.1669158520413425" />
+      <entry key="S2" value="3.174179655168018" />
+      <entry key="S5" value="6.117779560906489" />
+      <entry key="S10" value="8.324679930764722" />
+      <entry key="S30" value="10.550943502740349" />
+      <entry key="S60" value="11.27071778331121" />
+      <entry key="M2" value="12.000448488708654" />
+      <entry key="M5" value="13.81960736525221" />
+      <entry key="M10" value="15.356753559052708" />
+      <entry key="M15" value="16.082523991956737" />
+      <entry key="M30" value="16.953484595860967" />
+      <entry key="H1" value="17.48755416737171" />
+      <entry key="H2" value="18.539802844445763" />
+      <entry key="H4" value="22.269888699719928" />
+      <entry key="D1" value="58.92334191360116" />
+      <entry key="W1" value="90.34276271978571" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -208,7 +205,15 @@
       <option name="project" value="LOCAL" />
       <updated>1783114938863</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="fixed files checkin">
+      <option name="closed" value="true" />
+      <created>1783732330012</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1783732330012</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -225,6 +230,7 @@
     <MESSAGE value="add email conf" />
     <MESSAGE value="add descriptions" />
     <MESSAGE value="dentally skipped files" />
-    <option name="LAST_COMMIT_MESSAGE" value="dentally skipped files" />
+    <MESSAGE value="fixed files checkin" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixed files checkin" />
   </component>
 </project>

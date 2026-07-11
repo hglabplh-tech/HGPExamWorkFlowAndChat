@@ -1,0 +1,35 @@
+ASAG effectiveness test
+=======================
+
+accuracy: 1.0
+precision: 1.0
+recall: 1.0
+f1: 1.0
+good_normalized_score: 0.892
+bad_normalized_score: 0.251563
+score_separation: 0.6404
+threshold: 0.6
+good_passed: True
+bad_rejected: True
+ai_semantic_good: 0.94
+ai_semantic_bad: 0.15
+ai_semantic_margin: 0.79
+ai_fact_entailment_good: 0.92
+ai_fact_entailment_bad: 0.1
+ai_fact_entailment_margin: 0.82
+ai_contradiction_safety_good: 0.98
+ai_contradiction_safety_bad: 0.3
+ai_contradiction_safety_margin: 0.68
+ai_quality_gate_passed: True
+hallucination_risk_bad_case: high
+teacher_review_signal_active: True
+max_absolute_error: 0.0
+exact_values_match_expected: True
+latency_ms: 0.189
+answers_per_second: 10586.71
+latency_target_ms: 50
+meets_latency_target: True
+performance_verdict: performant
+
+good case score=8.92/10.0 normalized=0.892 signals={'jaccard': 0.5, 'keywords': 1.0, 'semantic': 0.94, 'trained_scoring': None, 'fact_entailment': 0.92, 'contradiction': 0.98, 'length': 1.0}
+bad case score=2.516/10.0 normalized=0.251563 signals={'jaccard': 0.09375, 'keywords': 0.25, 'semantic': 0.15, 'trained_scoring': None, 'fact_entailment': 0.1, 'contradiction': 0.3, 'length': 1.0}

@@ -1,0 +1,28 @@
+Chatroom exchange test
+======================
+
+messages_sent: 4
+student_a_received: 2
+student_b_received: 1
+chatbot_received: 1
+practice_score_shared: True
+research_result_shared: True
+delivery_accuracy: 1.0
+exact_delivery_match_expected: True
+ai_chatbot_command_recognized: True
+ai_chatbot_answered: True
+ai_shared_payload_integrity: True
+ai_visibility_gate_passed: True
+ai_collaboration_quality_gate_passed: True
+unauthorized_delivery_count: 0
+latency_ms: 0.007
+messages_per_second: 539301.98
+latency_target_ms: 50
+meets_latency_target: True
+performance_verdict: performant
+all_exchanges_successful: True
+
+1. student-a -> student-b: Please review my ASAG practice score. shared_type=practice_score
+2. student-b -> student-a: I see the score and suggest adding cache locality details. shared_type=None
+3. student-a -> @chatbot: @chatbot show research for M3 unified memory shared_type=research_result
+4. @chatbot -> student-a: Research received: Apple M3 course note is relevant. shared_type=research_result

@@ -1,0 +1,29 @@
+Hybrid search effectiveness test
+================================
+
+top_result_relevant: True
+precision_at_2: 1.0
+recall_at_2: 1.0
+mrr: 1.0
+ndcg_at_3: 1.0
+exact_top_two_match_expected: True
+ai_relevant_documents_in_top_2: 2
+ai_irrelevant_distractor_retrieved: False
+ai_grounded_source_coverage: 1.0
+ai_fusion_confidence_margin: 0.332902
+ai_semantic_channel_used: True
+ai_bm25_channel_used: True
+ai_full_text_channel_used: True
+ai_ranking_quality_gate_passed: True
+bm25_top_title: Apple M3 cache programming
+hybrid_top_title: Apple M3 cache programming
+latency_ms: 0.535
+documents_per_second: 5609.22
+latency_target_ms: 50
+meets_latency_target: True
+performance_verdict: performant
+
+query=Apple M3 unified memory cache programming
+bm25_order=['Apple M3 cache programming', 'GPU memory concepts']
+hybrid_order=['Apple M3 cache programming', 'GPU memory concepts']
+hybrid_components=[{'full_text': 0.35, 'bm25': 0.2, 'semantic': 0.434831}, {'full_text': 0.160417, 'bm25': 0.041513, 'semantic': 0.45}]
