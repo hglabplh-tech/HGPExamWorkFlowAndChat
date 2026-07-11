@@ -1,0 +1,6 @@
+# Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
+#
+# Keep the default Docker image CPU-oriented. Newer Linux PyTorch releases may
+# pull large CUDA/NVIDIA dependency packages by default, which is not appropriate
+# for the standard FastAPI service container.
+torch>=2.3,<2.4

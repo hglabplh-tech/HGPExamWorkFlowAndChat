@@ -1,0 +1,482 @@
+Metadata-Version: 2.4
+Name: hgp-exam-work-flow-and-chat
+Version: 0.1.0
+Summary: Course chat, curated knowledge, hybrid search, and assisted grading
+Author: Harald Glab-Plhak
+License: MIT License
+        
+        Copyright (c) 2026 Harald Glab-Plhak
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+        
+        
+Classifier: Development Status :: 3 - Alpha
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: fastapi<1,>=0.115
+Requires-Dist: uvicorn[standard]<1,>=0.30
+Requires-Dist: sqlalchemy[asyncio]<3,>=2.0
+Requires-Dist: asyncpg<1,>=0.29
+Requires-Dist: alembic<2,>=1.13
+Requires-Dist: pydantic-settings<3,>=2.5
+Requires-Dist: python-multipart<1,>=0.0.9
+Requires-Dist: pyjwt[crypto]<3,>=2.9
+Requires-Dist: argon2-cffi<26,>=23.1
+Requires-Dist: cryptography<46,>=43
+Requires-Dist: defusedxml<1,>=0.7
+Requires-Dist: httpx<1,>=0.27
+Requires-Dist: chromadb<2,>=0.5
+Requires-Dist: sentence-transformers<6,>=3
+Requires-Dist: reportlab<5,>=4
+Requires-Dist: pypdf<7,>=5
+Provides-Extra: ml
+Requires-Dist: torch<3,>=2.3; extra == "ml"
+Requires-Dist: transformers<5,>=4.44; extra == "ml"
+Requires-Dist: datasets<4,>=2.21; extra == "ml"
+Requires-Dist: torch-xla<3,>=2.3; platform_system == "Linux" and extra == "ml"
+Provides-Extra: dev
+Requires-Dist: pytest<9,>=8; extra == "dev"
+Requires-Dist: pytest-asyncio<1,>=0.24; extra == "dev"
+Requires-Dist: pytest-cov<7,>=5; extra == "dev"
+Requires-Dist: pytest-json-report<2,>=1.5; extra == "dev"
+Requires-Dist: pytest-benchmark<6,>=5; extra == "dev"
+Requires-Dist: ruff<1,>=0.6; extra == "dev"
+Dynamic: license-file
+Dynamic: requires-python
+
+<!-- Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License. -->
+
+# HGPExamWorkFlowAndChat
+
+A cloud-ready Python service for course chat, curated documents and videos,
+hybrid search, secure examination submissions, assisted grading, and independent
+ML experiments. The project is currently **alpha software**, not a certified
+grading, qualified-signature, or records-management product.
+
+Copyright © 2026 Harald Glab-Plhak. Distributed under the MIT License.
+
+## Boundaries
+
+- `frontend/`: responsive HTML5 Progressive Web App (one UI for phones, tablets, and desktops)
+- `backend/app/api.py` and `api_routes/`: small, versioned REST route modules
+- `backend/app/db_models/`: PostgreSQL models split by business area
+- `backend/app/services/`: scoring, search, evidence, trust, reporting, and ML utilities
+- `backend/app/workflows/`: pure exam-state and chat-visibility policies
+- `clients/`: independent Python REST client
+- `clients/native/`: Capacitor Android/iOS and Tauri Windows wrappers for the HTML5 client
+- `ml/`: BERT fine-tuning and educational LSTM training
+- `data/sample_courses/`: two reviewable example course definitions
+- `data/training/`: synthetic ASAG examples for pipeline development
+- `infra/`: TLS proxy and database setup
+
+ChromaDB is a derived semantic index. PostgreSQL remains canonical, including
+approval status and provenance, so the index can always be rebuilt and audited.
+
+## Run locally
+
+1. Copy `.env.example` to `.env` and replace `JWT_SECRET`.
+2. Put a development certificate and key in `certs/server.crt` and `certs/server.key`.
+3. Run `docker compose up --build`.
+4. Create the first administrator inside the API container:
+   `python -m backend.app.bootstrap admin@example.org 'a-long-password'`.
+5. Open `https://localhost`. Interactive API documentation is at `/docs`.
+
+For development without TLS termination, run PostgreSQL and Chroma with Compose,
+then start `uvicorn backend.app.main:app --reload`. Never expose that port publicly.
+
+## Build and deployment
+
+The application is packaged as an OCI/Docker image containing Python 3.12,
+FastAPI, Uvicorn, OpenSSL, and all runtime dependencies. Use Docker Compose for
+development or a single-server installation:
+
+```sh
+cp .env.example .env
+make up
+```
+
+For cloud production, push a version tag to publish an image to GitHub Container
+Registry, replace `OWNER` and the example host names in `deploy/kubernetes/`,
+create the application and OCSP secrets, and apply the manifests. Kubernetes is
+language-neutral; a Deployment is appropriate for the stateless Python API,
+while PostgreSQL, Chroma, object storage, and model storage should be managed
+services or separately operated stateful workloads.
+
+The provided deployment starts with one API replica. Before scaling out, replace
+the in-process WebSocket room broadcaster with Redis/NATS pub-sub, move startup
+schema changes to an Alembic migration Job, and use shared model/object storage.
+The GitHub workflows test Python 3.11/3.12 with coverage, build the image, and publish tagged
+releases to GHCR with provenance and an SBOM.
+
+## Native client apps
+
+The HTML5 client can be packaged as Android, iOS, macOS DMG, and Windows apps
+without duplicating the UI. The native wrappers live in `clients/native/`;
+Android and iOS use Capacitor, while macOS and Windows use Tauri. Build the
+static bundle with the cloud API origin:
+
+```sh
+export HCP_API_BASE="https://study.example.edu"
+make client-bundle
+```
+
+Then use the platform-specific commands documented in
+`docs/client-app-builds.md`, for example `make client-android-sync`,
+`make client-ios-sync`, `make client-macos-dmg-silicon`,
+`make client-macos-dmg-intel`, `make client-macos-dmg-universal`, or
+`make client-windows-build` after installing the required local SDKs.
+
+## Sample courses and tests
+
+The repository includes `CS-M3-101`, covering supported ARM64, profiling, concurrency,
+unified-memory, and Metal development on Apple Silicon M3, plus `HIST-DE-1949`, covering
+German history since 1949. Their accompanying CSV answer sets are intentionally synthetic.
+They are examples for ingestion and nightly-training tests, not sufficiently large or
+independently validated model-training corpora.
+
+Run `python -m pytest` after installing `.[dev]`. Tests cover persistence metadata,
+cryptographic evidence, password hashing, deterministic ASAG metrics, hybrid ranking,
+indexing, workflow visibility, and sample-data contracts. External PostgreSQL, Chroma,
+OCSP, and trust-list interoperability still require deployment-level integration tests.
+
+## Authentication and TLS
+
+Basic authentication is accepted only to exchange credentials for a short-lived
+bearer token. Every state-changing request also needs a unique
+`X-Request-Nonce`. The included Caddy configuration permits TLS 1.2 and 1.3 and
+contains an optional mutual-certificate authentication block. In production use
+an institutional OpenID Connect provider, managed certificates, refresh-token
+rotation, and a shared nonce store such as Redis.
+
+TLS is never replaced by Basic authentication, tokens, nonces, hashes, or digital
+signatures: those mechanisms have different jobs. Client certificates can be
+enabled in `infra/Caddyfile`; Caddy then forwards the verified certificate
+fingerprint to the otherwise private API. Passwords use Argon2id and are stored
+in the self-describing Unix/PHC modular format (`$argon2id$...`), not a legacy
+DES/SHA `/etc/shadow` scheme.
+
+## Signed examination evidence and retention
+
+Before submission, a student registers an Ed25519 public key. Their device signs
+a canonical receipt containing the exam ID, student ID, SHA-256 content digest,
+client timestamp, and one-time nonce. PostgreSQL stores the original bytes,
+signature, digest, nonce, server receipt timestamp, and retention deadline.
+Database triggers reject mutation or physical deletion of evidence and reject
+all updates/deletes to the hash-chained audit log.
+
+Submission requires an active certificate from an enabled application trust
+chain. The certificate fingerprint is bound into the student's signature. For a
+real examination, return additionally requires the instructor's active
+certificate and signature over the original exam hash, student-signature hash,
+and final grading hash. Practice examinations deliberately have no instructor
+signature and are labelled AI-only.
+
+Both workflows generate an A4 PDF report from PostgreSQL containing each
+question and answer, per-question score, ASAG metrics, feedback, evidence hashes,
+certificate fingerprints, and signature fingerprints. The report bytes and
+their own SHA-256 digest are retained in PostgreSQL and available from
+`GET /api/v1/submissions/{id}/report.pdf` subject to feedback-release rules.
+
+The administrative delete endpoint is deliberately a soft deletion: it requires
+an explicit retention override plus a reason during an active ten-year period,
+records the administrator, and preserves the evidence. Actual legally compliant
+purging must be a separately approved operational workflow coordinated with
+backups and immutable object storage; application code alone cannot guarantee a
+legal hold or make a system impossible to compromise.
+
+Direct and group conversations have explicit membership rows. A submission may
+only be shared by its owner, and its content endpoint requires membership in the
+exact conversation where it was shared.
+
+## EU and US trust frameworks
+
+The `/admin` screen manages customer trusted lists in ETSI TS 119 612 v5/v6
+XML. Lists remain disabled until their XML signature is validated. Official EU
+status cannot be set by an administrator; eIDAS validation follows the official
+EU LOTL through an EU DSS 6.2+ validation service. See
+`docs/trust-validation-contract.md` for its small HTTP contract and required
+fail-closed behavior.
+
+The signature API records PAdES/XAdES/CAdES/JAdES validation reports and supports
+official EU, customer-private ETSI, US private-PKI, and US federal-policy modes.
+NIST defines cryptographic and key-management requirements, not a universal US
+root list. A customer root therefore establishes private trust, not eIDAS
+qualified status or automatic US government trust.
+
+`tools/generate_certificate_request.py` creates an encrypted ECDSA P-256 key and
+CSR. The CSR must be certified by the selected CA, federal PKI, or qualified EU
+trust service provider. Local key generation alone cannot create a qualified
+electronic signature certificate.
+
+Customers may instead operate a private OpenSSL PKI. Run
+`tools/create_private_pki.sh <directory> <user-common-name>` to generate an
+encrypted P-256 root, issuing intermediate, and user client certificate with CA
+and key-usage constraints. Upload the root and intermediate through the private
+PKI administration API, enable it with an audited decision, then assign the
+verified user certificate. The `/api/v1/private-pki-roots.pem` API exports all
+enabled roots as `customer-client-roots.pem`; mount that file into Caddy and reload Caddy after
+changing the trust set. Never place root or intermediate private keys on the
+application server.
+
+OpenSSL chain validity means “trusted by this customer configuration.” It does
+not imply eIDAS qualified, public WebPKI, or US federal status. Revocation lists,
+OCSP, key ceremonies, offline root protection, renewal, and compromise response
+remain required production PKI procedures.
+
+The private-PKI generator also creates a delegated OCSP responder certificate
+and encrypted key. Configure the isolated signer using
+`infra/ocsp-config.example.json`, set `OCSP_SIGNER_URL` and its separate service
+token, and put the final `/api/v1/ocsp/{private-pki-id}` URL into issued user
+certificates. The responder returns RFC 6960 `good`, `revoked`, or `unknown`
+states and echoes OCSP nonces. EU certificates and signatures use DSS-managed
+OCSP/CRL validation instead.
+
+## Knowledge and coverage
+
+Documents and YouTube resources enter an unapproved review queue. Search returns
+only approved material. Empty searches emit a coverage warning, which is the
+beginning of a staff dashboard for disciplines, courses, and questions with weak
+or missing source coverage.
+
+The YouTube discovery helper writes unapproved candidates to CSV:
+
+```sh
+YOUTUBE_API_KEY=... python tools/youtube_to_csv.py \
+  "cellular respiration tutorial" biology-videos.csv --discipline Biology
+```
+
+## ML experiments
+
+Install the optional packages with `pip install -e '.[ml]'`.
+
+Fine-tune a BERT-compatible classifier from a `text,label` CSV:
+
+```sh
+python ml/train_bert.py training.csv --labels 8
+```
+
+Train a multilingual query/passage reranker from `query,passage,label` CSV data:
+
+```sh
+python ml/train_reranker.py relevance.csv --family xlm-roberta
+```
+
+Train the small character-level LSTM:
+
+```sh
+python ml/train_lstm.py approved-corpus.txt
+```
+
+The LSTM is deliberately isolated from grading and factual RAG responses: it is
+useful for learning and controlled experiments, but it does not provide reliable
+facts or citations. Models should be evaluated and registered before deployment.
+
+Hybrid retrieval fuses PostgreSQL full-text results with Chroma semantic results.
+The model router uses a multilingual MiniLM sentence transformer on economical
+hardware, a larger multilingual MPNet profile when selected, and optionally
+reranks complex queries with mBERT or XLM-RoBERTa. Device selection supports
+`auto`, `cpu`, `cuda`, `mps`, or an installed PyTorch/XLA device. BERT-family
+models are used for contextual reranking; sentence transformers produce the
+retrieval embeddings.
+
+Sentence-BERT (SBERT) is the sentence-embedding architecture; Sentence
+Transformers is the library and broader model ecosystem used here to run it.
+The ASAG implementation calls `SentenceTransformer` directly, so semantic answer
+comparison is not limited to a single original SBERT checkpoint.
+
+## Weighted ASAG grading and hybrid ranking
+
+The administration screen creates immutable, versioned scoring profiles for each
+discipline. Grading profiles combine token Jaccard overlap, required-keyword
+coverage, multilingual sentence-transformer cosine similarity, expected-fact
+entailment, contradiction safety, and answer-length adequacy. Every question has
+a teacher reference answer, required concepts, approved facts, and maximum mark.
+
+`POST /api/v1/submissions/{id}/ai-grade` creates a provisional score containing
+every raw signal, configured weight, actually applied normalized weight, profile
+version, warning, and review flag. If a model signal is unavailable, remaining
+weights are renormalized and the result is flagged; a teacher still approves or
+overrides the grade. Large disagreement between signals also forces review.
+
+The same discipline profile controls search ranking. PostgreSQL full-text and
+Chroma sentence-transformer results are normalized independently, multiplied by
+their configured weights, and summed. Each search result returns
+`score_components`, making its final rank explainable.
+
+## End-to-end learning and examination workflow
+
+Research questions, grounded answers, citations, visibility decisions, chat
+messages, shared research, practice scores, examination states, submissions,
+corrections, and returned grades are persisted in PostgreSQL. Practice exams
+release immediate provisional feedback; real exams suppress all feedback until
+an instructor approves and explicitly returns the grading. See
+`docs/workflows.md` for the student/instructor state transitions and REST flow.
+
+A nightly Kubernetes CronJob curates consented course-public research and
+teacher-returned scoring examples. Staff moderate student research examples.
+When training is enabled and enough approved examples exist, it fine-tunes the
+retrieval Sentence Transformer and supervised scoring CrossEncoder and records
+the resulting model run and artifact.
+
+For a local/manual nightly run use:
+
+```sh
+docker compose --profile tools run --rm trainer
+```
+
+## Knowledge import, audio, and scheduled training
+
+Staff can upload PDF or UTF-8 text through `POST /api/v1/knowledge/upload`, merge or
+export versioned PostgreSQL bundles, or send a file and question together through
+`POST /api/v1/knowledge/upload-and-ask`. Imports are content-addressed with SHA-256:
+an existing hash is returned unchanged and only new content is inserted. Imported
+documents become training candidates and require staff approval before use.
+
+Full-text search can use an active JSON thesaurus. Staff can import Apache Solr-style
+synonym files through `POST /api/v1/thesauri/upload` with `source_format=solr_synonyms`
+or post normalized JSON to `POST /api/v1/thesauri`. Equivalent Solr lines such as
+`cpu, processor` expand in both directions; explicit mappings such as
+`usa => united states, america` expand only from the left side. The stored JSON can be
+listed with `GET /api/v1/thesauri` and exported with `GET /api/v1/thesauri/{id}.json`.
+`GET /api/v1/search` applies active thesauri by default and exposes the applied
+`query_expansion` terms in the response for auditability.
+
+Hybrid retrieval now combines PostgreSQL web-search ranking, dependency-free BM25,
+and semantic vector retrieval. Discipline profiles can weight the three channels as
+`full_text`, `bm25`, and `semantic`. Staff can export project vocabulary from approved
+knowledge through `GET /api/v1/knowledge/vocab.txt` or
+`GET /api/v1/knowledge/vocabulary.json`; the local mBERT and LSTM training scripts
+accept `--vocab-file` so model artifacts record the project vocabulary used.
+
+Knowledge imports run a trusted-source fact-check step before approval. The check
+uses `INTERNET_SEARCH_ENDPOINT`, `INTERNET_SEARCH_API_KEY`, and
+`TRUSTED_FACT_SOURCE_DOMAINS`; when no endpoint is configured the import is marked
+for manual review rather than silently trusted.
+
+The HTML5 frontend includes a GitHub-style administrator login with optional TOTP,
+TOTP enrollment controls, thesaurus import, vocabulary export links, chat bubbles,
+`@chatbot` room replies, score/research sharing fields, and a practice/real exam
+submission mask. Real-exam submission asks for confirmation, hashes the gathered
+answers and uploaded-file metadata, requests a confirmation token, and submits the
+signed evidence package through the existing REST submission flow.
+
+`POST /api/v1/audio/transcribe` uses an administrator-approved, freely available
+Whisper model on CPU. Its transcript can be used as a research question or an exam
+answer draft. Model IDs, timeouts, scoring weights, AdamW settings, authentication
+modes, signature algorithms, and certificate defaults are environment settings.
+Model availability is not permission to ingest arbitrary Internet material: staff
+must verify copyright, license, provenance, privacy, and consent.
+
+The Compose `training` profile runs at exact 48-hour intervals; the Kubernetes job
+runs at 02:00 every second calendar day. Only approved examples are used. The mBERT
+and CPU LSTM pipelines record loss/score progress and use dropout, deterministic
+sentence restructuring, shuffling, AdamW weight decay, smoothing/penalties, and
+gradient clipping to reduce shortcut learning.
+
+Run `python tools/run_test_reports.py` to create matching JSON and PDF reports with
+functional results, durations, and the bundled utility microbenchmarks.
+
+## Integrity review, notifications, and grading scales
+
+An instructor can call `POST /api/v1/submissions/{id}/academic-integrity-check`.
+The result stores separate Internet-similarity matches, basic APA author-year and
+reference-section checks, optional LanguageTool-compatible grammar findings, and
+the existing per-question fact-entailment/contradiction signals. Internet search
+uses an administrator-configured JSON search endpoint and API key; the application
+does not scrape search-engine pages. A similarity result is evidence for human
+review, never an automatic plagiarism finding.
+
+`POST /api/v1/training/start` requests immediate training in addition to the
+48-hour schedule. Imported documents remain training candidates until approved.
+mBERT and LSTM training use average validation/training loss for configurable early
+stopping. `POST /api/v1/notifications/email` sends audited scoring or question-answer
+notifications through an authenticated SMTP relay; message bodies are never placed
+in audit details.
+
+Users have a base role plus narrow explicit permissions. Reports show percentage,
+ECTS, an indicative German numeric grade, British classification, and US letter/GPA.
+European country entries expose ECTS as a common reference only. These values are
+not credential equivalencies: each institution's published scale and ECTS
+distribution table prevail.
+
+## Topic groups, group exams, rules, MCQ, and XML
+
+Instructors can call `POST /api/v1/courses/{course_id}/exam-groups/randomize` to
+create balanced, randomly assigned chatrooms for dedicated exam topics. Supplying
+the same seed reproduces an assignment for audit; omitting it creates a fresh secure
+seed. Each group is connected to its course and examination.
+
+For group examinations, an instructor registers an X.509 group certificate with
+`PUT /api/v1/exam-groups/{id}/certificate`. Its chain must validate against an
+enabled customer private PKI. The private key remains client-side. Submissions are
+accepted only from group members and must be signed by the registered certificate.
+
+Exam rule sets can be created as JSON or uploaded as a JSON rules file. They define
+page limits, topic, citation policy, and normalized weights for context, design,
+wording, and citations. Choice questions support single or multiple correct options
+and optional penalized partial credit. Course exams are always stored in PostgreSQL
+and can be exchanged through the versioned, entity-safe XML import/export endpoints;
+XML exports intentionally contain no student submissions or private evidence.
+
+Instructors can also create complete question-answer exams from a versioned JSON
+file or from the `/admin` examination builder. The builder has entry fields for
+question text, default/reference answer, points, keywords, facts, and choice options;
+the `+ Add question` button appends the next question, `Download JSON` saves the
+portable file, and `Create draft examination` imports it into PostgreSQL through
+`POST /api/v1/courses/{course_id}/examinations/from-json`. The same JSON can be
+uploaded with `POST /api/v1/courses/{course_id}/examinations/import.json` and
+exported again with `GET /api/v1/examinations/{id}/export.json`.
+
+Students can load released examinations by course in the main HTML5 page. Practice
+exams are submitted through the existing signed submission flow and receive ASAG
+feedback; real exams use the confirmation, hash, signature, and instructor-correction
+workflow before results are returned.
+
+The HTML5 masks now share a top-left menu frame. The course menu lists selectable
+courses, chatrooms can be selected from the chat section, and administrator-only
+links lead to import/export and user definition. The user-definition mask captures
+user ID, name, email, optional matriculation number, password plus visible/hidden
+confirmation fields, base role, explicit rights checkboxes, and create/cancel/help
+actions. The examination execution mask loads examinations for the selected course,
+renders each question with its points and answer field or multiple-choice checklist,
+and shows practice ASAG results in a scoring window after each per-question submit.
+The chat mask follows a WhatsApp-style layout with chatroom list, left/right bubbles,
+plus-file attachment picker, and browser microphone dictation where available.
+When browser speech recognition is unavailable, the microphone button records a
+short phrase and sends it to the project's ASR endpoint. A neighboring audio-send
+button sends the spoken phrase as an audio attachment to the selected chat. Messages
+can also carry uploaded files; if the message mentions `@chatbot`, supported text,
+PDF, JSON, Markdown, CSV, or audio attachments are extracted/transcribed and used as
+additional context for the chatbot's research or grading-style response. The emoji
+button opens a lightweight browser-side picker for quick insertion into the message
+field.
+
+## Production work still required
+
+- Alembic migrations instead of automatic table creation
+- Redis/NATS-backed WebSocket fan-out before multiple API replicas
+- background jobs for ASR, embeddings, Chroma indexing, and virus scanning
+- object storage for original documents and exam files
+- calibrated per-discipline grading against teacher-labelled evaluation sets
+- complete citation validation, ASR accuracy monitoring, and model-drift alerting
+- retention rules, consent, accessibility testing, backups, and monitoring

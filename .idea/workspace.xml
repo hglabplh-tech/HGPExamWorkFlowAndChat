@@ -5,6 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6dcf1ec0-ee83-4509-bb62-c3e495e5bdad" name="Changes" comment="dentally skipped files">
+      <change afterPath="$PROJECT_DIR$/hgp_exam_work_flow_and_chat.egg-info/PKG-INFO" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hgp_exam_work_flow_and_chat.egg-info/SOURCES.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hgp_exam_work_flow_and_chat.egg-info/dependency_links.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hgp_exam_work_flow_and_chat.egg-info/requires.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hgp_exam_work_flow_and_chat.egg-info/top_level.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/requirements-docker-constraints.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/FUNDING.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/FUNDING.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <list id="ddda333b-02b2-478d-872f-da0899d48821" name="out" comment="">
