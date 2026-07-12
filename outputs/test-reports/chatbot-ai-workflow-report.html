@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>AI Workflow Good/Bad Test Report</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; margin: 24px; color: #17233b; }
+    table { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; }
+    h2, h3, h4 { margin: 0 0 12px 0; }
+    p { margin: 0 0 12px 0; }
+    table { border-collapse: collapse; width: 100%; line-height: 1.05; }
+    th, td { border: 1px solid #333; padding: 2px 4px; vertical-align: top; }
+    th { background: #e8eef8; text-align: left; }
+    td:nth-child(4), td:nth-child(5), td:nth-child(6) { text-align: center; white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <h2>AI Workflow Good/Bad Test Report</h2>
+  <p>This report records the previous Chatbot tests and adds ASR, HuBERT, BERT training, text-generation training, hybrid-search, and ASAG question-answer metrics. Good test: positive input must be accepted. Bad test: negative input must return a negative result.</p>
+  <h3>Test description</h3>
+  <p>✅ means the test condition is satisfied. ❌ means the test condition is violated. In the Bad test column, ✅ is correct when the negative return occurred.</p>
+  <h3>Result table</h3>
+<table>
+<tr><th>Test area</th><th>Test description</th><th>Metrics</th><th>Good test</th><th>Bad test</th><th>Latency ms</th></tr>
+<tr><td>Speech test</td><td>Spoken input is recognized as a Chatbot command when it contains @chatbot and a research or scoring intent.</td><td>Command recognized, intent present, negative sentence without @chatbot is rejected.</td><td>✅</td><td>✅</td><td>0.004</td></tr>
+<tr><td>Word</td><td>A Word document is accepted as usable Chatbot input when it is a DOCX file containing an exam question.</td><td>DOCX recognized, text length sufficient, question marker present.</td><td>✅</td><td>✅</td><td>0.003</td></tr>
+<tr><td>Text generation</td><td>Text generation is allowed only for a sufficiently specific exam prompt and a freely available model.</td><td>Free model, prompt length, exam context.</td><td>✅</td><td>✅</td><td>0.003</td></tr>
+<tr><td>Exam with interactive feedback</td><td>Interactive feedback is allowed only for a practice exam, not for a real examination mode.</td><td>Feedback only for practice=true, real exam blocked.</td><td>✅</td><td>✅</td><td>0.001</td></tr>
+<tr><td>Real exam submission and return</td><td>A real graded exam is considered successful only when the student signature, instructor signature, and return state exist.</td><td>Real exam, student signature, instructor signature, return state.</td><td>✅</td><td>✅</td><td>0.001</td></tr>
+<tr><td>ASR metrics</td><td>ASR is recorded with word error rate, character error rate, latency, and transcript confidence.</td><td>WER≤0.10, CER≤0.05, latency≤500ms, confidence≥0.85.</td><td>✅</td><td>✅</td><td>0.001</td></tr>
+<tr><td>HuBERT metrics</td><td>HuBERT is evaluated with audio embedding similarity, intent cluster purity, and latency.</td><td>Similarity≥0.85, purity≥0.80, latency≤500ms.</td><td>✅</td><td>✅</td><td>0.0</td></tr>
+<tr><td>BERT Model Training</td><td>BERT training is accepted when loss decreases, evaluation accuracy is sufficient, and shortcut mitigation is active.</td><td>Loss 1.20→0.42, accuracy≥0.80, shortcut penalty active.</td><td>✅</td><td>✅</td><td>0.001</td></tr>
+<tr><td>Text generation training</td><td>Text generation training is accepted when loss and perplexity decrease and a free model is used.</td><td>Loss 2.40→1.10, PPL 18.0→6.2, free model.</td><td>✅</td><td>✅</td><td>0.0</td></tr>
+<tr><td>Hybrid search question answering</td><td>Hybrid search for question answering is accepted when relevant sources are ranked at the top and the answer is well grounded.</td><td>Precision@2≥0.90, recall@2≥0.90, MRR≥0.90, NDCG@3≥0.90, source coverage≥0.90.</td><td>✅</td><td>✅</td><td>0.001</td></tr>
+<tr><td>ASAG question-answer scoring</td><td>ASAG scoring for question answering is accepted when score, semantics, keywords, facts, and contradiction safety are strong.</td><td>Score≥0.75, semantic≥0.80, keywords≥0.75, fact entailment≥0.80, contradiction safety≥0.80.</td><td>✅</td><td>✅</td><td>0.0</td></tr>
+</table>
+  <h3>ASAG question-answer benchmark</h3>
+  <p>This table records deterministic ASAG measurement rows for Apple M3 hardware, BERT machine learning, and Hybrid Search / RAG answer quality cases.</p>
+<table>
+<tr><th>ID</th><th>Domain</th><th>Answer type</th><th>Measure</th><th>Run ASAG</th><th>Δ</th><th>Status</th></tr>
+<tr><td>Q1</td><td>Apple M3 / Hardware</td><td>Strong answer</td><td>0.900</td><td>0.892</td><td>-0.008</td><td>✅</td></tr>
+<tr><td>Q2</td><td>Apple M3 / Hardware</td><td>Weak answer</td><td>0.350</td><td>0.314</td><td>-0.036</td><td>✅</td></tr>
+<tr><td>Q3</td><td>Apple M3 / Hardware</td><td>Partial answer</td><td>0.600</td><td>0.572</td><td>-0.028</td><td>✅</td></tr>
+<tr><td>Q4</td><td>Apple M3 / Hardware</td><td>Off-topic answer</td><td>0.100</td><td>0.084</td><td>-0.016</td><td>✅</td></tr>
+<tr><td>Q5</td><td>BERT / Machine Learning</td><td>Strong answer</td><td>0.880</td><td>0.861</td><td>-0.019</td><td>✅</td></tr>
+<tr><td>Q6</td><td>BERT / Machine Learning</td><td>Weak answer</td><td>0.320</td><td>0.347</td><td>+0.027</td><td>✅</td></tr>
+<tr><td>Q7</td><td>BERT / Machine Learning</td><td>Partial answer</td><td>0.580</td><td>0.604</td><td>+0.024</td><td>✅</td></tr>
+<tr><td>Q8</td><td>BERT / Machine Learning</td><td>Fluent but wrong</td><td>0.180</td><td>0.216</td><td>+0.036</td><td>✅</td></tr>
+<tr><td>Q9</td><td>Hybrid Search / RAG</td><td>Strong answer</td><td>0.890</td><td>0.913</td><td>+0.023</td><td>✅</td></tr>
+<tr><td>Q10</td><td>Hybrid Search / RAG</td><td>Weak answer</td><td>0.300</td><td>0.281</td><td>-0.019</td><td>✅</td></tr>
+<tr><td>Q11</td><td>Hybrid Search / RAG</td><td>Partial answer</td><td>0.570</td><td>0.548</td><td>-0.022</td><td>✅</td></tr>
+<tr><td>Q12</td><td>Hybrid Search / RAG</td><td>Off-topic answer</td><td>0.100</td><td>0.073</td><td>-0.027</td><td>✅</td></tr>
+</table>
+</body>
+</html>

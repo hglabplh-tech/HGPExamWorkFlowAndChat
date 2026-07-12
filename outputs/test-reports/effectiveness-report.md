@@ -1,14 +1,14 @@
-# HGPExamWorkFlowAndChat effectiveness test report
+### HGPExamWorkFlowAndChat effectiveness test report
 
 This report is generated from the domain-specific text outputs created by the pytest effectiveness tests.
 
-## ASAG scoring effectiveness
+#### ASAG scoring effectiveness
 
-### Test description
+##### Test description
 
 Scores one intentionally strong answer and one intentionally weak answer for an Apple M3 microprocessor-programming question. The test verifies that the AI-assisted ASAG signals separate correct from incorrect answers, preserve deterministic expected values, keep fact and contradiction signals healthy, and complete within the configured latency budget.
 
-### Metrics
+##### Metrics
 
 | Metric | Value |
 | --- | --- |
@@ -42,20 +42,20 @@ Scores one intentionally strong answer and one intentionally weak answer for an 
 | meets_latency_target | True |
 | performance_verdict | performant |
 
-### Evidence details
+#### Evidence details
 
 | No. | Detail |
 | --- | --- |
 | 1 | good case score=8.92/10.0 normalized=0.892 signals={'jaccard': 0.5, 'keywords': 1.0, 'semantic': 0.94, 'trained_scoring': None, 'fact_entailment': 0.92, 'contradiction': 0.98, 'length': 1.0} |
 | 2 | bad case score=2.516/10.0 normalized=0.251563 signals={'jaccard': 0.09375, 'keywords': 0.25, 'semantic': 0.15, 'trained_scoring': None, 'fact_entailment': 0.1, 'contradiction': 0.3, 'length': 1.0} |
 
-## Hybrid search effectiveness
+#### Hybrid search effectiveness
 
-### Test description
+#### Test description
 
 Ranks a controlled knowledge corpus with BM25, full-text scores, and semantic scores. The test verifies that the relevant Apple M3 documents outrank an unrelated German-history distractor, that weighted fusion preserves the expected top results, and that retrieval latency remains below the target threshold.
 
-### Metrics
+#### Metrics
 
 | Metric | Value |
 | --- | --- |
@@ -81,7 +81,7 @@ Ranks a controlled knowledge corpus with BM25, full-text scores, and semantic sc
 | meets_latency_target | True |
 | performance_verdict | performant |
 
-### Evidence details
+#### Evidence details
 
 | No. | Detail |
 | --- | --- |
@@ -90,13 +90,13 @@ Ranks a controlled knowledge corpus with BM25, full-text scores, and semantic sc
 | 3 | hybrid_order=['Apple M3 cache programming', 'GPU memory concepts'] |
 | 4 | hybrid_components=[{'full_text': 0.35, 'bm25': 0.2, 'semantic': 0.434831}, {'full_text': 0.160417, 'bm25': 0.041513, 'semantic': 0.45}] |
 
-## Chatroom exchange workflow
+#### Chatroom exchange workflow
 
-### Test description
+##### Test description
 
 Simulates a course chatroom exchange between two students and the @chatbot assistant. The test verifies message delivery, chatbot addressing, visibility-limited sharing of ASAG scores and research results, payload integrity, and low-latency workflow execution.
 
-### Metrics
+##### Metrics
 
 | Metric | Value |
 | --- | --- |
@@ -121,7 +121,7 @@ Simulates a course chatroom exchange between two students and the @chatbot assis
 | performance_verdict | performant |
 | all_exchanges_successful | True |
 
-### Evidence details
+##### Evidence details
 
 | No. | Detail |
 | --- | --- |
