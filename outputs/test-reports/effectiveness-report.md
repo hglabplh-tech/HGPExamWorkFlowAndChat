@@ -36,8 +36,8 @@ Scores one intentionally strong answer and one intentionally weak answer for an 
 | teacher_review_signal_active | False |
 | max_absolute_error | 0.0 |
 | exact_values_match_expected | True |
-| latency_ms | 0.153 |
-| answers_per_second | 13096.8 |
+| latency_ms | 0.352 |
+| answers_per_second | 5681.82 |
 | latency_target_ms | 50 |
 | meets_latency_target | True |
 | performance_verdict | performant |
@@ -75,8 +75,8 @@ Ranks a controlled knowledge corpus with BM25, full-text scores, and semantic sc
 | ai_ranking_quality_gate_passed | True |
 | bm25_top_title | Apple M3 cache programming |
 | hybrid_top_title | Apple M3 cache programming |
-| latency_ms | 0.49 |
-| documents_per_second | 6120.36 |
+| latency_ms | 0.244 |
+| documents_per_second | 12286.67 |
 | latency_target_ms | 50 |
 | meets_latency_target | True |
 | performance_verdict | performant |
@@ -114,8 +114,8 @@ Simulates a course chatroom exchange between two students and the @chatbot assis
 | ai_visibility_gate_passed | True |
 | ai_collaboration_quality_gate_passed | True |
 | unauthorized_delivery_count | 0 |
-| latency_ms | 0.007 |
-| messages_per_second | 596214.0 |
+| latency_ms | 0.012 |
+| messages_per_second | 325414.93 |
 | latency_target_ms | 50 |
 | meets_latency_target | True |
 | performance_verdict | performant |

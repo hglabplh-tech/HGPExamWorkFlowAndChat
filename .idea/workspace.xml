@@ -4,7 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6dcf1ec0-ee83-4509-bb62-c3e495e5bdad" name="Changes" comment="commit workspace xml" />
+    <list default="true" id="6dcf1ec0-ee83-4509-bb62-c3e495e5bdad" name="Changes" comment="commit missing files FIX">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/outputs/test-reports/asag-effectiveness.txt" beforeDir="false" afterPath="$PROJECT_DIR$/outputs/test-reports/asag-effectiveness.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/outputs/test-reports/chat-exchange.txt" beforeDir="false" afterPath="$PROJECT_DIR$/outputs/test-reports/chat-exchange.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/outputs/test-reports/chatbot-ai-workflow-report.html" beforeDir="false" afterPath="$PROJECT_DIR$/outputs/test-reports/chatbot-ai-workflow-report.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/outputs/test-reports/effectiveness-report.md" beforeDir="false" afterPath="$PROJECT_DIR$/outputs/test-reports/effectiveness-report.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/outputs/test-reports/hybrid-search-effectiveness.txt" beforeDir="false" afterPath="$PROJECT_DIR$/outputs/test-reports/hybrid-search-effectiveness.txt" afterDir="false" />
+    </list>
     <list id="ddda333b-02b2-478d-872f-da0899d48821" name="out" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/hcp-xml-workflow-chat.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/hgp-exam-work-flow-and-chat.iml" afterDir="false" />
     </list>
@@ -18,23 +25,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0001237743505602" />
-      <entry key="MS500" value="1.1656553611578406" />
-      <entry key="S2" value="1.8890983974560165" />
-      <entry key="S5" value="2.931077684794328" />
-      <entry key="S10" value="3.722194338487036" />
-      <entry key="S30" value="4.503079745457102" />
-      <entry key="S60" value="4.741332173169908" />
-      <entry key="M2" value="4.868001346648003" />
-      <entry key="M5" value="4.946545969826379" />
-      <entry key="M10" value="4.973162612016927" />
-      <entry key="M15" value="4.982083787556418" />
-      <entry key="M30" value="4.991400157973269" />
-      <entry key="H1" value="5.139566799941737" />
-      <entry key="H2" value="7.838370552093358" />
-      <entry key="H4" value="17.711765554523875" />
-      <entry key="D1" value="72.45795152990154" />
-      <entry key="W1" value="137.70488009679053" />
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0000961734170266" />
+      <entry key="S2" value="1.2211006854127098" />
+      <entry key="S5" value="2.2217109617939" />
+      <entry key="S10" value="3.1998970280213106" />
+      <entry key="S30" value="4.386577262996402" />
+      <entry key="S60" value="5.369135213421837" />
+      <entry key="M2" value="6.741568823119961" />
+      <entry key="M5" value="8.34222254750326" />
+      <entry key="M10" value="9.09627479824098" />
+      <entry key="M15" value="9.379466267251235" />
+      <entry key="M30" value="9.680672839608253" />
+      <entry key="H1" value="9.977433457399485" />
+      <entry key="H2" value="12.715581274399268" />
+      <entry key="H4" value="22.574626947549593" />
+      <entry key="D1" value="77.36501375632741" />
+      <entry key="W1" value="142.67966986258475" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -42,37 +49,37 @@
       <entry key="S2" value="0.0" />
       <entry key="S5" value="0.0" />
       <entry key="S10" value="0.0" />
-      <entry key="S30" value="1.5976773449966E-310" />
-      <entry key="S60" value="1.263992620625852E-155" />
-      <entry key="M2" value="3.555267388855376E-78" />
-      <entry key="M5" value="1.047970138315392E-31" />
-      <entry key="M10" value="3.2372366893932745E-16" />
-      <entry key="M15" value="4.714651934653807E-11" />
-      <entry key="M30" value="6.866332306736843E-6" />
-      <entry key="H1" value="0.0026203687348801" />
-      <entry key="H2" value="0.0511895448861025" />
-      <entry key="H4" value="0.22633781663612737" />
-      <entry key="D1" value="0.9910123538720057" />
-      <entry key="W1" value="1.7656113406633342" />
+      <entry key="S30" value="4.00860131567E-312" />
+      <entry key="S60" value="2.0021491741802879E-156" />
+      <entry key="M2" value="1.4149732061704518E-78" />
+      <entry key="M5" value="7.249353645403694E-32" />
+      <entry key="M10" value="2.6924623758566623E-16" />
+      <entry key="M15" value="4.169651538913735E-11" />
+      <entry key="M30" value="6.457283901853579E-6" />
+      <entry key="H1" value="0.0025411186319914017" />
+      <entry key="H2" value="0.05040951675474234" />
+      <entry key="H4" value="0.22460672480380042" />
+      <entry key="D1" value="0.9897450548908353" />
+      <entry key="W1" value="1.765288613718211" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.9592641193268152" />
-      <entry key="MS500" value="0.9963201548027754" />
-      <entry key="S2" value="1.5051351996148965" />
-      <entry key="S5" value="2.6734505462546654" />
-      <entry key="S10" value="3.5679764730754946" />
-      <entry key="S30" value="4.444973542476013" />
-      <entry key="S60" value="4.711365074341507" />
-      <entry key="M2" value="4.852783105216207" />
-      <entry key="M5" value="4.940401533789453" />
-      <entry key="M10" value="4.970080802086744" />
-      <entry key="M15" value="4.980027110995494" />
-      <entry key="M30" value="4.990377603881195" />
-      <entry key="H1" value="5.141669803544689" />
-      <entry key="H2" value="7.889279132200566" />
-      <entry key="H4" value="17.937922581247776" />
-      <entry key="D1" value="73.44888439793425" />
-      <entry key="W1" value="139.4704678835385" />
+      <entry key="MS100" value="0.9592641193252643" />
+      <entry key="MS500" value="0.9918117804074683" />
+      <entry key="S2" value="1.218259690890482" />
+      <entry key="S5" value="2.219200326173348" />
+      <entry key="S10" value="3.197977614832429" />
+      <entry key="S30" value="4.384240697281378" />
+      <entry key="S60" value="5.363910885318921" />
+      <entry key="M2" value="6.735262969358811" />
+      <entry key="M5" value="8.33786991012613" />
+      <entry key="M10" value="9.093660063050121" />
+      <entry key="M15" value="9.377612876200736" />
+      <entry key="M30" value="9.679693922815009" />
+      <entry key="H1" value="9.979464206022527" />
+      <entry key="H2" value="12.765709778642135" />
+      <entry key="H4" value="22.79905209985709" />
+      <entry key="D1" value="78.3546790660321" />
+      <entry key="W1" value="144.4449348751199" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -238,7 +245,15 @@
       <option name="project" value="LOCAL" />
       <updated>1784118897070</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="commit missing files FIX">
+      <option name="closed" value="true" />
+      <created>1784119056493</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1784119056493</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -259,6 +274,7 @@
     <MESSAGE value="add performance metrics and report tests" />
     <MESSAGE value="Added performance and functional tests. Added new ASAG form with configurable values. Added a playground for training and playing with the config to empirically look for better values (See FEATURES.md)" />
     <MESSAGE value="commit workspace xml" />
-    <option name="LAST_COMMIT_MESSAGE" value="commit workspace xml" />
+    <MESSAGE value="commit missing files FIX" />
+    <option name="LAST_COMMIT_MESSAGE" value="commit missing files FIX" />
   </component>
 </project>

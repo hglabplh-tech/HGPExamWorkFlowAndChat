@@ -31,17 +31,17 @@
 <table class="workflow">
 <colgroup><col class="id"><col class="area"><col class="desc"><col class="metrics"><col class="icon"><col class="icon"><col class="lat"></colgroup>
 <tr><th>ID</th><th>Test area</th><th>Short test</th><th>Key metrics</th><th>Good</th><th>Bad</th><th>ms</th></tr>
-<tr><td>T1</td><td>Speech test</td><td>Recognizes @chatbot voice command.</td><td>Intent ok; negative rejected.</td><td>✅</td><td>✅</td><td>0.007</td></tr>
-<tr><td>T2</td><td>Word</td><td>Accepts DOCX exam input.</td><td>DOCX, text, question marker.</td><td>✅</td><td>✅</td><td>0.005</td></tr>
-<tr><td>T3</td><td>Text generation</td><td>Allows valid exam prompt generation.</td><td>Free model, prompt, exam context.</td><td>✅</td><td>✅</td><td>0.004</td></tr>
-<tr><td>T4</td><td>Exam with interactive feedback</td><td>Allows feedback only in practice mode.</td><td>Practice allowed; real blocked.</td><td>✅</td><td>✅</td><td>0.002</td></tr>
-<tr><td>T5</td><td>Real exam submission and return</td><td>Checks real exam signature workflow.</td><td>Student + instructor signatures.</td><td>✅</td><td>✅</td><td>0.001</td></tr>
-<tr><td>T6</td><td>ASR metrics</td><td>Checks speech recognition quality.</td><td>WER≤.10, CER≤.05, conf≥.85.</td><td>✅</td><td>✅</td><td>0.002</td></tr>
-<tr><td>T7</td><td>HuBERT metrics</td><td>Checks HuBERT audio embeddings.</td><td>Similarity≥.85, purity≥.80.</td><td>✅</td><td>✅</td><td>0.001</td></tr>
-<tr><td>T8</td><td>BERT Model Training</td><td>Checks BERT training progress.</td><td>Loss down, acc≥.80, penalty on.</td><td>✅</td><td>✅</td><td>0.001</td></tr>
-<tr><td>T9</td><td>Text generation training</td><td>Checks generator training progress.</td><td>Loss and PPL down; free model.</td><td>✅</td><td>✅</td><td>0.001</td></tr>
-<tr><td>T10</td><td>Hybrid search question answering</td><td>Checks grounded hybrid QA.</td><td>P@2, R@2, MRR, NDCG ≥.90.</td><td>✅</td><td>✅</td><td>0.001</td></tr>
-<tr><td>T11</td><td>ASAG question-answer scoring</td><td>Checks ASAG QA scoring.</td><td>Score≥.75; semantic/facts strong.</td><td>✅</td><td>✅</td><td>0.001</td></tr>
+<tr><td>T1</td><td>Speech test</td><td>Recognizes @chatbot voice command.</td><td>Intent ok; negative rejected.</td><td>✅</td><td>✅</td><td>0.012</td></tr>
+<tr><td>T2</td><td>Word</td><td>Accepts DOCX exam input.</td><td>DOCX, text, question marker.</td><td>✅</td><td>✅</td><td>0.008</td></tr>
+<tr><td>T3</td><td>Text generation</td><td>Allows valid exam prompt generation.</td><td>Free model, prompt, exam context.</td><td>✅</td><td>✅</td><td>0.006</td></tr>
+<tr><td>T4</td><td>Exam with interactive feedback</td><td>Allows feedback only in practice mode.</td><td>Practice allowed; real blocked.</td><td>✅</td><td>✅</td><td>0.005</td></tr>
+<tr><td>T5</td><td>Real exam submission and return</td><td>Checks real exam signature workflow.</td><td>Student + instructor signatures.</td><td>✅</td><td>✅</td><td>0.003</td></tr>
+<tr><td>T6</td><td>ASR metrics</td><td>Checks speech recognition quality.</td><td>WER≤.10, CER≤.05, conf≥.85.</td><td>✅</td><td>✅</td><td>0.003</td></tr>
+<tr><td>T7</td><td>HuBERT metrics</td><td>Checks HuBERT audio embeddings.</td><td>Similarity≥.85, purity≥.80.</td><td>✅</td><td>✅</td><td>0.002</td></tr>
+<tr><td>T8</td><td>BERT Model Training</td><td>Checks BERT training progress.</td><td>Loss down, acc≥.80, penalty on.</td><td>✅</td><td>✅</td><td>0.002</td></tr>
+<tr><td>T9</td><td>Text generation training</td><td>Checks generator training progress.</td><td>Loss and PPL down; free model.</td><td>✅</td><td>✅</td><td>0.002</td></tr>
+<tr><td>T10</td><td>Hybrid search question answering</td><td>Checks grounded hybrid QA.</td><td>P@2, R@2, MRR, NDCG ≥.90.</td><td>✅</td><td>✅</td><td>0.003</td></tr>
+<tr><td>T11</td><td>ASAG question-answer scoring</td><td>Checks ASAG QA scoring.</td><td>Score≥.75; semantic/facts strong.</td><td>✅</td><td>✅</td><td>0.002</td></tr>
 </table>
   <h3>ASAG question-answer benchmark</h3>
   <p>Expected measure vs. ASAG run score; tolerance ±0.12.</p>

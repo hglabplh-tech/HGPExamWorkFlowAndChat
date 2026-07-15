@@ -25,8 +25,8 @@ hallucination_risk_bad_case: high
 teacher_review_signal_active: False
 max_absolute_error: 0.0
 exact_values_match_expected: True
-latency_ms: 0.153
-answers_per_second: 13096.8
+latency_ms: 0.352
+answers_per_second: 5681.82
 latency_target_ms: 50
 meets_latency_target: True
 performance_verdict: performant
