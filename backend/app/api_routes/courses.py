@@ -11,10 +11,11 @@ from ..models import Course, DisciplineScoringProfile, ModelTrainingRun, Trainin
 from ..schemas import CourseCreate, CourseOut, ScoringProfileCreate, TrainingApproval
 from ..security import authenticate, require_nonce
 from ..services.audit import append_audit
+from ..services.configuration_cache import invalidate_configuration
 
 
 from .common import (
-    require_training_manager,
+    require_admin, require_training_manager,
 )
 
 router = APIRouter(prefix="/api/v1")
@@ -58,7 +59,7 @@ async def create_course(data: CourseCreate, db: AsyncSession = Depends(get_db), 
 @router.post("/scoring-profiles", status_code=201)
 async def create_scoring_profile(data: ScoringProfileCreate, db: AsyncSession = Depends(get_db), user: User = Depends(require_nonce)):
     """Perform the create scoring profile operation."""
-    require_training_manager(user)
+    require_admin(user)
     try:
         data.validate_weights()
     except ValueError as error:
@@ -82,13 +83,14 @@ async def create_scoring_profile(data: ScoringProfileCreate, db: AsyncSession = 
     await db.flush()
     await append_audit(db, user.id, "scoring_profile_created", "discipline_scoring_profile", profile.id, details={"discipline": profile.discipline, "version": profile.version, "grading_weights": profile.grading_weights, "search_weights": profile.search_weights})
     await db.commit()
+    invalidate_configuration("scoring", data.discipline)
     return {"id": profile.id, "discipline": profile.discipline, "version": profile.version}
 
 
 @router.get("/scoring-profiles")
 async def scoring_profiles(discipline: str | None = None, db: AsyncSession = Depends(get_db), user: User = Depends(authenticate)):
     """Perform the scoring profiles operation."""
-    require_training_manager(user)
+    require_admin(user)
     query = select(DisciplineScoringProfile).order_by(DisciplineScoringProfile.discipline, DisciplineScoringProfile.version.desc())
     if discipline:
         query = query.where(DisciplineScoringProfile.discipline == discipline)

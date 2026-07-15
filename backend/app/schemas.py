@@ -506,6 +506,22 @@ class MailServerSettingsOut(BaseModel):
     active: bool
 
 
+class LoggingSettingsIn(BaseModel):
+    """Represent administrator-entered runtime logging configuration."""
+    level: str = Field(default="WARNING", pattern="^(DEBUG|INFO|WARNING|WARN|ERROR|SEVERE|CRITICAL)$")
+    log_file_path: str | None = Field(default=None, max_length=1000)
+    debug_values: bool = False
+
+
+class LoggingSettingsOut(BaseModel):
+    """Return current runtime logging configuration."""
+    level: str
+    effective_level: str | None = None
+    log_file_path: str | None = None
+    debug_values: bool
+    available_levels: list[str]
+
+
 class PlaygroundAsagConfig(BaseModel):
     """Override ASAG scoring settings for one playground trial."""
     discipline: str = Field(default="Playground", min_length=2, max_length=120)

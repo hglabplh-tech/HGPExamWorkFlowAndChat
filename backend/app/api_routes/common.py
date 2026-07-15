@@ -9,11 +9,12 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..models import Course, DisciplineScoringProfile, Enrollment, ExamGroup, ExamQuestion, Examination, PrivatePKI, Role, Submission, User, UserCertificate
+from ..models import Course, Enrollment, ExamGroup, ExamQuestion, Examination, PrivatePKI, Role, Submission, User, UserCertificate
 from ..services.asag import grade_answer
 from ..services.evidence import certificate_sha256, sha256_hex
 from ..services.reports import generate_exam_report
 from ..services.authorization import has_permission
+from ..services.configuration_cache import CachedScoringProfile, cached_active_scoring_profile
 from ..services.grading_scales import convert_grades
 from ..services.multiple_choice import score_choice_answer
 
@@ -75,12 +76,9 @@ async def require_active_signing_certificate(db: AsyncSession, user: User, finge
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Signing certificate is not active in an enabled application trust chain")
 
 
-async def active_scoring_profile(db: AsyncSession, course: Course) -> DisciplineScoringProfile | None:
+async def active_scoring_profile(db: AsyncSession, course: Course) -> CachedScoringProfile | None:
     """Perform the active scoring profile operation."""
-    return await db.scalar(select(DisciplineScoringProfile).where(
-        DisciplineScoringProfile.discipline == course.discipline,
-        DisciplineScoringProfile.active.is_(True),
-    ).order_by(DisciplineScoringProfile.version.desc()))
+    return await cached_active_scoring_profile(db, course.discipline)
 
 
 async def build_grade_proposal(db: AsyncSession, submission: Submission) -> dict:

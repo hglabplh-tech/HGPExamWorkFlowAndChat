@@ -29,12 +29,27 @@
         <a href="#admin-chatrooms">Defined chatrooms</a>
         <a href="#admin-import-export">Import/export</a>
         <a href="#chroma-admin">Rebuild ChromaDB</a>
+        <a href="#logging-config">Logging configuration</a>
         <a href="#user-definition">User definition</a>
         <a href="#user-definition">Create user entry</a>
         <a href="#totp-config">TOTP configuration</a>
         <a href="#mail-config">SMTP / IMAP configuration</a>
         <button type="button" id="admin-logout" class="link-button">Logout</button>
       </details>
+      <nav class="admin-tabs" aria-label="Administration tabs">
+        <a href="#admin-courses">Courses</a>
+        <a href="#admin-chatrooms">Chatrooms</a>
+        <a href="#user-definition">Users</a>
+        <a href="#totp-config">TOTP</a>
+        <a href="#mail-config">Mail</a>
+        <a href="#logging-config">Logging</a>
+        <a href="#chroma-admin">ChromaDB</a>
+        <a href="#admin-import-export">Import/export</a>
+        <a href="#trust-form">Trust</a>
+        <a href="#scoring-form">Scoring</a>
+        <a href="#exam-builder-form">Exams</a>
+        <a href="#thesaurus-form">Thesaurus</a>
+      </nav>
       <section id="admin-courses" class="admin-panel">
         <p class="eyebrow">COURSES</p>
         <h1>Courses added to the system</h1>
@@ -116,6 +131,20 @@
           <div class="button-row"><button>Save mail configuration</button><button type="button" id="load-mail-config">Reload</button></div>
         </form>
         <div id="mail-config-status" aria-live="polite"></div>
+      </section>
+      <section id="logging-config" class="admin-panel">
+        <p class="eyebrow">LOGFILES</p>
+        <h1>Logging configuration</h1>
+        <p>Uses Python standard logging. Default is WARNING, so only warnings, errors, and severe events are emitted until an administrator selects INFO or DEBUG.</p>
+        <form id="logging-config-form" class="admin-form">
+          <label>Log level<select id="log-level"><option value="WARNING">Warning / errors only</option><option value="ERROR">Error only</option><option value="SEVERE">Severe only</option><option value="INFO">Info REST entry / exit</option><option value="DEBUG">Debug with sanitized values</option></select></label>
+          <label>Log file path<input id="log-file-path" placeholder="/var/log/hgp-exam-workflow/app.log"></label>
+          <label><input id="log-debug-values" type="checkbox"> Include sanitized debug values</label>
+          <div class="button-row"><button>Save logging configuration</button><button type="button" id="load-logging-config">Reload</button></div>
+        </form>
+        <div class="button-row"><button type="button" id="load-cache-status">Show configuration cache</button><button type="button" id="invalidate-cache">Invalidate configuration cache</button></div>
+        <pre id="configuration-cache-status"></pre>
+        <div id="logging-config-status" aria-live="polite"></div>
       </section>
       <section id="chroma-admin" class="admin-panel">
         <p class="eyebrow">VECTOR INDEX</p>

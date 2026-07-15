@@ -8,7 +8,7 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
-from ..models import ActiveUserSession, ConversationMember, Course, DisciplineScoringProfile, Document, Enrollment, ResearchHistory, ResearchHistoryEntry, ResearchInteraction, Role, Thesaurus, User, VideoResource
+from ..models import ActiveUserSession, ConversationMember, Course, Document, Enrollment, ResearchHistory, ResearchHistoryEntry, ResearchInteraction, Role, Thesaurus, User, VideoResource
 from ..schemas import ResearchHistoryCreate, ResearchHistoryUpdate, ResearchQuestionCreate, ResearchVisibilityUpdate, SearchResponse
 from ..security import authenticate, current_active_session, require_nonce
 from ..services.audit import append_audit
@@ -45,10 +45,7 @@ async def search(
     if course_id:
         course = await db.get(Course, course_id)
         if course:
-            scoring_profile = await db.scalar(select(DisciplineScoringProfile).where(
-                DisciplineScoringProfile.discipline == course.discipline,
-                DisciplineScoringProfile.active.is_(True),
-            ).order_by(DisciplineScoringProfile.version.desc()))
+            scoring_profile = await active_scoring_profile(db, course)
     thesaurus_entries: list[dict] = []
     if use_thesaurus:
         thesauri = (await db.scalars(select(Thesaurus).where(Thesaurus.active.is_(True)))).all()

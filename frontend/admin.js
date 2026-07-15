@@ -22,7 +22,7 @@ document.querySelector("#login-form").addEventListener("submit", async event => 
   token=data.access_token;
   sessionStorage.setItem("token",token);
   document.querySelector("#login-status").textContent=`Signed in as ${data.display_name||email}`;
-  refresh(); refreshPki(); refreshScoring(); refreshThesauri(); loadMailConfig(); loadAdminCourses(); loadAdminChatrooms();
+  refresh(); refreshPki(); refreshScoring(); refreshThesauri(); loadMailConfig(); loadLoggingConfig(); loadAdminCourses(); loadAdminChatrooms();
 });
 
 document.querySelector("#send-login-totp").addEventListener("click",async()=>{
@@ -139,6 +139,26 @@ async function loadMailConfig() {
   target.textContent="Mail configuration loaded.";
 }
 
+async function loadLoggingConfig() {
+  if(!token)return;
+  const target=document.querySelector("#logging-config-status");
+  const response=await fetch("/api/v1/admin/logging-settings",{headers:headers()});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok){target.textContent=data.detail||"Unable to load logging configuration.";return;}
+  document.querySelector("#log-level").value=data.level||"WARNING";
+  document.querySelector("#log-file-path").value=data.log_file_path||"";
+  document.querySelector("#log-debug-values").checked=!!data.debug_values;
+  target.textContent=`Logging loaded. Active level: ${data.level}; output: ${data.log_file_path||"console"}.`;
+}
+
+async function loadConfigurationCacheStatus() {
+  if(!token)return;
+  const target=document.querySelector("#configuration-cache-status");
+  const response=await fetch("/api/v1/admin/configuration-cache",{headers:headers()});
+  const data=await response.json().catch(()=>({}));
+  target.textContent=response.ok?JSON.stringify(data,null,2):(data.detail||"Unable to load configuration cache status.");
+}
+
 document.addEventListener("click",async event=>{
   const button=event.target.closest(".trust-decision,.pki-decision");
   if(!button)return;
@@ -199,6 +219,13 @@ document.querySelector("#chroma-rebuild-form").addEventListener("submit",async e
 });
 
 document.querySelector("#load-mail-config").addEventListener("click",loadMailConfig);
+document.querySelector("#load-logging-config").addEventListener("click",loadLoggingConfig);
+document.querySelector("#load-cache-status").addEventListener("click",loadConfigurationCacheStatus);
+document.querySelector("#invalidate-cache").addEventListener("click",async()=>{
+  const response=await fetch("/api/v1/admin/configuration-cache/invalidate",{method:"POST",headers:{...headers(),"X-Request-Nonce":nonce()}});
+  const data=await response.json().catch(()=>({}));
+  document.querySelector("#configuration-cache-status").textContent=response.ok?JSON.stringify(data.cache,null,2):(data.detail||"Configuration cache invalidation failed.");
+});
 document.querySelector("#mail-config-form").addEventListener("submit",async event=>{
   event.preventDefault();
   const value=id=>document.querySelector(id).value.trim()||null;
@@ -222,6 +249,18 @@ document.querySelector("#mail-config-form").addEventListener("submit",async even
   const data=await response.json().catch(()=>({}));
   document.querySelector("#mail-config-status").textContent=response.ok?`Mail configuration saved. SMTP: ${data.smtp_host||"not configured"}; IMAP: ${data.imap_host||"not configured"}.`:(data.detail||"Mail configuration failed");
   if(response.ok){document.querySelector("#smtp-password").value="";document.querySelector("#imap-password").value="";loadMailConfig();}
+});
+
+document.querySelector("#logging-config-form").addEventListener("submit",async event=>{
+  event.preventDefault();
+  const payload={
+    level:document.querySelector("#log-level").value,
+    log_file_path:document.querySelector("#log-file-path").value.trim()||null,
+    debug_values:document.querySelector("#log-debug-values").checked,
+  };
+  const response=await fetch("/api/v1/admin/logging-settings",{method:"PUT",headers:{...headers(),"Content-Type":"application/json","X-Request-Nonce":nonce()},body:JSON.stringify(payload)});
+  const data=await response.json().catch(()=>({}));
+  document.querySelector("#logging-config-status").textContent=response.ok?`Logging saved. Level ${data.level}; output ${data.log_file_path||"console"}.`:(data.detail||"Logging configuration failed");
 });
 
 document.querySelector("#totp-setup").addEventListener("click",async()=>{
@@ -322,5 +361,6 @@ refreshPki();
 refreshScoring();
 refreshThesauri();
 loadMailConfig();
+loadLoggingConfig();
 loadAdminCourses();
 loadAdminChatrooms();

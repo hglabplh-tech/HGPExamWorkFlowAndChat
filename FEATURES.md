@@ -23,6 +23,8 @@ grading service.
 - Infrastructure: Caddy TLS proxy, PostgreSQL setup, migrations, OCSP config.
 - Canonical data store: PostgreSQL; ChromaDB is treated as a rebuildable
   semantic index.
+- Runtime logging uses Python standard `logging` with timestamps and levels
+  `DEBUG`, `INFO`, `WARNING`, `ERROR`, and `SEVERE` (`CRITICAL` internally).
 - Static hygiene: unused imports, unused locals, and accidental redefinitions
   are checked with Ruff.
 
@@ -295,6 +297,65 @@ semantic/full-text indexes.
 **UI surface**
 
 - Admin thesaurus upload mask with name, language, format, and file input.
+
+## 9a. Standard logging and logfiles
+
+**Purpose:** provide simple operational logfiles without introducing a complex
+logging framework.
+
+**Attributes**
+
+- Uses Python's built-in `logging` library.
+- Default level is `WARNING`, so warnings, errors, and severe/critical events
+  are emitted by default; REST `INFO` logging must be enabled by an administrator.
+- Timestamp is included in every log line.
+- `INFO` logging records REST entry and exit metadata: method, path, query,
+  client, status, and duration.
+- `DEBUG` logging can include sanitized request/response metadata; passwords,
+  bearer tokens, nonces, signatures, certificates, cookies, and TOTP values are
+  redacted.
+- `SEVERE` is exposed in the UI and REST API and maps to Python `CRITICAL`.
+- Runtime logging configuration is admin-only.
+
+**REST surface**
+
+- `GET /api/v1/admin/logging-settings`
+- `PUT /api/v1/admin/logging-settings`
+
+**UI surface**
+
+- Admin `Logging` tab with level, optional logfile path, and sanitized
+  debug-values toggle.
+
+## 9b. Configuration cache
+
+**Purpose:** keep the active application configuration in memory and reload it
+only after the affected configuration section changes.
+
+**Attributes**
+
+- Central cache service for global settings, SMTP/IMAP mail configuration, and
+  active discipline/scoring profiles.
+- Cached database configurations are detached snapshots, not live SQLAlchemy
+  session objects.
+- Cache entries are loaded lazily on first use and reused by application logic.
+- Invalidation is section-based:
+  - `global` clears environment settings,
+  - `mail` clears SMTP/IMAP snapshots,
+  - `scoring` clears discipline scoring/search profiles,
+  - `logging` marks runtime logging configuration changed.
+- Admin saves automatically invalidate the affected section.
+- Manual cache status and invalidation endpoints are admin-only.
+
+**REST surface**
+
+- `GET /api/v1/admin/configuration-cache`
+- `POST /api/v1/admin/configuration-cache/invalidate`
+
+**UI surface**
+
+- Admin `Logging` panel includes configuration-cache status and invalidate
+  buttons for operational troubleshooting.
 
 ## 10. ASR and audio input
 
@@ -617,6 +678,9 @@ chatrooms, trust, PKI, scoring, exams, and search language resources.
 - Defined chatrooms.
 - User definition / create user entry.
 - TOTP configuration.
+- SMTP / IMAP configuration.
+- Logging configuration.
+- Configuration-cache status and invalidation.
 - Import/export links.
 - ChromaDB rebuild panel with economy/quality embedding profile selector.
 - Trust-list upload and enable/disable.

@@ -28,7 +28,7 @@ from ..services.vocabulary import build_vocabulary_bundle, vocabulary_text
 
 
 from .common import (
-    require_staff,
+    require_admin, require_staff,
 )
 
 router = APIRouter(prefix="/api/v1")
@@ -212,7 +212,7 @@ async def rebuild_chroma_index(
     user: User = Depends(require_nonce),
 ):
     """Rebuild the derived ChromaDB vector index from approved PostgreSQL documents."""
-    require_staff(user)
+    require_admin(user)
     documents = (await db.scalars(select(Document).options(selectinload(Document.chunks)).where(
         Document.staff_approved.is_(True),
     ).order_by(Document.title))).all()

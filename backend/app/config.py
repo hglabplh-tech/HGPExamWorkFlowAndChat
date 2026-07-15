@@ -70,6 +70,9 @@ class Settings(BaseSettings):
     sms_gateway_url: str | None = None
     sms_gateway_token: SecretStr = SecretStr("")
     registration_activation_minutes: int = 30
+    log_level: str = "WARNING"
+    log_file_path: str | None = None
+    log_debug_values: bool = False
     allowed_free_models: str = (
         "google-bert/bert-base-multilingual-cased,FacebookAI/xlm-roberta-base,"
         "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2,"

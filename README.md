@@ -15,6 +15,8 @@ Copyright © 2026 Harald Glab-Plhak. Distributed under the MIT License.
 - `backend/app/api.py` and `api_routes/`: small, versioned REST route modules
 - `backend/app/db_models/`: PostgreSQL models split by business area
 - `backend/app/services/`: scoring, search, evidence, trust, reporting, and ML utilities
+- Python standard `logging`: timestamped warning/error default, admin-enabled
+  REST entry/exit INFO logging, and sanitized DEBUG values
 - `backend/app/workflows/`: pure exam-state and chat-visibility policies
 - `clients/`: independent Python REST client
 - `clients/native/`: Capacitor Android/iOS and Tauri Windows wrappers for the HTML5 client

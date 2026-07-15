@@ -7,16 +7,13 @@ import asyncio
 import smtplib
 from email.message import EmailMessage
 
-from sqlalchemy import select
-
-from ..config import get_settings
 from ..database import SessionLocal
-from ..models import MailServerSettings
+from .configuration_cache import cached_global_settings, cached_mail_settings
 
 
 async def _effective_mail_settings() -> dict:
     """Load administrator mail settings and fall back to environment values."""
-    env = get_settings()
+    env = cached_global_settings()
     values = {
         "smtp_host": env.smtp_host,
         "smtp_port": env.smtp_port,
@@ -27,10 +24,7 @@ async def _effective_mail_settings() -> dict:
         "email_from": env.email_from,
     }
     async with SessionLocal() as db:
-        saved = await db.scalar(select(MailServerSettings).where(
-            MailServerSettings.name == "default",
-            MailServerSettings.active.is_(True),
-        ))
+        saved = await cached_mail_settings(db, include_inactive=False)
         if saved:
             values.update({
                 "smtp_host": saved.smtp_host or values["smtp_host"],

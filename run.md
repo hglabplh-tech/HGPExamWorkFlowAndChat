@@ -89,6 +89,10 @@ Useful menu entries:
 - `User definition`: create administrator, instructor, staff, and student users.
 - `TOTP configuration`: initialize two-factor login for the signed-in account.
 - `SMTP / IMAP configuration`: configure outbound SMTP and stored IMAP settings.
+- `Logging configuration`: choose `WARNING`, `ERROR`, `SEVERE`, `INFO`, or
+  `DEBUG`, optionally write to a logfile, and enable sanitized debug values.
+- `Configuration cache`: view cached configuration sections or invalidate them
+  manually. Normal admin saves invalidate their affected section automatically.
 - `Import/export`: export knowledge and vocabulary files.
 - `Rebuild ChromaDB`: rebuild the vector index from PostgreSQL.
 - `Trusted lists` and `Private PKI`: configure certificate trust sources.
@@ -101,6 +105,15 @@ The SMTP/IMAP page stores:
 
 Saved SMTP settings override `.env` for application email delivery. Empty
 password fields keep the previously saved password.
+
+Logging uses Python's built-in `logging`. The default is `WARNING`, so warning,
+error, and severe/critical messages are visible. Enable `INFO` only when you
+want REST entry/exit traces; enable `DEBUG` only for troubleshooting because it
+adds sanitized request/response metadata.
+
+The application reads active configuration through a lazy configuration cache.
+Mail settings and scoring profiles are loaded once, reused, and reloaded only
+after an administrator changes the affected section or invalidates the cache.
 
 ## Authentication flow
 

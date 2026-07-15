@@ -20,6 +20,9 @@ textarea,select { width:100%; border:1px solid #c9c0af; border-radius:8px; paddi
 .login-card { max-width:420px; margin:40px auto; padding:28px; border:1px solid #d8d1c2; border-radius:14px; background:white; box-shadow:0 10px 30px #17233b18; }
 .side-card { padding:12px; margin-bottom:18px; border-radius:12px; background:white; }
 .admin-panel,.exam-card { margin:28px 0; padding:24px; border-radius:14px; background:#fffaf0; border:1px solid #e2d7c4; }
+.admin-tabs { display:flex; flex-wrap:wrap; gap:8px; padding:10px; margin:18px 0; border:1px solid #d8d1c2; border-radius:14px; background:#ebe6da; }
+.admin-tabs a { padding:8px 12px; border-radius:999px; color:var(--ink); background:white; text-decoration:none; font-weight:700; }
+.admin-tabs a:hover,.admin-tabs a:focus { color:white; background:var(--sea); }
 .question-builder { display:grid; gap:14px; }
 .question-card { display:grid; gap:10px; padding:16px; border:1px solid #d8d1c2; border-radius:12px; background:white; }
 .question-card legend { font-weight:700; color:var(--sea); }

@@ -78,6 +78,8 @@ Important configuration groups:
 - Trust/signatures: `EU_DSS_VALIDATOR_URL`, `OCSP_SIGNER_URL`,
   `OCSP_SIGNER_TOKEN`, `SIGNATURE_HASH_ALGORITHM`, `SIGNATURE_ALGORITHMS`,
   `RETENTION_YEARS`.
+- Logging: `LOG_LEVEL`, `LOG_FILE_PATH`, and `LOG_DEBUG_VALUES`. Default
+  `LOG_LEVEL=WARNING` emits warnings, errors, and severe events only.
 
 Playground ASAG experiments do not need extra installation steps. They use the
 built-in `Playground` course/discipline and store request inputs as unapproved
@@ -86,6 +88,10 @@ training candidates for later staff review.
 SMTP can also be configured after login through the admin menu item
 `SMTP / IMAP configuration`. Values saved there override `.env` for outgoing
 mail while keeping `.env` as fallback.
+
+Logging can also be changed at runtime through the admin menu item
+`Logging configuration`; use `INFO` for REST entry/exit traces and `DEBUG` only
+when sanitized boundary values are needed for troubleshooting.
 
 ## Create local TLS certificates
 

@@ -1,5 +1,6 @@
 # Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 # GitHub Sponsors funding configuration for HGPExamWorkFlowAndChat.
 github: hglabplh_tech
-custom: ['https://stripe.com'],
+custom:
+  - "https://stripe.com"
   - "https://github.com/hglabplh-tech/HGPExamWorkFlowAndChat"
