@@ -5,9 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6dcf1ec0-ee83-4509-bb62-c3e495e5bdad" name="Changes" comment="add performance metrics and report tests">
-      <change afterPath="$PROJECT_DIR$/outputs/test-reports/chatbot-ai-workflow-report.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/api_routes/grading.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api_routes/grading.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/services/asag.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/asag.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/outputs/test-reports/asag-effectiveness.txt" beforeDir="false" afterPath="$PROJECT_DIR$/outputs/test-reports/asag-effectiveness.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/outputs/test-reports/chat-exchange.txt" beforeDir="false" afterPath="$PROJECT_DIR$/outputs/test-reports/chat-exchange.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/outputs/test-reports/chatbot-ai-workflow-report.html" beforeDir="false" afterPath="$PROJECT_DIR$/outputs/test-reports/chatbot-ai-workflow-report.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/outputs/test-reports/effectiveness-report.md" beforeDir="false" afterPath="$PROJECT_DIR$/outputs/test-reports/effectiveness-report.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/outputs/test-reports/hybrid-search-effectiveness.txt" beforeDir="false" afterPath="$PROJECT_DIR$/outputs/test-reports/hybrid-search-effectiveness.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_asag_metrics.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_asag_metrics.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_effectiveness_reports.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_effectiveness_reports.py" afterDir="false" />
     </list>
     <list id="ddda333b-02b2-478d-872f-da0899d48821" name="out" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/hcp-xml-workflow-chat.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/hgp-exam-work-flow-and-chat.iml" afterDir="false" />
@@ -218,7 +226,15 @@
       <option name="project" value="LOCAL" />
       <updated>1783813322171</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="add performance metrics and report tests">
+      <option name="closed" value="true" />
+      <created>1783885508456</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1783885508456</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

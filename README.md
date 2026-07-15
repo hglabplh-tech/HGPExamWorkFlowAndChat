@@ -93,6 +93,22 @@ cryptographic evidence, password hashing, deterministic ASAG metrics, hybrid ran
 indexing, workflow visibility, and sample-data contracts. External PostgreSQL, Chroma,
 OCSP, and trust-list interoperability still require deployment-level integration tests.
 
+## Playground experiments
+
+The built-in `Playground` course/discipline is for empirical ASAG experiments.
+`POST /api/v1/playground/asag-score` accepts request-level overrides for ASAG
+weights, topic, semantic profile, and context documents. If no weights are sent,
+the global formula is used:
+
+```text
+0.40 CrossEncoder + 0.30 EmbeddingSimilarity + 0.10 Jaccard + 0.10 BM25
++ 0.05 ContextMatch + 0.05 FactCoverage
+```
+
+Playground inputs are stored as unapproved training candidates so staff can
+review them before model training. `POST /api/v1/playground/asag-metrics`
+aggregates trial accuracy, MAE, RMSE, latency, and baseline comparison.
+
 ## Authentication and TLS
 
 Basic authentication is accepted only to exchange credentials for a short-lived

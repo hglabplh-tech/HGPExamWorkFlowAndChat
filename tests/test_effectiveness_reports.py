@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import math
 import uuid
+import importlib
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -18,6 +19,8 @@ from backend.app.schemas import SearchHit
 from backend.app.services import asag
 from backend.app.services.bm25 import BM25Document, bm25_rank
 from backend.app.services.search_ranking import HybridRanker
+
+asag = importlib.reload(asag)
 
 
 REPORT_DIR = Path(__file__).parents[1] / "outputs" / "test-reports"
@@ -171,20 +174,23 @@ def test_asag_good_and_bad_case_metrics() -> None:
         version=1,
         semantic_profile="economy",
         grading_weights={
-            "jaccard": 0.15,
-            "keywords": 0.20,
-            "semantic": 0.25,
-            "fact_entailment": 0.20,
-            "contradiction": 0.10,
-            "length": 0.10,
+            "cross_encoder": 0.40,
+            "embedding_similarity": 0.30,
+            "jaccard": 0.10,
+            "bm25": 0.10,
+            "context_match": 0.05,
+            "fact_coverage": 0.05,
         },
     )
     started_at = perf_counter()
     with (
-        patched_attribute(asag, "semantic_similarity", lambda answer, _reference, _profile: 0.94 if "cache" in answer.casefold() else 0.15),
+        patched_attribute(asag, "bert_cross_encoder_similarity", lambda _reference, answer, _discipline: 0.96 if "cache" in answer.casefold() else 0.12),
+        patched_attribute(asag, "embedding_similarity", lambda answer, _reference, _profile: 0.94 if "cache" in answer.casefold() else 0.15),
+        patched_attribute(asag, "jaccard", lambda answer, _reference: 0.50 if "cache" in answer.casefold() else 0.09375),
+        patched_attribute(asag, "bm25_keyword_coverage", lambda answer, _keywords: 1.0 if "cache" in answer.casefold() else 0.25),
+        patched_attribute(asag, "hybrid_context_match", lambda answer, _contexts, _profile: 0.94 if "cache" in answer.casefold() else 0.15),
         patched_attribute(asag, "fact_entailment", lambda answer, _facts: 0.92 if "unified memory" in answer.casefold() else 0.10),
         patched_attribute(asag, "nli_probabilities", lambda _premise, hypothesis: (0.90, 0.02) if "unified" in hypothesis.casefold() else (0.20, 0.70)),
-        patched_attribute(asag, "trained_scoring", lambda _reference, _answer, _discipline: None),
     ):
         cases = [
             ("good", "The Apple M3 unified memory design lets CPU and GPU share data with fewer copies, and cache-aware code improves throughput.", True),
@@ -194,13 +200,13 @@ def test_asag_good_and_bad_case_metrics() -> None:
     elapsed_seconds = perf_counter() - started_at
     predictions = [result["normalized_score"] >= 0.60 for _name, result, _expected in results]
     labels = [expected for _name, _result, expected in results]
-    expected_scores = {"good": 0.892, "bad": 0.251563}
+    expected_scores = {"good": 0.909, "bad": 0.139875}
     max_absolute_error = max(abs(result["normalized_score"] - expected_scores[name]) for name, result, _expected in results)
     good_signals = results[0][1]["signals"]
     bad_signals = results[1][1]["signals"]
-    semantic_margin = good_signals["semantic"] - bad_signals["semantic"]
-    fact_entailment_margin = good_signals["fact_entailment"] - bad_signals["fact_entailment"]
-    contradiction_safety_margin = good_signals["contradiction"] - bad_signals["contradiction"]
+    semantic_margin = good_signals["embedding_similarity"] - bad_signals["embedding_similarity"]
+    fact_coverage_margin = good_signals["fact_coverage"] - bad_signals["fact_coverage"]
+    cross_encoder_margin = good_signals["cross_encoder"] - bad_signals["cross_encoder"]
     metrics = binary_metrics(predictions, labels)
     metrics.update({
         "good_normalized_score": results[0][1]["normalized_score"],
@@ -209,17 +215,17 @@ def test_asag_good_and_bad_case_metrics() -> None:
         "threshold": 0.60,
         "good_passed": predictions[0],
         "bad_rejected": not predictions[1],
-        "ai_semantic_good": good_signals["semantic"],
-        "ai_semantic_bad": bad_signals["semantic"],
+        "ai_cross_encoder_good": good_signals["cross_encoder"],
+        "ai_cross_encoder_bad": bad_signals["cross_encoder"],
+        "ai_cross_encoder_margin": round(cross_encoder_margin, 4),
+        "ai_embedding_good": good_signals["embedding_similarity"],
+        "ai_embedding_bad": bad_signals["embedding_similarity"],
         "ai_semantic_margin": round(semantic_margin, 4),
-        "ai_fact_entailment_good": good_signals["fact_entailment"],
-        "ai_fact_entailment_bad": bad_signals["fact_entailment"],
-        "ai_fact_entailment_margin": round(fact_entailment_margin, 4),
-        "ai_contradiction_safety_good": good_signals["contradiction"],
-        "ai_contradiction_safety_bad": bad_signals["contradiction"],
-        "ai_contradiction_safety_margin": round(contradiction_safety_margin, 4),
-        "ai_quality_gate_passed": semantic_margin >= 0.50 and fact_entailment_margin >= 0.50 and contradiction_safety_margin >= 0.40,
-        "hallucination_risk_bad_case": "high" if bad_signals["contradiction"] < 0.50 else "low",
+        "ai_fact_coverage_good": good_signals["fact_coverage"],
+        "ai_fact_coverage_bad": bad_signals["fact_coverage"],
+        "ai_fact_coverage_margin": round(fact_coverage_margin, 4),
+        "ai_quality_gate_passed": cross_encoder_margin >= 0.50 and semantic_margin >= 0.50 and fact_coverage_margin >= 0.50,
+        "hallucination_risk_bad_case": "high" if bad_signals["fact_coverage"] < 0.50 else "low",
         "teacher_review_signal_active": bool(results[0][1]["requires_teacher_review"] or results[1][1]["requires_teacher_review"]),
         "max_absolute_error": round(max_absolute_error, 8),
         "exact_values_match_expected": max_absolute_error <= 1e-9,

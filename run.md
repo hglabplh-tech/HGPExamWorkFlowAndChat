@@ -138,6 +138,23 @@ curl -k -X POST "https://localhost/api/v1/knowledge/rebuild-chroma?profile=econo
   -H "X-Request-Nonce: $(uuidgen)"
 ```
 
+## Playground ASAG experiments
+
+Use the `Playground` discipline/course to try ASAG weights without changing
+normal course grading.
+
+Endpoints:
+
+```text
+GET  /api/v1/playground/course
+POST /api/v1/playground/asag-score
+POST /api/v1/playground/asag-metrics
+```
+
+`asag-score` accepts request-level weight/topic/context overrides and stores the
+input as an unapproved training candidate. `asag-metrics` compares trials by
+accuracy, MAE, RMSE, latency, and optional baseline accuracy.
+
 ## Import and export knowledge
 
 Useful endpoints:

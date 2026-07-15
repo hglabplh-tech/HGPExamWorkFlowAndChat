@@ -16,7 +16,7 @@ ai_visibility_gate_passed: True
 ai_collaboration_quality_gate_passed: True
 unauthorized_delivery_count: 0
 latency_ms: 0.007
-messages_per_second: 539301.98
+messages_per_second: 596214.0
 latency_target_ms: 50
 meets_latency_target: True
 performance_verdict: performant

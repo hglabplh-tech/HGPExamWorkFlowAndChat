@@ -79,6 +79,10 @@ Important configuration groups:
   `OCSP_SIGNER_TOKEN`, `SIGNATURE_HASH_ALGORITHM`, `SIGNATURE_ALGORITHMS`,
   `RETENTION_YEARS`.
 
+Playground ASAG experiments do not need extra installation steps. They use the
+built-in `Playground` course/discipline and store request inputs as unapproved
+training candidates for later staff review.
+
 SMTP can also be configured after login through the admin menu item
 `SMTP / IMAP configuration`. Values saved there override `.env` for outgoing
 mail while keeping `.env` as fallback.

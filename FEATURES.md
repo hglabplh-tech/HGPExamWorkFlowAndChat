@@ -406,6 +406,9 @@ keeping instructor review and override.
 **REST surface**
 
 - `POST /api/v1/examinations/{examination_id}/questions/{question_id}/score-draft`
+- `GET /api/v1/playground/course`
+- `POST /api/v1/playground/asag-score`
+- `POST /api/v1/playground/asag-metrics`
 - `POST /api/v1/submissions/{submission_id}/ai-grade`
 - `POST /api/v1/submissions/{submission_id}/teacher-override`
 - `POST /api/v1/submissions/{submission_id}/return`
@@ -416,6 +419,33 @@ keeping instructor review and override.
 
 - Practice scoring side panel.
 - Admin scoring-profile mask with grading and search weights.
+
+## 13a. Playground ASAG experimentation
+
+**Purpose:** provide a dedicated `Playground` course/discipline for empirical
+ASAG, ASR/RAG-adjacent, and model-training experiments without changing normal
+course grading defaults.
+
+**Attributes**
+
+- Built-in course descriptor: code `PLAYGROUND`, title `Playground`,
+  discipline `Playground`.
+- Playground ASAG trials accept request-level overrides for discipline, topic,
+  semantic profile, context documents, and scoring weights.
+- If no override is supplied, global ASAG defaults are used:
+  `0.40 CrossEncoder + 0.30 EmbeddingSimilarity + 0.10 Jaccard + 0.10 BM25 +
+  0.05 ContextMatch + 0.05 FactCoverage`.
+- Inputs are stored as unapproved `TrainingExample` rows with
+  `source_type="playground"` and `task="answer_scoring"` so staff can later
+  review and approve them for model training.
+- Metrics endpoint compares empirical trials by tolerance, mean absolute error,
+  RMSE, latency, and optional baseline accuracy.
+
+**REST surface**
+
+- `GET /api/v1/playground/course`
+- `POST /api/v1/playground/asag-score`
+- `POST /api/v1/playground/asag-metrics`
 
 ## 14. Grading reports and international grade conversions
 

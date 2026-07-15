@@ -286,14 +286,13 @@ class CertificateRevoke(BaseModel):
 class ScoringProfileCreate(BaseModel):
     """Represent scoringprofilecreate."""
     discipline: str = Field(min_length=2, max_length=120)
-    grading_weights: dict[str, float] = Field(default_factory=lambda: {
+    grading_weights: dict[str, object] = Field(default_factory=lambda: {
+        "cross_encoder": 0.40,
+        "embedding_similarity": 0.30,
         "jaccard": 0.10,
-        "keywords": 0.15,
-        "semantic": 0.25,
-        "trained_scoring": 0.10,
-        "fact_entailment": 0.20,
-        "contradiction": 0.10,
-        "length": 0.10,
+        "bm25": 0.10,
+        "context_match": 0.05,
+        "fact_coverage": 0.05,
     })
     search_weights: dict[str, float] = Field(default_factory=lambda: {
         "full_text": 0.35,
@@ -304,12 +303,33 @@ class ScoringProfileCreate(BaseModel):
 
     def validate_weights(self) -> None:
         """Perform the validate weights operation."""
-        expected_grading = {"jaccard", "keywords", "semantic", "trained_scoring", "fact_entailment", "contradiction", "length"}
-        if set(self.grading_weights) != expected_grading or set(self.search_weights) != {"full_text", "bm25", "semantic"}:
+        expected_grading = {"cross_encoder", "embedding_similarity", "jaccard", "bm25", "context_match", "fact_coverage"}
+        def validate_asag_group(group: dict[str, float]) -> None:
+            """Validate one flat ASAG component-weight mapping."""
+            if not isinstance(group, dict):
+                raise ValueError("ASAG weights must be a mapping")
+            if not set(group) <= expected_grading:
+                raise ValueError("Weight keys do not match the supported scoring signals")
+            if any(value < 0 or value > 1 for value in group.values()) or sum(group.values()) <= 0 or sum(group.values()) > 1:
+                raise ValueError("Weights must be between 0 and 1 with a positive total no larger than 1")
+
+        if set(self.search_weights) != {"full_text", "bm25", "semantic"}:
             raise ValueError("Weight keys do not match the supported scoring signals")
-        for group in (self.grading_weights, self.search_weights):
-            if any(value < 0 or value > 1 for value in group.values()) or sum(group.values()) <= 0:
-                raise ValueError("Weights must be between 0 and 1 with a positive total")
+        if set(self.grading_weights) == expected_grading:
+            validate_asag_group(self.grading_weights)
+        else:
+            allowed = {"default", "topics"}
+            if not set(self.grading_weights) <= allowed:
+                raise ValueError("Weight keys do not match the supported scoring signals")
+            if "default" in self.grading_weights:
+                validate_asag_group(self.grading_weights["default"])
+            topics = self.grading_weights.get("topics", {})
+            if topics and not isinstance(topics, dict):
+                raise ValueError("Topic weights must be a mapping")
+            for topic_weights in topics.values():
+                validate_asag_group(topic_weights)
+        if any(value < 0 or value > 1 for value in self.search_weights.values()) or sum(self.search_weights.values()) <= 0:
+            raise ValueError("Weights must be between 0 and 1 with a positive total")
 
 
 class ExaminationCreate(BaseModel):
@@ -484,3 +504,39 @@ class MailServerSettingsOut(BaseModel):
     imap_password_set: bool
     imap_ssl: bool
     active: bool
+
+
+class PlaygroundAsagConfig(BaseModel):
+    """Override ASAG scoring settings for one playground trial."""
+    discipline: str = Field(default="Playground", min_length=2, max_length=120)
+    topic: str | None = Field(default="Playground", max_length=200)
+    semantic_profile: str = Field(default="economy", pattern="^(economy|quality)$")
+    weights: dict[str, float] | None = None
+    context_documents: list[str] = Field(default_factory=list, max_length=20)
+
+
+class PlaygroundAsagScoreRequest(BaseModel):
+    """Score one playground answer and keep the input as a training candidate."""
+    prompt: str = Field(min_length=2, max_length=10000)
+    reference_answer: str = Field(min_length=1, max_length=10000)
+    answer: str = Field(min_length=1, max_length=10000)
+    required_keywords: list[str] = Field(default_factory=list, max_length=100)
+    expected_facts: list[str] = Field(default_factory=list, max_length=100)
+    max_score: float = Field(default=1.0, gt=0, le=1000)
+    expected_score: float | None = Field(default=None, ge=0, le=1)
+    config: PlaygroundAsagConfig = Field(default_factory=PlaygroundAsagConfig)
+    training_candidate: bool = True
+
+
+class PlaygroundMetricTrial(BaseModel):
+    """One empirical playground trial result for metric aggregation."""
+    expected_score: float = Field(ge=0, le=1)
+    observed_score: float = Field(ge=0, le=1)
+    latency_ms: float = Field(default=0, ge=0)
+
+
+class PlaygroundMetricsRequest(BaseModel):
+    """Evaluate empirical playground trials against target accuracy and latency."""
+    trials: list[PlaygroundMetricTrial] = Field(min_length=1, max_length=1000)
+    tolerance: float = Field(default=0.12, ge=0, le=1)
+    baseline_accuracy: float | None = Field(default=None, ge=0, le=1)

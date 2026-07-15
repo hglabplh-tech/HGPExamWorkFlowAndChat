@@ -54,7 +54,13 @@ async def academic_integrity_check(
         signals = [item.get("signals", {}) for item in (submission.ai_grade or {}).get("questions", [])]
         review["fact_check"] = {
             "status": "available" if signals else "requires_ai_grade_first",
-            "per_question": [{"fact_entailment": item.get("fact_entailment"), "contradiction_safety": item.get("contradiction")} for item in signals],
+            "per_question": [
+                {
+                    "fact_coverage": item.get("fact_coverage", item.get("fact_entailment")),
+                    "contradiction_safety": item.get("contradiction_safety", item.get("contradiction")),
+                }
+                for item in signals
+            ],
         }
     if examination.rule_set_id:
         rule_set = await db.get(ExamRuleSet, examination.rule_set_id)

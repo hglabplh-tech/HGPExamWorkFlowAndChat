@@ -1,14 +1,14 @@
-### HGPExamWorkFlowAndChat effectiveness test report
+# HGPExamWorkFlowAndChat effectiveness test report
 
 This report is generated from the domain-specific text outputs created by the pytest effectiveness tests.
 
-#### ASAG scoring effectiveness
+## ASAG scoring effectiveness
 
-##### Test description
+### Test description
 
 Scores one intentionally strong answer and one intentionally weak answer for an Apple M3 microprocessor-programming question. The test verifies that the AI-assisted ASAG signals separate correct from incorrect answers, preserve deterministic expected values, keep fact and contradiction signals healthy, and complete within the configured latency budget.
 
-##### Metrics
+### Metrics
 
 | Metric | Value |
 | --- | --- |
@@ -16,46 +16,46 @@ Scores one intentionally strong answer and one intentionally weak answer for an 
 | precision | 1.0 |
 | recall | 1.0 |
 | f1 | 1.0 |
-| good_normalized_score | 0.892 |
-| bad_normalized_score | 0.251563 |
-| score_separation | 0.6404 |
+| good_normalized_score | 0.909 |
+| bad_normalized_score | 0.139875 |
+| score_separation | 0.7691 |
 | threshold | 0.6 |
 | good_passed | True |
 | bad_rejected | True |
-| ai_semantic_good | 0.94 |
-| ai_semantic_bad | 0.15 |
+| ai_cross_encoder_good | 0.96 |
+| ai_cross_encoder_bad | 0.12 |
+| ai_cross_encoder_margin | 0.84 |
+| ai_embedding_good | 0.94 |
+| ai_embedding_bad | 0.15 |
 | ai_semantic_margin | 0.79 |
-| ai_fact_entailment_good | 0.92 |
-| ai_fact_entailment_bad | 0.1 |
-| ai_fact_entailment_margin | 0.82 |
-| ai_contradiction_safety_good | 0.98 |
-| ai_contradiction_safety_bad | 0.3 |
-| ai_contradiction_safety_margin | 0.68 |
+| ai_fact_coverage_good | 0.92 |
+| ai_fact_coverage_bad | 0.1 |
+| ai_fact_coverage_margin | 0.82 |
 | ai_quality_gate_passed | True |
 | hallucination_risk_bad_case | high |
-| teacher_review_signal_active | True |
+| teacher_review_signal_active | False |
 | max_absolute_error | 0.0 |
 | exact_values_match_expected | True |
-| latency_ms | 0.189 |
-| answers_per_second | 10586.71 |
+| latency_ms | 0.153 |
+| answers_per_second | 13096.8 |
 | latency_target_ms | 50 |
 | meets_latency_target | True |
 | performance_verdict | performant |
 
-#### Evidence details
+### Evidence details
 
 | No. | Detail |
 | --- | --- |
-| 1 | good case score=8.92/10.0 normalized=0.892 signals={'jaccard': 0.5, 'keywords': 1.0, 'semantic': 0.94, 'trained_scoring': None, 'fact_entailment': 0.92, 'contradiction': 0.98, 'length': 1.0} |
-| 2 | bad case score=2.516/10.0 normalized=0.251563 signals={'jaccard': 0.09375, 'keywords': 0.25, 'semantic': 0.15, 'trained_scoring': None, 'fact_entailment': 0.1, 'contradiction': 0.3, 'length': 1.0} |
+| 1 | good case score=9.09/10.0 normalized=0.909 signals={'cross_encoder': 0.96, 'embedding_similarity': 0.94, 'jaccard': 0.5, 'bm25': 1.0, 'context_match': 0.94, 'fact_coverage': 0.92, 'contradiction_safety': 0.98} |
+| 2 | bad case score=1.399/10.0 normalized=0.139875 signals={'cross_encoder': 0.12, 'embedding_similarity': 0.15, 'jaccard': 0.09375, 'bm25': 0.25, 'context_match': 0.15, 'fact_coverage': 0.1, 'contradiction_safety': 0.3} |
 
-#### Hybrid search effectiveness
+## Hybrid search effectiveness
 
-#### Test description
+### Test description
 
 Ranks a controlled knowledge corpus with BM25, full-text scores, and semantic scores. The test verifies that the relevant Apple M3 documents outrank an unrelated German-history distractor, that weighted fusion preserves the expected top results, and that retrieval latency remains below the target threshold.
 
-#### Metrics
+### Metrics
 
 | Metric | Value |
 | --- | --- |
@@ -75,13 +75,13 @@ Ranks a controlled knowledge corpus with BM25, full-text scores, and semantic sc
 | ai_ranking_quality_gate_passed | True |
 | bm25_top_title | Apple M3 cache programming |
 | hybrid_top_title | Apple M3 cache programming |
-| latency_ms | 0.535 |
-| documents_per_second | 5609.22 |
+| latency_ms | 0.49 |
+| documents_per_second | 6120.36 |
 | latency_target_ms | 50 |
 | meets_latency_target | True |
 | performance_verdict | performant |
 
-#### Evidence details
+### Evidence details
 
 | No. | Detail |
 | --- | --- |
@@ -90,13 +90,13 @@ Ranks a controlled knowledge corpus with BM25, full-text scores, and semantic sc
 | 3 | hybrid_order=['Apple M3 cache programming', 'GPU memory concepts'] |
 | 4 | hybrid_components=[{'full_text': 0.35, 'bm25': 0.2, 'semantic': 0.434831}, {'full_text': 0.160417, 'bm25': 0.041513, 'semantic': 0.45}] |
 
-#### Chatroom exchange workflow
+## Chatroom exchange workflow
 
-##### Test description
+### Test description
 
 Simulates a course chatroom exchange between two students and the @chatbot assistant. The test verifies message delivery, chatbot addressing, visibility-limited sharing of ASAG scores and research results, payload integrity, and low-latency workflow execution.
 
-##### Metrics
+### Metrics
 
 | Metric | Value |
 | --- | --- |
@@ -115,13 +115,13 @@ Simulates a course chatroom exchange between two students and the @chatbot assis
 | ai_collaboration_quality_gate_passed | True |
 | unauthorized_delivery_count | 0 |
 | latency_ms | 0.007 |
-| messages_per_second | 539301.98 |
+| messages_per_second | 596214.0 |
 | latency_target_ms | 50 |
 | meets_latency_target | True |
 | performance_verdict | performant |
 | all_exchanges_successful | True |
 
-##### Evidence details
+### Evidence details
 
 | No. | Detail |
 | --- | --- |

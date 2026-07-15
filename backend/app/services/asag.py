@@ -2,6 +2,7 @@
 """Utilities for asag."""
 import math
 import re
+import uuid
 from functools import lru_cache
 from pathlib import Path
 
@@ -10,10 +11,20 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 from ..config import get_settings
 from ..models import DisciplineScoringProfile, ExamQuestion
+from .bm25 import BM25Document, bm25_rank
 from .embeddings import encode
 from .model_router import resolve_torch_device
 
 TOKEN = re.compile(r"\w+", re.UNICODE)
+ASAG_FORMULA_WEIGHTS = {
+    "cross_encoder": 0.40,
+    "embedding_similarity": 0.30,
+    "jaccard": 0.10,
+    "bm25": 0.10,
+    "context_match": 0.05,
+    "fact_coverage": 0.05,
+}
+ASAG_WEIGHT_KEYS = set(ASAG_FORMULA_WEIGHTS)
 
 
 def tokens(text: str) -> set[str]:
@@ -35,11 +46,29 @@ def keyword_coverage(answer: str, keywords: list[str]) -> float | None:
     return sum(" ".join(TOKEN.findall(keyword.casefold())) in normalized for keyword in keywords) / len(keywords)
 
 
+def bm25_keyword_coverage(answer: str, keywords: list[str]) -> float | None:
+    """Score required keyword coverage with BM25-backed lexical matching."""
+    if not keywords:
+        return None
+    documents = [
+        BM25Document(id=uuid.uuid5(uuid.NAMESPACE_URL, f"asag-keyword:{index}:{keyword}"), title=keyword, text=keyword)
+        for index, keyword in enumerate(keywords)
+    ]
+    hits = bm25_rank(answer, documents, limit=len(documents))
+    matched = {hit.title.casefold() for hit in hits if hit.score > 0}
+    return sum(keyword.casefold() in matched for keyword in keywords) / len(keywords)
+
+
 def semantic_similarity(answer: str, reference: str, profile: str) -> float:
     """Perform the semantic similarity operation."""
     vectors = encode(profile, [answer, reference], get_settings().compute_device)
     cosine = sum(left * right for left, right in zip(vectors[0], vectors[1]))
     return max(0.0, min(1.0, cosine))
+
+
+def embedding_similarity(answer: str, reference: str, profile: str) -> float:
+    """Score answer/reference similarity with the configured embedding model."""
+    return semantic_similarity(answer, reference, profile)
 
 
 def length_adequacy(answer: str, reference: str) -> float:
@@ -49,10 +78,12 @@ def length_adequacy(answer: str, reference: str) -> float:
 
 
 @lru_cache(maxsize=3)
-def trained_cross_encoder(model_path: str):
-    """Perform the trained cross encoder operation."""
-    from sentence_transformers import CrossEncoder
-    return CrossEncoder(model_path, device=resolve_torch_device(get_settings().compute_device))
+def bert_cross_encoder_components(model_path: str):
+    """Load an approved BERT-style cross-encoder from a trained local model path."""
+    device = resolve_torch_device(get_settings().compute_device)
+    tokenizer = AutoTokenizer.from_pretrained(model_path)
+    model = AutoModelForSequenceClassification.from_pretrained(model_path).to(device).eval()
+    return tokenizer, model, device
 
 
 def discipline_slug(value: str) -> str:
@@ -60,13 +91,26 @@ def discipline_slug(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", value.casefold()).strip("-") or "general"
 
 
-def trained_scoring(reference: str, answer: str, discipline: str) -> float | None:
-    """Perform the trained scoring operation."""
+def bert_cross_encoder_similarity(reference: str, answer: str, discipline: str) -> float | None:
+    """Score answer/reference fit with a local BERT cross-encoder when available."""
     current = Path(get_settings().model_output_dir) / "answer_scoring" / discipline_slug(discipline) / "current"
     if not current.exists():
         return None
-    value = float(trained_cross_encoder(str(current.resolve())).predict([(reference, answer)])[0])
+    tokenizer, model, device = bert_cross_encoder_components(str(current.resolve()))
+    values = tokenizer(reference, answer, return_tensors="pt", truncation=True, max_length=512)
+    values = {key: value.to(device) for key, value in values.items()}
+    with torch.inference_mode():
+        logits = model(**values).logits[0]
+    if logits.numel() == 1:
+        value = float(torch.sigmoid(logits[0]))
+    else:
+        value = float(logits.softmax(dim=-1)[-1])
     return max(0.0, min(1.0, value))
+
+
+def trained_scoring(reference: str, answer: str, discipline: str) -> float | None:
+    """Backward-compatible alias for the BERT cross-encoder ASAG score."""
+    return bert_cross_encoder_similarity(reference, answer, discipline)
 
 
 @lru_cache(maxsize=1)
@@ -101,36 +145,136 @@ def fact_entailment(answer: str, facts: list[str]) -> float | None:
     return sum(nli_probabilities(answer, fact)[0] for fact in facts) / len(facts)
 
 
-def grade_answer(question: ExamQuestion, answer: str, profile: DisciplineScoringProfile) -> dict:
-    """Perform the grade answer operation."""
+def reference_fact_coverage(answer: str, facts: list[str]) -> float | None:
+    """Score how many reference facts are explicitly covered by the answer."""
+    if not facts:
+        return None
+    normalized_answer = " ".join(TOKEN.findall(answer.casefold()))
+    covered = 0
+    for fact in facts:
+        fact_tokens = TOKEN.findall(fact.casefold())
+        if not fact_tokens:
+            continue
+        fact_terms = set(fact_tokens)
+        answer_terms = set(TOKEN.findall(normalized_answer))
+        overlap = len(fact_terms & answer_terms) / len(fact_terms)
+        if overlap >= 0.60:
+            covered += 1
+    return covered / len(facts)
+
+
+def hybrid_context_match(answer: str, contexts: list[str], profile: str) -> float | None:
+    """Score how well the answer matches retrieved hybrid-search context."""
+    if not contexts:
+        return None
+    return max(embedding_similarity(answer, context, profile) for context in contexts)
+
+
+def normalize_asag_weights(weights: dict[str, float]) -> dict[str, float]:
+    """Return ASAG weights normalized to sum to one."""
+    if set(weights) != ASAG_WEIGHT_KEYS:
+        raise ValueError("ASAG weights must contain exactly the supported scoring components")
+    if any(value < 0 for value in weights.values()):
+        raise ValueError("ASAG weights cannot be negative")
+    total = sum(weights.values())
+    if total <= 0:
+        raise ValueError("ASAG weights must contain a positive total")
+    return {name: value / total for name, value in weights.items()}
+
+
+def merge_asag_weight_overrides(overrides: dict[str, float]) -> dict[str, float]:
+    """Merge explicit overrides with global defaults without changing explicit values."""
+    if not set(overrides) <= ASAG_WEIGHT_KEYS:
+        raise ValueError("ASAG weight overrides contain unsupported components")
+    explicit = {key: float(value) for key, value in overrides.items()}
+    if any(value < 0 for value in explicit.values()) or sum(explicit.values()) > 1:
+        raise ValueError("ASAG weight overrides must be non-negative and sum to at most one")
+    missing = ASAG_WEIGHT_KEYS - set(explicit)
+    remaining = 1.0 - sum(explicit.values())
+    default_missing_total = sum(ASAG_FORMULA_WEIGHTS[key] for key in missing)
+    merged = dict(explicit)
+    for key in missing:
+        merged[key] = 0.0 if default_missing_total <= 0 else remaining * ASAG_FORMULA_WEIGHTS[key] / default_missing_total
+    return normalize_asag_weights(merged)
+
+
+def resolve_asag_weights(profile: DisciplineScoringProfile | None, topic: str | None = None) -> dict[str, float]:
+    """Resolve topic, discipline, or global ASAG weights.
+
+    Supported ``grading_weights`` formats:
+    - flat component mapping for a discipline-wide override;
+    - ``{"default": {...}, "topics": {"topic name": {...}}}`` for topic overrides.
+    Missing or invalid values fall back to the global formula defaults.
+    """
+    raw = profile.grading_weights if profile is not None else None
+    candidate: dict | None = None
+    if isinstance(raw, dict):
+        topics = raw.get("topics")
+        if topic and isinstance(topics, dict) and isinstance(topics.get(topic), dict):
+            candidate = topics[topic]
+        elif isinstance(raw.get("default"), dict):
+            candidate = raw["default"]
+        elif ASAG_WEIGHT_KEYS <= set(raw):
+            candidate = raw
+    if not candidate:
+        return dict(ASAG_FORMULA_WEIGHTS)
+    try:
+        return merge_asag_weight_overrides({key: float(candidate[key]) for key in ASAG_WEIGHT_KEYS if key in candidate})
+    except (TypeError, ValueError):
+        return dict(ASAG_FORMULA_WEIGHTS)
+
+
+def fixed_asag_score(
+    signals: dict[str, float | None],
+    weights: dict[str, float] | None = None,
+) -> tuple[float, dict[str, float], list[str]]:
+    """Apply the configured ASAG formula for answer scoring."""
+    warnings: list[str] = []
+    applied_weights = normalize_asag_weights(weights or ASAG_FORMULA_WEIGHTS)
+    score = 0.0
+    for name, weight in ASAG_FORMULA_WEIGHTS.items():
+        value = signals.get(name)
+        if value is None:
+            warnings.append(f"ASAG signal unavailable and scored as 0: {name}")
+            value = 0.0
+        score += weight * value
+    return max(0.0, min(1.0, score)), applied_weights, warnings
+
+
+def grade_answer(
+    question: ExamQuestion,
+    answer: str,
+    profile: DisciplineScoringProfile,
+    context_documents: list[str] | None = None,
+    topic: str | None = None,
+) -> dict:
+    """Grade an answer with configured BERT/embedding/lexical/context ASAG weights."""
+    contexts = context_documents if context_documents is not None else [question.reference_answer]
     signals: dict[str, float | None] = {
+        "cross_encoder": bert_cross_encoder_similarity(question.reference_answer, answer, profile.discipline),
+        "embedding_similarity": embedding_similarity(answer, question.reference_answer, profile.semantic_profile),
         "jaccard": jaccard(answer, question.reference_answer),
-        "keywords": keyword_coverage(answer, question.required_keywords),
-        "semantic": semantic_similarity(answer, question.reference_answer, profile.semantic_profile),
-        "trained_scoring": trained_scoring(question.reference_answer, answer, profile.discipline),
-        "fact_entailment": None,
-        "contradiction": None,
-        "length": length_adequacy(answer, question.reference_answer),
+        "bm25": bm25_keyword_coverage(answer, question.required_keywords),
+        "context_match": hybrid_context_match(answer, contexts, profile.semantic_profile),
+        "fact_coverage": reference_fact_coverage(answer, question.expected_facts),
     }
     warnings: list[str] = []
-    if signals["trained_scoring"] is None and profile.grading_weights.get("trained_scoring", 0) > 0:
-        warnings.append("No approved discipline-trained scoring model is active; other weights were renormalized")
+    if signals["cross_encoder"] is None:
+        warnings.append("No approved BERT cross-encoder scoring model is active; cross_encoder contributes 0")
     try:
-        signals["fact_entailment"] = fact_entailment(answer, question.expected_facts)
+        fact_signal = fact_entailment(answer, question.expected_facts)
+        if fact_signal is not None:
+            signals["fact_coverage"] = fact_signal
         _, contradiction = nli_probabilities(question.reference_answer, answer)
-        signals["contradiction"] = 1.0 - contradiction
+        signals["contradiction_safety"] = 1.0 - contradiction
     except Exception as error:
         warnings.append(f"NLI fact-check signal unavailable: {type(error).__name__}")
 
+    resolved_weights = resolve_asag_weights(profile, topic)
+    normalized, applied_weights, formula_warnings = fixed_asag_score(signals, resolved_weights)
+    warnings.extend(formula_warnings)
     available = {name: value for name, value in signals.items() if value is not None}
-    denominator = sum(profile.grading_weights.get(name, 0.0) for name in available)
-    if denominator <= 0:
-        warnings.append("Configured weights do not cover available signals; equal fallback weights applied")
-        applied_weights = {name: 1.0 / len(available) for name in available}
-    else:
-        applied_weights = {name: profile.grading_weights.get(name, 0.0) / denominator for name in available}
-    normalized = sum(available[name] * applied_weights[name] for name in available)
-    spread = math.sqrt(sum((value - normalized) ** 2 for value in available.values()) / len(available))
+    spread = math.sqrt(sum((value - normalized) ** 2 for value in available.values()) / len(available)) if available else 0.0
     if spread > 0.25:
         warnings.append("Scoring signals disagree; teacher review required")
     return {
