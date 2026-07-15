@@ -4,19 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6dcf1ec0-ee83-4509-bb62-c3e495e5bdad" name="Changes" comment="add performance metrics and report tests">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/api_routes/grading.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api_routes/grading.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/schemas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/services/asag.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/services/asag.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/outputs/test-reports/asag-effectiveness.txt" beforeDir="false" afterPath="$PROJECT_DIR$/outputs/test-reports/asag-effectiveness.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/outputs/test-reports/chat-exchange.txt" beforeDir="false" afterPath="$PROJECT_DIR$/outputs/test-reports/chat-exchange.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/outputs/test-reports/chatbot-ai-workflow-report.html" beforeDir="false" afterPath="$PROJECT_DIR$/outputs/test-reports/chatbot-ai-workflow-report.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/outputs/test-reports/effectiveness-report.md" beforeDir="false" afterPath="$PROJECT_DIR$/outputs/test-reports/effectiveness-report.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/outputs/test-reports/hybrid-search-effectiveness.txt" beforeDir="false" afterPath="$PROJECT_DIR$/outputs/test-reports/hybrid-search-effectiveness.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_asag_metrics.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_asag_metrics.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_effectiveness_reports.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_effectiveness_reports.py" afterDir="false" />
-    </list>
+    <list default="true" id="6dcf1ec0-ee83-4509-bb62-c3e495e5bdad" name="Changes" comment="Added performance and functional tests. Added new ASAG form with configurable values. Added a playground for training and playing with the config to empirically look for better values (See FEATURES.md)" />
     <list id="ddda333b-02b2-478d-872f-da0899d48821" name="out" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/hcp-xml-workflow-chat.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/hgp-exam-work-flow-and-chat.iml" afterDir="false" />
     </list>
@@ -234,7 +222,15 @@
       <option name="project" value="LOCAL" />
       <updated>1783885508456</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="Added performance and functional tests. Added new ASAG form with configurable values. Added a playground for training and playing with the config to empirically look for better values (See FEATURES.md)">
+      <option name="closed" value="true" />
+      <created>1784088024029</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1784088024029</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -253,6 +249,7 @@
     <MESSAGE value="dentally skipped files" />
     <MESSAGE value="fixed files checkin" />
     <MESSAGE value="add performance metrics and report tests" />
-    <option name="LAST_COMMIT_MESSAGE" value="add performance metrics and report tests" />
+    <MESSAGE value="Added performance and functional tests. Added new ASAG form with configurable values. Added a playground for training and playing with the config to empirically look for better values (See FEATURES.md)" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added performance and functional tests. Added new ASAG form with configurable values. Added a playground for training and playing with the config to empirically look for better values (See FEATURES.md)" />
   </component>
 </project>
