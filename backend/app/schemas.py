@@ -351,6 +351,7 @@ class QuestionCreate(BaseModel):
     expected_facts: list[str] = Field(default_factory=list)
     max_score: float = Field(gt=0, le=1000)
     question_type: str = Field(default="free_text", pattern="^(free_text|single_choice|multiple_choice)$")
+    question_category: str = Field(default="description", pattern="^(description|fact|argument|dialectical)$")
     choices: list[str] = Field(default_factory=list)
     correct_options: list[str] = Field(default_factory=list)
     partial_credit: bool = False

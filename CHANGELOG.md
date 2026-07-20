@@ -5,7 +5,7 @@
 ## Unreleased
 
 - Renamed the project to HGPExamWorkFlowAndChat.
-- Split the REST API and PostgreSQL models into small domain modules.
+- Split the RPC-over-HTTP API and PostgreSQL models into small domain modules.
 - Added pure hybrid-ranking and workflow-policy utilities with layer tests.
 - Added synthetic Apple M3 programming and German-history course/training examples.
 
@@ -23,7 +23,7 @@ to use [Semantic Versioning](https://semver.org/).
 - Weighted, discipline-specific ASAG grading with teacher overrides.
 - Signed examination evidence, retention controls, and append-only audit events.
 - EU/custom trusted lists, private OpenSSL PKI, and OCSP services.
-- Responsive HTML5 Progressive Web App and REST client.
+- Responsive HTML5 Progressive Web App and RPC-over-HTTP client.
 - OCI image, local Compose stack, Kubernetes manifests, and GitHub CI.
 - Persisted student/instructor course journeys with practice-versus-real exam states.
 - Visibility-controlled research history and chat sharing of research/practice scores.

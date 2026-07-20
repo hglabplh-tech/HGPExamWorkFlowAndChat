@@ -33,11 +33,11 @@ cd /Users/hglabplh/Documents/Codex/2026-06-30/HGPExamWorkFlowAndChat
 
 Main directories:
 
-- `backend/`: FastAPI app, REST routes, services, security, scoring, search,
+- `backend/`: FastAPI app, RPC-over-HTTP routes, services, security, scoring, search,
   workflows, and database models.
 - `frontend/`: HTML5 web app and admin UI.
 - `infra/`: Caddy, PostgreSQL initialization, migrations, and OCSP examples.
-- `clients/`: Python REST client and native wrapper projects.
+- `clients/`: Python RPC-over-HTTP client and native wrapper projects.
 - `ml/`: BERT/reranker/LSTM training utilities.
 - `data/`: sample courses and synthetic training data.
 
@@ -90,7 +90,7 @@ SMTP can also be configured after login through the admin menu item
 mail while keeping `.env` as fallback.
 
 Logging can also be changed at runtime through the admin menu item
-`Logging configuration`; use `INFO` for REST entry/exit traces and `DEBUG` only
+`Logging configuration`; use `INFO` for HTTP RPC entry/exit traces and `DEBUG` only
 when sanitized boundary values are needed for troubleshooting.
 
 ## Create local TLS certificates

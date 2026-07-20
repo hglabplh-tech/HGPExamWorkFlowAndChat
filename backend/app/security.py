@@ -96,7 +96,7 @@ async def authenticate(
     totp_code: str | None = Header(default=None, alias="X-TOTP-Code"),
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    """Authenticate one REST request against a live session or trusted certificate."""
+    """Authenticate one HTTP RPC request against a live session or trusted certificate."""
     user: User | None = None
     settings = get_settings()
     if bearer_credentials:

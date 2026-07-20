@@ -39,7 +39,7 @@ that balance:
 Funding through Stripe helps pay for:
 
 - Hardening the Docker and cloud deployment path.
-- Expanding tests for REST APIs, workflows, security services, scoring, and
+- Expanding tests for RPC-over-HTTP APIs, workflows, security services, scoring, and
   import/export functions.
 - Improving documentation for administrators, instructors, and developers.
 - Building safer model-training and evaluation workflows for CPU-first

@@ -108,7 +108,7 @@ password fields keep the previously saved password.
 
 Logging uses Python's built-in `logging`. The default is `WARNING`, so warning,
 error, and severe/critical messages are visible. Enable `INFO` only when you
-want REST entry/exit traces; enable `DEBUG` only for troubleshooting because it
+want HTTP RPC entry/exit traces; enable `DEBUG` only for troubleshooting because it
 adds sanitized request/response metadata.
 
 The application reads active configuration through a lazy configuration cache.
@@ -126,7 +126,7 @@ after an administrator changes the affected section or invalidates the cache.
    logs in.
 7. The backend creates a persistent active-session row and returns a bearer
    token.
-8. State-changing REST calls send `Authorization: Bearer ...` and a unique
+8. State-changing HTTP RPC calls send `Authorization: Bearer ...` and a unique
    `X-Request-Nonce`.
 
 ## Rebuild ChromaDB from PostgreSQL
@@ -137,7 +137,7 @@ From the admin UI:
 2. Choose `Economy` or `Quality`.
 3. Press `Rebuild ChromaDB`.
 
-REST endpoint:
+RPC-over-HTTP endpoint:
 
 ```text
 POST /api/v1/knowledge/rebuild-chroma?profile=economy

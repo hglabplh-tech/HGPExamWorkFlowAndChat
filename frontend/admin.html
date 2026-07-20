@@ -137,7 +137,7 @@
         <h1>Logging configuration</h1>
         <p>Uses Python standard logging. Default is WARNING, so only warnings, errors, and severe events are emitted until an administrator selects INFO or DEBUG.</p>
         <form id="logging-config-form" class="admin-form">
-          <label>Log level<select id="log-level"><option value="WARNING">Warning / errors only</option><option value="ERROR">Error only</option><option value="SEVERE">Severe only</option><option value="INFO">Info REST entry / exit</option><option value="DEBUG">Debug with sanitized values</option></select></label>
+          <label>Log level<select id="log-level"><option value="WARNING">Warning / errors only</option><option value="ERROR">Error only</option><option value="SEVERE">Severe only</option><option value="INFO">Info HTTP RPC entry / exit</option><option value="DEBUG">Debug with sanitized values</option></select></label>
           <label>Log file path<input id="log-file-path" placeholder="/var/log/hgp-exam-workflow/app.log"></label>
           <label><input id="log-debug-values" type="checkbox"> Include sanitized debug values</label>
           <div class="button-row"><button>Save logging configuration</button><button type="button" id="load-logging-config">Reload</button></div>

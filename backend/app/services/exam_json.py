@@ -24,6 +24,7 @@ def export_exam_json(course_code: str, exam: object, questions: list[object]) ->
                 "expected_facts": question.expected_facts,
                 "max_score": question.max_score,
                 "question_type": question.question_type,
+                "question_category": getattr(question, "question_category", "description"),
                 "choices": question.choices,
                 "correct_options": question.correct_options,
                 "partial_credit": question.partial_credit,

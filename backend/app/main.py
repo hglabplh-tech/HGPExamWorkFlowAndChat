@@ -44,8 +44,8 @@ app.mount("/static", StaticFiles(directory=FRONTEND), name="static")
 
 
 @app.middleware("http")
-async def log_rest_entry_exit(request: Request, call_next):
-    """Log REST entry and exit metadata when INFO logging is enabled."""
+async def log_rpc_http_entry_exit(request: Request, call_next):
+    """Log HTTP RPC entry and exit metadata when INFO logging is enabled."""
     started = time.perf_counter()
     entry = {
         "method": request.method,
@@ -53,13 +53,13 @@ async def log_rest_entry_exit(request: Request, call_next):
         "query": str(request.url.query),
         "client": request.client.host if request.client else None,
     }
-    logger.info("rest_entry %s", entry)
+    logger.info("rpc_http_entry %s", entry)
     if current_logging_config().get("debug_values"):
-        logger.debug("rest_entry_values %s", sanitize_mapping(dict(request.headers)))
+        logger.debug("rpc_http_entry_values %s", sanitize_mapping(dict(request.headers)))
     try:
         response = await call_next(request)
     except Exception:
-        logger.exception("rest_exception method=%s path=%s", request.method, request.url.path)
+        logger.exception("rpc_http_exception method=%s path=%s", request.method, request.url.path)
         raise
     duration_ms = round((time.perf_counter() - started) * 1000, 2)
     exit_values = {
@@ -68,9 +68,9 @@ async def log_rest_entry_exit(request: Request, call_next):
         "status_code": response.status_code,
         "duration_ms": duration_ms,
     }
-    logger.info("rest_exit %s", exit_values)
+    logger.info("rpc_http_exit %s", exit_values)
     if current_logging_config().get("debug_values"):
-        logger.debug("rest_exit_values %s", sanitize_mapping(dict(response.headers)))
+        logger.debug("rpc_http_exit_values %s", sanitize_mapping(dict(response.headers)))
     return response
 
 

@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
-"""Playground REST endpoints for ASAG scoring experiments."""
+"""Playground RPC-over-HTTP endpoints for ASAG scoring experiments."""
 import asyncio
 import math
 import time

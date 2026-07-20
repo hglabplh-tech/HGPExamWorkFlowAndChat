@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
-"""Authentication REST endpoints for login, logout, and active sessions."""
+"""Authentication RPC-over-HTTP endpoints for login, logout, and active sessions."""
 import hmac
 import secrets
 from datetime import UTC, datetime, timedelta

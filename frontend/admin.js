@@ -301,11 +301,13 @@ function addExamQuestion(values={}) {
     <label>Required keywords, comma separated<input class="exam-keywords" value="${escapeHtml((values.required_keywords||[]).join(", "))}"></label>
     <label>Expected facts, one per line<textarea class="exam-facts" rows="2">${escapeHtml((values.expected_facts||[]).join("\n"))}</textarea></label>
     <label>Type<select class="exam-question-type"><option value="free_text">Free text</option><option value="single_choice">Single choice</option><option value="multiple_choice">Multiple choice</option></select></label>
+    <label>Category<select class="exam-question-category"><option value="description">Description</option><option value="fact">Fact</option><option value="argument">Argument</option><option value="dialectical">Dialectical</option></select></label>
     <label>Choices, one per line<textarea class="exam-choices" rows="2">${escapeHtml((values.choices||[]).join("\n"))}</textarea></label>
     <label>Correct choices, one per line<textarea class="exam-correct" rows="2">${escapeHtml((values.correct_options||[]).join("\n"))}</textarea></label>
     <label><input class="exam-partial" type="checkbox" ${values.partial_credit?"checked":""}> Penalized partial credit</label>
     <button type="button" class="remove-question">Remove</button>`;
   node.querySelector(".exam-question-type").value=values.question_type||"free_text";
+  node.querySelector(".exam-question-category").value=values.question_category||"description";
   list.appendChild(node);
 }
 
@@ -325,6 +327,7 @@ function examPayload() {
       expected_facts:lines(card.querySelector(".exam-facts").value),
       max_score:Number(card.querySelector(".exam-points").value),
       question_type:card.querySelector(".exam-question-type").value,
+      question_category:card.querySelector(".exam-question-category").value,
       choices:lines(card.querySelector(".exam-choices").value),
       correct_options:lines(card.querySelector(".exam-correct").value),
       partial_credit:card.querySelector(".exam-partial").checked,

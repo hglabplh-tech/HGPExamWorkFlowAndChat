@@ -51,6 +51,7 @@ class ExamQuestion(UUIDMixin, Base):
     expected_facts: Mapped[list] = mapped_column(JSONB, default=list)
     max_score: Mapped[float] = mapped_column()
     question_type: Mapped[str] = mapped_column(String(30), default="free_text", index=True)
+    question_category: Mapped[str] = mapped_column(String(30), default="description", index=True)
     choices: Mapped[list] = mapped_column(JSONB, default=list)
     correct_options: Mapped[list] = mapped_column(JSONB, default=list)
     partial_credit: Mapped[bool] = mapped_column(Boolean, default=False)

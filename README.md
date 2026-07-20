@@ -12,13 +12,13 @@ Copyright © 2026 Harald Glab-Plhak. Distributed under the MIT License.
 ## Boundaries
 
 - `frontend/`: responsive HTML5 Progressive Web App (one UI for phones, tablets, and desktops)
-- `backend/app/api.py` and `api_routes/`: small, versioned REST route modules
+- `backend/app/api.py` and `api_routes/`: small, versioned RPC-over-HTTP route modules
 - `backend/app/db_models/`: PostgreSQL models split by business area
 - `backend/app/services/`: scoring, search, evidence, trust, reporting, and ML utilities
 - Python standard `logging`: timestamped warning/error default, admin-enabled
-  REST entry/exit INFO logging, and sanitized DEBUG values
+  HTTP RPC entry/exit INFO logging, and sanitized DEBUG values
 - `backend/app/workflows/`: pure exam-state and chat-visibility policies
-- `clients/`: independent Python REST client
+- `clients/`: independent Python RPC-over-HTTP client
 - `clients/native/`: Capacitor Android/iOS and Tauri Windows wrappers for the HTML5 client
 - `ml/`: BERT fine-tuning and educational LSTM training
 - `data/sample_courses/`: two reviewable example course definitions
@@ -27,6 +27,10 @@ Copyright © 2026 Harald Glab-Plhak. Distributed under the MIT License.
 
 ChromaDB is a derived semantic index. PostgreSQL remains canonical, including
 approval status and provenance, so the index can always be rebuilt and audited.
+The HTTP API is documented as RPC services over HTTP, because most operations
+call application commands/workflows rather than exposing purely resource-oriented APIs.
+Exam questions carry both a technical answer type and an ASAG question category:
+Description, Fact, Argument, or Dialectical.
 
 ## Run locally
 
@@ -282,7 +286,7 @@ messages, shared research, practice scores, examination states, submissions,
 corrections, and returned grades are persisted in PostgreSQL. Practice exams
 release immediate provisional feedback; real exams suppress all feedback until
 an instructor approves and explicitly returns the grading. See
-`docs/workflows.md` for the student/instructor state transitions and REST flow.
+`docs/workflows.md` for the student/instructor state transitions and RPC-over-HTTP flow.
 
 A nightly Kubernetes CronJob curates consented course-public research and
 teacher-returned scoring examples. Staff moderate student research examples.
@@ -330,7 +334,7 @@ TOTP enrollment controls, thesaurus import, vocabulary export links, chat bubble
 `@chatbot` room replies, score/research sharing fields, and a practice/real exam
 submission mask. Real-exam submission asks for confirmation, hashes the gathered
 answers and uploaded-file metadata, requests a confirmation token, and submits the
-signed evidence package through the existing REST submission flow.
+signed evidence package through the existing RPC-over-HTTP submission flow.
 
 `POST /api/v1/audio/transcribe` uses an administrator-approved, freely available
 Whisper model on CPU. Its transcript can be used as a research question or an exam

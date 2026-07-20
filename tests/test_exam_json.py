@@ -21,6 +21,7 @@ def test_exam_json_round_trip_preserves_questions_and_points() -> None:
         expected_facts=["M3 contains performance cores."],
         max_score=12.5,
         question_type="free_text",
+        question_category="description",
         choices=[],
         correct_options=[],
         partial_credit=False,
@@ -30,6 +31,7 @@ def test_exam_json_round_trip_preserves_questions_and_points() -> None:
     assert payload["format"] == FORMAT
     assert parsed["course_code"] == "CS-M3"
     assert parsed["questions"][0]["max_score"] == 12.5
+    assert parsed["questions"][0]["question_category"] == "description"
     assert parsed["questions"][0]["reference_answer"].startswith("It is a CPU")
 
 
@@ -48,6 +50,7 @@ def test_exam_json_schema_validates_nested_choice_questions() -> None:
             "reference_answer": "A",
             "max_score": 1,
             "question_type": "single_choice",
+            "question_category": "fact",
             "choices": ["A", "B"],
             "correct_options": ["A"],
         }],
@@ -65,3 +68,17 @@ def test_exam_json_schema_validates_nested_choice_questions() -> None:
                 "correct_options": ["C"],
             }],
         ).validate_exam()
+
+
+def test_exam_json_schema_rejects_unknown_question_category() -> None:
+    """ASAG question categories are limited to description, fact, argument, and dialectical."""
+    with pytest.raises(ValueError):
+        ExaminationJsonCreate(
+            title="Bad category",
+            questions=[{
+                "prompt": "Explain",
+                "reference_answer": "Reference",
+                "max_score": 1,
+                "question_category": "unsupported",
+            }],
+        )

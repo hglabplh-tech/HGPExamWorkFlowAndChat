@@ -25,6 +25,8 @@ grading service.
   semantic index.
 - Runtime logging uses Python standard `logging` with timestamps and levels
   `DEBUG`, `INFO`, `WARNING`, `ERROR`, and `SEVERE` (`CRITICAL` internally).
+- HTTP endpoints are documented as RPC services over HTTP, because they call
+  explicit application commands/workflows rather than purely resource-oriented APIs.
 - Static hygiene: unused imports, unused locals, and accidental redefinitions
   are checked with Ruff.
 
@@ -55,7 +57,7 @@ certificate binding.
 - Activation links are time-limited, with a default 30-minute lifetime.
 - Login TOTP is sent through the selected email/SMS channel.
 
-**REST surface**
+**RPC-over-HTTP surface**
 
 - `POST /api/v1/auth/token`
 - `POST /api/v1/auth/logout`
@@ -101,7 +103,7 @@ to users.
 - Deactivation preserves auditability.
 - User creation is available from the administration menu.
 
-**REST surface**
+**RPC-over-HTTP surface**
 
 - `POST /api/v1/users`
 - `GET /api/v1/users`
@@ -126,7 +128,7 @@ course and discipline.
 - Course access checks protect research, examinations, and chat.
 - Discipline controls grading/search profiles.
 
-**REST surface**
+**RPC-over-HTTP surface**
 
 - `GET /api/v1/courses`
 - `POST /api/v1/courses`
@@ -151,7 +153,7 @@ rooms, chatbot interaction, and controlled sharing.
 - Random exam groups can be generated per examination/topic.
 - Group-exam submissions can use group X.509 certificates.
 
-**REST surface**
+**RPC-over-HTTP surface**
 
 - `POST /api/v1/conversations`
 - `GET /api/v1/conversations`
@@ -184,7 +186,7 @@ context to refine the next query.
   newly created as `New chat`.
 - Recent high-signal terms are used to refine the next hybrid search query.
 
-**REST surface**
+**RPC-over-HTTP surface**
 
 - `GET /api/v1/research/histories`
 - `POST /api/v1/research/histories`
@@ -222,7 +224,7 @@ semantic/full-text indexes.
 - Query expansion metadata returned to clients.
 - Coverage warnings for weak source coverage.
 
-**REST surface**
+**RPC-over-HTTP surface**
 
 - `GET /api/v1/search`
 - `GET /api/v1/search/model-decision`
@@ -252,7 +254,7 @@ semantic/full-text indexes.
 - PDF/text upload and upload-and-ask flows.
 - Smart ingestion avoids duplicate content by hash.
 - Approved documents are chunked and indexed.
-- ChromaDB can be fully rebuilt from PostgreSQL through an admin REST request;
+- ChromaDB can be fully rebuilt from PostgreSQL through an admin HTTP RPC request;
   missing chunks are created before re-indexing.
 - YouTube resources can be imported/exported with discipline, question tags, and
   keywords.
@@ -261,7 +263,7 @@ semantic/full-text indexes.
 - Fact-check gate for imported knowledge through trusted internet sources when
   configured.
 
-**REST surface**
+**RPC-over-HTTP surface**
 
 - `POST /api/v1/documents`
 - `POST /api/v1/knowledge/upload`
@@ -287,7 +289,7 @@ semantic/full-text indexes.
 - Active thesauri are applied during query expansion.
 - Vocabulary export remains available for ML models.
 
-**REST surface**
+**RPC-over-HTTP surface**
 
 - `POST /api/v1/thesauri/upload`
 - `POST /api/v1/thesauri`
@@ -307,17 +309,17 @@ logging framework.
 
 - Uses Python's built-in `logging` library.
 - Default level is `WARNING`, so warnings, errors, and severe/critical events
-  are emitted by default; REST `INFO` logging must be enabled by an administrator.
+  are emitted by default; HTTP RPC `INFO` logging must be enabled by an administrator.
 - Timestamp is included in every log line.
-- `INFO` logging records REST entry and exit metadata: method, path, query,
+- `INFO` logging records HTTP RPC entry and exit metadata: method, path, query,
   client, status, and duration.
 - `DEBUG` logging can include sanitized request/response metadata; passwords,
   bearer tokens, nonces, signatures, certificates, cookies, and TOTP values are
   redacted.
-- `SEVERE` is exposed in the UI and REST API and maps to Python `CRITICAL`.
+- `SEVERE` is exposed in the UI and RPC-over-HTTP API and maps to Python `CRITICAL`.
 - Runtime logging configuration is admin-only.
 
-**REST surface**
+**RPC-over-HTTP surface**
 
 - `GET /api/v1/admin/logging-settings`
 - `PUT /api/v1/admin/logging-settings`
@@ -347,7 +349,7 @@ only after the affected configuration section changes.
 - Admin saves automatically invalidate the affected section.
 - Manual cache status and invalidation endpoints are admin-only.
 
-**REST surface**
+**RPC-over-HTTP surface**
 
 - `GET /api/v1/admin/configuration-cache`
 - `POST /api/v1/admin/configuration-cache/invalidate`
@@ -368,7 +370,7 @@ only after the affected configuration section changes.
 - Audio messages can be sent through chat.
 - Chatbot can treat audio transcript as command/research context.
 
-**REST surface**
+**RPC-over-HTTP surface**
 
 - `POST /api/v1/audio/transcribe`
 - `POST /api/v1/conversations/{conversation_id}/messages/upload`
@@ -388,13 +390,16 @@ and AI-assisted drafts.
 - Examinations include title, course, instructions, kind, state, open/close
   dates, group mode, and optional rule set.
 - Questions include prompt, reference answer, required keywords, expected facts,
-  max score, question type, choices, correct options, and partial-credit flag.
+  max score, technical question type, ASAG question category, choices, correct
+  options, and partial-credit flag.
+- ASAG question categories are `Description`, `Fact`, `Argument`, and
+  `Dialectical`.
 - Instructors can build JSON exams through a GUI mask.
 - Exams can be exported/imported as JSON and XML.
 - Exam rule sets define page-count, citation, topic, and weight rules.
 - AI-assisted draft creation is available for instructors/staff.
 
-**REST surface**
+**RPC-over-HTTP surface**
 
 - `POST /api/v1/examinations`
 - `POST /api/v1/examinations/draft-with-ai`
@@ -412,7 +417,8 @@ and AI-assisted drafts.
 **UI surface**
 
 - Admin examination builder with `+ Add question`, JSON download, group-mode
-  checkbox, question type, choices, correct answers, and points.
+  checkbox, question type, question category, choices, correct answers, and
+  points.
 
 ## 12. Examination execution and submission
 
@@ -433,7 +439,7 @@ auditable work.
 - Configurable correction window allows limited correction after submission.
 - Soft deletion requires override and reason during retention period.
 
-**REST surface**
+**RPC-over-HTTP surface**
 
 - `POST /api/v1/submissions/prepare`
 - `POST /api/v1/submissions`
@@ -464,7 +470,7 @@ keeping instructor review and override.
 - Real-exam AI grading is provisional and reviewable.
 - Teacher overrides are audited with reason.
 
-**REST surface**
+**RPC-over-HTTP surface**
 
 - `POST /api/v1/examinations/{examination_id}/questions/{question_id}/score-draft`
 - `GET /api/v1/playground/course`
@@ -502,7 +508,7 @@ course grading defaults.
 - Metrics endpoint compares empirical trials by tolerance, mean absolute error,
   RMSE, latency, and optional baseline accuracy.
 
-**REST surface**
+**RPC-over-HTTP surface**
 
 - `GET /api/v1/playground/course`
 - `POST /api/v1/playground/asag-score`
@@ -522,7 +528,7 @@ and cross-system grade scales.
 - Practice reports are AI-only.
 - Real reports include instructor return/signature workflow.
 
-**REST surface**
+**RPC-over-HTTP surface**
 
 - `GET /api/v1/submissions/{submission_id}/report.pdf`
 
@@ -544,7 +550,7 @@ and cross-system grade scales.
 - Grammar service hook.
 - Academic-integrity review stored on submissions.
 
-**REST surface**
+**RPC-over-HTTP surface**
 
 - `POST /api/v1/submissions/{submission_id}/academic-integrity-check`
 
@@ -569,7 +575,7 @@ private-trust configurations.
 - OCSP responder endpoint for private PKI.
 - Enabled private roots exportable as PEM for TLS proxy use.
 
-**REST surface**
+**RPC-over-HTTP surface**
 
 - `GET /api/v1/trust-lists`
 - `POST /api/v1/trust-lists`
@@ -627,7 +633,7 @@ evidence.
 - Free Hugging Face model allowlist.
 - CPU/GPU/MPS/auto device selection.
 
-**REST surface**
+**RPC-over-HTTP surface**
 
 - `POST /api/v1/training/start`
 - `GET /api/v1/training/examples`

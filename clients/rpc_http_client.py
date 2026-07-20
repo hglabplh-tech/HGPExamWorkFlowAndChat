@@ -14,7 +14,7 @@ from backend.app.services.evidence import certificate_sha256, grading_signature_
 
 
 class HGPExamWorkFlowAndChatClient:
-    """Synchronous REST client for the HGPExamWorkFlowAndChat service."""
+    """Synchronous RPC-over-HTTP client for the HGPExamWorkFlowAndChat service."""
     def __init__(self, base_url: str, email: str, password: str, ca_file: str | bool = True):
         """Perform the init operation."""
         self.http = httpx.Client(base_url=base_url, verify=ca_file, timeout=20)

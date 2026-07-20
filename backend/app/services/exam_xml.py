@@ -24,7 +24,7 @@ def export_exam_xml(course_code: str, exam: object, questions: list[object], rul
         SubElement(root, "rules-json").text = json.dumps(rules, sort_keys=True)
     question_root = SubElement(root, "questions")
     for question in questions:
-        node = SubElement(question_root, "question", {"type": question.question_type, "max-score": str(question.max_score), "partial-credit": str(question.partial_credit).lower()})
+        node = SubElement(question_root, "question", {"type": question.question_type, "category": getattr(question, "question_category", "description"), "max-score": str(question.max_score), "partial-credit": str(question.partial_credit).lower()})
         SubElement(node, "prompt").text = question.prompt
         SubElement(node, "reference-answer").text = question.reference_answer
         for value in question.required_keywords:
@@ -58,6 +58,7 @@ def import_exam_xml(data: bytes) -> dict:
             "expected_facts": [value.text or "" for value in node.findall("fact")],
             "max_score": float(node.attrib.get("max-score", "0")),
             "question_type": node.attrib.get("type", "free_text"),
+            "question_category": node.attrib.get("category", "description"),
             "choices": choices,
             "correct_options": correct,
             "partial_credit": node.attrib.get("partial-credit") == "true",

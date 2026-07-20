@@ -180,7 +180,7 @@ async def upload_and_ask(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_nonce),
 ):
-    """Accept a file and question in one REST request and optionally persist it."""
+    """Accept a file and question in one HTTP RPC request and optionally persist it."""
     try:
         extracted = await asyncio.to_thread(ContentExtractor.extract, await file.read(), file.content_type or "application/octet-stream", file.filename or "")
     except (ValueError, UnicodeError) as error:

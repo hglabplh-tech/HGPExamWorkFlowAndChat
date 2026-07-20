@@ -4,7 +4,7 @@
 
 The client UI is still the single HTML5/PWA frontend in `frontend/`. Native
 clients wrap that same UI so Android, iOS, macOS, Windows, and browser users
-share one interface and one REST API.
+share one interface and one RPC-over-HTTP API.
 
 ## Build bundle
 

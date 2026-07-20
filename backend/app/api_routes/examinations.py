@@ -75,7 +75,7 @@ async def _store_rule_set(data: ExamRuleSetCreate, db: AsyncSession, user: User)
 
 @router.post("/exam-rule-sets", status_code=201)
 async def create_exam_rule_set(data: ExamRuleSetCreate, db: AsyncSession = Depends(get_db), user: User = Depends(require_nonce)):
-    """Create a validated rule set from a REST JSON body."""
+    """Create a validated rule set from a HTTP RPC JSON body."""
     require_staff(user)
     try:
         item = await _store_rule_set(data, db, user)
@@ -201,7 +201,7 @@ async def course_examinations(course_id: uuid.UUID, db: AsyncSession = Depends(g
             "state": examination.state,
             "released_at": examination.released_at,
             "closes_at": examination.closes_at,
-            "questions": [{"id": question.id, "prompt": question.prompt, "max_score": question.max_score, "question_type": question.question_type, "choices": question.choices} for question in questions],
+            "questions": [{"id": question.id, "prompt": question.prompt, "max_score": question.max_score, "question_type": question.question_type, "question_category": question.question_category, "choices": question.choices} for question in questions],
         })
     return output
 

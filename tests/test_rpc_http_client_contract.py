@@ -1,11 +1,11 @@
-"""REST-client behavior tests.
+"""RPC-over-HTTP client behavior tests.
 
 Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """
 
 import httpx
 
-from clients.rest_client import HGPExamWorkFlowAndChatClient
+from clients.rpc_http_client import HGPExamWorkFlowAndChatClient
 
 
 def test_client_logs_in_and_adds_a_fresh_nonce(monkeypatch) -> None:

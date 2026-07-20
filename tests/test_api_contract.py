@@ -1,4 +1,4 @@
-"""REST-boundary contract tests.
+"""RPC-over-HTTP boundary contract tests.
 
 Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """

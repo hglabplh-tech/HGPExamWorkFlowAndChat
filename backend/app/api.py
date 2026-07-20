@@ -1,4 +1,4 @@
-"""Aggregate REST router for HGPExamWorkFlowAndChat.
+"""Aggregate RPC-over-HTTP router for HGPExamWorkFlowAndChat.
 
 Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """

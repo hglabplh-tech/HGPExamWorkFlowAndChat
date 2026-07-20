@@ -1,4 +1,4 @@
-"""Administrative system-configuration REST endpoints.
+"""Administrative system-configuration RPC-over-HTTP endpoints.
 
 Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """
