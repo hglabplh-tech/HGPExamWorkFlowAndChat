@@ -30,6 +30,24 @@ class DocumentCreate(BaseModel):
     metadata: dict = Field(default_factory=dict)
 
 
+class CourseKnowledgeBaseCreate(BaseModel):
+    """Configure the course-specific PostgreSQL knowledge-base entry point."""
+    name: str = Field(default="default", min_length=2, max_length=160)
+    description: str = ""
+    fulltext_config: str = Field(default="simple", max_length=80)
+    semantic_profile: str = Field(default="economy", pattern="^(economy|quality)$")
+    mbert_model: str | None = Field(default=None, max_length=300)
+    active: bool = True
+    settings: dict = Field(default_factory=dict)
+
+
+class CourseKnowledgeBaseOut(CourseKnowledgeBaseCreate):
+    """Return a course knowledge-base entry point."""
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    course_id: uuid.UUID
+
+
 class VideoCreate(BaseModel):
     """Represent videocreate."""
     youtube_video_id: str

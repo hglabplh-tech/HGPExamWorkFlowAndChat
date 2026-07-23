@@ -3,6 +3,7 @@
 Copyright (c) 2026 Harald Glab-Plhak. Licensed under the MIT License.
 """
 
+from backend.app.api_routes.chat import chatbot_question, is_chatbot_command
 from backend.app.schemas import MessageCreate, QuestionDraftScore, UserCreate
 
 
@@ -29,3 +30,10 @@ def test_message_create_accepts_attachment_metadata() -> None:
     """The chat mask can send files or audio metadata with a message."""
     message = MessageCreate(body="@chatbot check this", attachments=[{"filename": "essay.txt", "sha256": "abc"}])
     assert message.attachments[0]["filename"] == "essay.txt"
+
+
+def test_chatbot_command_must_start_message() -> None:
+    """Only a leading @chatbot mention invokes hybrid-search chatbot behavior."""
+    assert is_chatbot_command("@chatbot research cache locality")
+    assert chatbot_question("@chatbot research cache locality") == "research cache locality"
+    assert not is_chatbot_command("please ask @chatbot later")

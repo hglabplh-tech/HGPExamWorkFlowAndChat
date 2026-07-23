@@ -18,6 +18,8 @@ def test_journey_endpoints_are_registered() -> None:
         "/api/v1/thesauri", "/api/v1/thesauri/upload",
         "/api/v1/knowledge/vocab.txt", "/api/v1/knowledge/vocabulary.json",
         "/api/v1/knowledge/rebuild-chroma",
+        "/api/v1/courses/{course_id}/knowledge-base",
+        "/api/v1/courses/{course_id}/knowledge-base/{name}",
         "/api/v1/users/me/totp/setup", "/api/v1/users/me/totp/verify",
         "/api/v1/auth/token", "/api/v1/auth/logout",
         "/api/v1/auth/check_totp", "/api/v1/auth/get_fresh_totp",

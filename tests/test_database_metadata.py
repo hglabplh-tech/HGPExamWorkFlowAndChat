@@ -14,6 +14,7 @@ def test_required_workflow_tables_are_registered() -> None:
         "audit_events", "training_examples", "trust_lists", "submission_confirmations",
         "exam_groups", "exam_rule_sets", "thesauri", "active_user_sessions",
         "research_histories", "research_history_entries", "mail_server_settings",
+        "course_knowledge_bases",
     }
     assert required <= set(Base.metadata.tables)
 
@@ -37,7 +38,10 @@ def test_submission_retention_and_signature_columns_exist() -> None:
         "correction_until", "supersedes_submission_id",
         "academic_integrity_review",
         "exam_group_id", "group_certificate_pem",
+        "encrypted_answers", "encrypted_content", "encrypted_ai_grade",
+        "encrypted_teacher_grade", "encryption_recipients", "encryption_status",
     } <= columns
+    assert "encrypted_grade" in Base.metadata.tables["grade_events"].columns
 
 
 def test_user_permissions_are_persisted() -> None:
@@ -52,7 +56,17 @@ def test_user_matriculation_number_is_persisted() -> None:
 
 def test_chat_message_attachments_are_persisted() -> None:
     """Chat uploads store safe metadata/transcripts for receivers."""
-    assert "attachments" in Base.metadata.tables["messages"].columns
+    columns = set(Base.metadata.tables["messages"].columns.keys())
+    assert {"attachments", "mentioned_user_ids"} <= columns
+
+
+def test_course_knowledge_base_entry_points_are_persisted() -> None:
+    """Courses have an explicit entry point for PostgreSQL hybrid knowledge search."""
+    columns = set(Base.metadata.tables["course_knowledge_bases"].columns.keys())
+    assert {
+        "course_id", "name", "description", "fulltext_config", "semantic_profile",
+        "mbert_model", "active", "settings",
+    } <= columns
 
 
 def test_totp_columns_are_persisted() -> None:

@@ -14,8 +14,8 @@ from sqlalchemy.orm import selectinload
 
 from ..database import get_db
 from ..config import get_settings
-from ..models import Document, Thesaurus, TrainingExample, User, VideoResource
-from ..schemas import DocumentCreate, ThesaurusJsonImport, ThesaurusOut, VideoCreate
+from ..models import CourseKnowledgeBase, Document, Thesaurus, TrainingExample, User, VideoResource
+from ..schemas import CourseKnowledgeBaseCreate, CourseKnowledgeBaseOut, DocumentCreate, ThesaurusJsonImport, ThesaurusOut, VideoCreate
 from ..security import authenticate, require_nonce
 from ..services.audit import append_audit
 from ..services.academic_integrity import fact_check_knowledge_text
@@ -32,6 +32,48 @@ from .common import (
 )
 
 router = APIRouter(prefix="/api/v1")
+
+
+@router.get("/courses/{course_id}/knowledge-base", response_model=list[CourseKnowledgeBaseOut])
+async def list_course_knowledge_bases(
+    course_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(authenticate),
+):
+    """List the PostgreSQL knowledge-base entry points for a course."""
+    require_staff(user)
+    return (await db.scalars(select(CourseKnowledgeBase).where(
+        CourseKnowledgeBase.course_id == course_id,
+    ).order_by(CourseKnowledgeBase.name))).all()
+
+
+@router.put("/courses/{course_id}/knowledge-base/{name}", response_model=CourseKnowledgeBaseOut)
+async def upsert_course_knowledge_base(
+    course_id: uuid.UUID,
+    name: str,
+    data: CourseKnowledgeBaseCreate,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_nonce),
+):
+    """Create or update the course entry point used by full-text, BM25, and mBERT search."""
+    require_staff(user)
+    item = await db.scalar(select(CourseKnowledgeBase).where(
+        CourseKnowledgeBase.course_id == course_id,
+        CourseKnowledgeBase.name == name,
+    ))
+    if not item:
+        item = CourseKnowledgeBase(course_id=course_id, name=name)
+        db.add(item)
+    item.description = data.description
+    item.fulltext_config = data.fulltext_config
+    item.semantic_profile = data.semantic_profile
+    item.mbert_model = data.mbert_model
+    item.active = data.active
+    item.settings = data.settings
+    await append_audit(db, user.id, "course_knowledge_base_upserted", "course", course_id, details={"name": name, "active": item.active, "semantic_profile": item.semantic_profile})
+    await db.commit()
+    await db.refresh(item)
+    return item
 
 
 @router.post("/thesauri/upload", response_model=ThesaurusOut, status_code=201)

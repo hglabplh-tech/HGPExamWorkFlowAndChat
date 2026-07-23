@@ -14,6 +14,7 @@ from ..models import Examination, ExamRuleSet, GradeEvent, Role, Submission, Use
 from ..schemas import GradeOverride, IntegrityCheckRequest, InstructorReturn
 from ..security import authenticate, require_nonce
 from ..services.audit import append_audit
+from ..services.envelope_encryption import best_effort_encrypt_json
 from ..services.evidence import certificate_matches_public_key, certificate_sha256, grading_signature_message, sha256_hex, verify_certificate_signature
 from ..services.academic_integrity import review_exam_text
 from ..services.exam_rules import evaluate_exam_rules
@@ -159,7 +160,10 @@ async def propose_ai_grade(
         raise HTTPException(status.HTTP_409_CONFLICT, "Practice feedback and report are already final")
     proposal = await build_grade_proposal(db, submission)
     submission.ai_grade = proposal
-    db.add(GradeEvent(submission_id=submission.id, actor_id=user.id, kind="ai_proposal", grade=proposal, reason="Weighted ASAG scoring"))
+    submission.encrypted_ai_grade, grade_status = best_effort_encrypt_json(proposal, submission.student_certificate_pem, "submission.ai_grade")
+    if grade_status != "encrypted" and submission.encryption_status == "encrypted":
+        submission.encryption_status = grade_status
+    db.add(GradeEvent(submission_id=submission.id, actor_id=user.id, kind="ai_proposal", grade=proposal, encrypted_grade=submission.encrypted_ai_grade, reason="Weighted ASAG scoring"))
     await append_audit(db, user.id, "ai_grade_proposed", "submission", submission.id, details={"profile_id": proposal["profile_id"], "total": proposal["total"], "requires_teacher_review": proposal["requires_teacher_review"]})
     await db.commit()
     return proposal
@@ -181,8 +185,11 @@ async def override_grade(
     await require_course_instructor(db, user, examination.course_id)
     grade = data.model_dump(exclude={"reason"})
     submission.teacher_grade = grade
+    submission.encrypted_teacher_grade, grade_status = best_effort_encrypt_json(grade, submission.student_certificate_pem, "submission.teacher_grade")
+    if grade_status != "encrypted" and submission.encryption_status == "encrypted":
+        submission.encryption_status = grade_status
     submission.state = "corrected"
-    db.add(GradeEvent(submission_id=submission.id, actor_id=user.id, kind="teacher_override", grade=grade, reason=data.reason))
+    db.add(GradeEvent(submission_id=submission.id, actor_id=user.id, kind="teacher_override", grade=grade, encrypted_grade=submission.encrypted_teacher_grade, reason=data.reason))
     await append_audit(db, user.id, "teacher_grade_override", "submission", submission.id, data.reason, {"grade": grade})
     await db.commit()
     return {"submission_id": submission.id, "effective_grade": grade, "overridden_by": user.id}
@@ -230,6 +237,18 @@ async def return_graded_submission(
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(error)) from error
     await require_active_signing_certificate(db, user, certificate_fingerprint)
     submission.grading_sha256 = grading_hash
+    student_encrypted_teacher_grade = submission.encrypted_teacher_grade
+    instructor_encrypted_teacher_grade, grade_status = best_effort_encrypt_json(submission.teacher_grade, certificate_pem, "submission.returned_teacher_grade")
+    submission.encrypted_teacher_grade = {
+        "student": student_encrypted_teacher_grade,
+        "instructor": instructor_encrypted_teacher_grade,
+    }
+    if grade_status == "encrypted":
+        recipients = list(submission.encryption_recipients or [])
+        recipients.append({"role": "instructor", "certificate_sha256": certificate_fingerprint})
+        submission.encryption_recipients = recipients
+    elif submission.encryption_status == "encrypted":
+        submission.encryption_status = grade_status
     submission.instructor_signature = instructor_signature
     submission.instructor_certificate_pem = certificate_pem
     submission.instructor_signed_at = data.signed_at

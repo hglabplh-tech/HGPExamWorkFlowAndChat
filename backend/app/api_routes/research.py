@@ -8,7 +8,7 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
-from ..models import ActiveUserSession, ConversationMember, Course, Document, Enrollment, ResearchHistory, ResearchHistoryEntry, ResearchInteraction, Role, Thesaurus, User, VideoResource
+from ..models import ActiveUserSession, ConversationMember, Course, CourseKnowledgeBase, Document, Enrollment, ResearchHistory, ResearchHistoryEntry, ResearchInteraction, Role, Thesaurus, User, VideoResource
 from ..schemas import ResearchHistoryCreate, ResearchHistoryUpdate, ResearchQuestionCreate, ResearchVisibilityUpdate, SearchResponse
 from ..security import authenticate, current_active_session, require_nonce
 from ..services.audit import append_audit
@@ -42,10 +42,15 @@ async def search(
         if not membership:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Course enrollment required")
     scoring_profile = None
+    knowledge_base = None
     if course_id:
         course = await db.get(Course, course_id)
         if course:
             scoring_profile = await active_scoring_profile(db, course)
+            knowledge_base = await db.scalar(select(CourseKnowledgeBase).where(
+                CourseKnowledgeBase.course_id == course_id,
+                CourseKnowledgeBase.active.is_(True),
+            ).order_by(CourseKnowledgeBase.name))
     thesaurus_entries: list[dict] = []
     if use_thesaurus:
         thesauri = (await db.scalars(select(Thesaurus).where(Thesaurus.active.is_(True)))).all()
@@ -57,7 +62,7 @@ async def search(
         db,
         refined_q,
         course_id,
-        profile=scoring_profile.semantic_profile if scoring_profile else "economy",
+        profile=knowledge_base.semantic_profile if knowledge_base else scoring_profile.semantic_profile if scoring_profile else "economy",
         weights=scoring_profile.search_weights if scoring_profile else None,
         thesaurus_entries=thesaurus_entries,
     )
@@ -104,6 +109,10 @@ async def ask_research_question(
     if not course:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Course not found")
     profile = await active_scoring_profile(db, course)
+    knowledge_base = await db.scalar(select(CourseKnowledgeBase).where(
+        CourseKnowledgeBase.course_id == course.id,
+        CourseKnowledgeBase.active.is_(True),
+    ).order_by(CourseKnowledgeBase.name))
     thesaurus_entries: list[dict] = []
     thesauri = (await db.scalars(select(Thesaurus).where(Thesaurus.active.is_(True)))).all()
     for thesaurus in thesauri:
@@ -112,7 +121,7 @@ async def ask_research_question(
         db,
         course.id,
         data.question,
-        profile.semantic_profile if profile else "economy",
+        knowledge_base.semantic_profile if knowledge_base else profile.semantic_profile if profile else "economy",
         profile.search_weights if profile else None,
         thesaurus_entries,
     )

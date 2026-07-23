@@ -27,10 +27,16 @@ Copyright © 2026 Harald Glab-Plhak. Distributed under the MIT License.
 
 ChromaDB is a derived semantic index. PostgreSQL remains canonical, including
 approval status and provenance, so the index can always be rebuilt and audited.
+Each course can define a PostgreSQL `course_knowledge_bases` entry point that
+selects the active full-text/BM25 and mBERT/semantic-search profile for that
+course.
 The HTTP API is documented as RPC services over HTTP, because most operations
 call application commands/workflows rather than exposing purely resource-oriented APIs.
 Exam questions carry both a technical answer type and an ASAG question category:
 Description, Fact, Argument, or Dialectical.
+In chat, a message beginning with `@chatbot` sends the remaining text to
+course-scoped hybrid search and returns the chatbot answer as a normal chat
+message; other `@user` forms are stored as user mentions.
 
 ## Run locally
 
@@ -40,6 +46,13 @@ Description, Fact, Argument, or Dialectical.
 4. Create the first administrator inside the API container:
    `python -m backend.app.bootstrap admin@example.org 'a-long-password'`.
 5. Open `https://localhost`. Interactive API documentation is at `/docs`.
+
+For a clean local database plus initialized Playground course and default
+knowledge-base entry point, run:
+
+```sh
+python -m backend.app.db_cli bootstrap-playground
+```
 
 For development without TLS termination, run PostgreSQL and Chroma with Compose,
 then start `uvicorn backend.app.main:app --reload`. Never expose that port publicly.
@@ -146,6 +159,12 @@ real examination, return additionally requires the instructor's active
 certificate and signature over the original exam hash, student-signature hash,
 and final grading hash. Practice examinations deliberately have no instructor
 signature and are labelled AI-only.
+
+Sensitive exam answers, signed content, ASAG scores, and tutor grading payloads
+are also stored as certificate-bound encrypted JSONB envelopes. RSA-capable X.509
+recipient certificates receive AES-GCM payloads with RSA-OAEP-wrapped content
+keys; unsupported encryption certificates are recorded through the
+`encryption_status` field for administrator review.
 
 Both workflows generate an A4 PDF report from PostgreSQL containing each
 question and answer, per-question score, ASAG metrics, feedback, evidence hashes,
@@ -331,10 +350,12 @@ for manual review rather than silently trusted.
 
 The HTML5 frontend includes a GitHub-style administrator login with optional TOTP,
 TOTP enrollment controls, thesaurus import, vocabulary export links, chat bubbles,
-`@chatbot` room replies, score/research sharing fields, and a practice/real exam
-submission mask. Real-exam submission asks for confirmation, hashes the gathered
-answers and uploaded-file metadata, requests a confirmation token, and submits the
-signed evidence package through the existing RPC-over-HTTP submission flow.
+leading-`@chatbot` hybrid-search room replies, score/research sharing fields, and
+a practice/real exam submission mask. Real-exam submission asks for confirmation,
+hashes the gathered answers and uploaded-file metadata, requests a confirmation
+token, encrypts sensitive answer/grading evidence for certificate recipients where
+possible, and submits the signed evidence package through the existing
+RPC-over-HTTP submission flow.
 
 `POST /api/v1/audio/transcribe` uses an administrator-approved, freely available
 Whisper model on CPU. Its transcript can be used as a research question or an exam
@@ -421,11 +442,12 @@ plus-file attachment picker, and browser microphone dictation where available.
 When browser speech recognition is unavailable, the microphone button records a
 short phrase and sends it to the project's ASR endpoint. A neighboring audio-send
 button sends the spoken phrase as an audio attachment to the selected chat. Messages
-can also carry uploaded files; if the message mentions `@chatbot`, supported text,
-PDF, JSON, Markdown, CSV, or audio attachments are extracted/transcribed and used as
-additional context for the chatbot's research or grading-style response. The emoji
-button opens a lightweight browser-side picker for quick insertion into the message
-field.
+can also carry uploaded files; if the message starts with `@chatbot`, supported
+text, PDF, JSON, Markdown, CSV, or audio attachments are extracted/transcribed and
+used as additional context for the chatbot's research or grading-style response.
+Other `@user`, `@"User Name"`, and `@{User Name}` tokens are stored as visible
+user mentions in the chat database. The emoji button opens a lightweight
+browser-side picker for quick insertion into the message field.
 
 ## Production work still required
 

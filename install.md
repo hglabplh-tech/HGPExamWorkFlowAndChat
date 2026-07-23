@@ -85,6 +85,13 @@ Playground ASAG experiments do not need extra installation steps. They use the
 built-in `Playground` course/discipline and store request inputs as unapproved
 training candidates for later staff review.
 
+To create tables, apply idempotent SQL migrations, and initialize the Playground
+course with a default PostgreSQL knowledge-base entry point:
+
+```sh
+python -m backend.app.db_cli bootstrap-playground
+```
+
 SMTP can also be configured after login through the admin menu item
 `SMTP / IMAP configuration`. Values saved there override `.env` for outgoing
 mail while keeping `.env` as fallback.

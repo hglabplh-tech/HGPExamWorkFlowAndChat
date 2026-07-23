@@ -144,11 +144,14 @@ rooms, chatbot interaction, and controlled sharing.
 - Conversation purpose can identify general, exam-preparation, and exam-work
   contexts.
 - Explicit conversation membership protects visibility.
-- Messages store body, sender, timestamp, optional attachments, shared type, and
-  shared ID.
+- Messages store body, sender, timestamp, optional attachments, mentioned user
+  IDs, shared type, and shared ID.
 - Attachments include safe metadata and optional transcripts.
-- Chatbot can be addressed with `@chatbot`.
-- Users can address other users with `@{user}` style text.
+- Chatbot is invoked only when `@chatbot` starts the message. The text after
+  `@chatbot` is sent to course-scoped hybrid search over the PostgreSQL
+  knowledge base, and the answer is returned as a chatbot chat message.
+- Users can address other users with `@{user}`, `@"user"`, or simple `@user`
+  mention text; these are stored as user mentions, not chatbot commands.
 - Research results and practice scores can be shared into chats.
 - Random exam groups can be generated per examination/topic.
 - Group-exam submissions can use group X.509 certificates.
@@ -251,6 +254,8 @@ semantic/full-text indexes.
 
 - Documents store body text, source URI, metadata, content hash, media type, and
   approval state.
+- `course_knowledge_bases` defines the course entry point for PostgreSQL
+  full-text, BM25, and mBERT/semantic search settings.
 - PDF/text upload and upload-and-ask flows.
 - Smart ingestion avoids duplicate content by hash.
 - Approved documents are chunked and indexed.
@@ -273,6 +278,8 @@ semantic/full-text indexes.
 - `GET /api/v1/knowledge/vocab.txt`
 - `POST /api/v1/knowledge/import-bundle`
 - `POST /api/v1/knowledge/rebuild-chroma`
+- `GET /api/v1/courses/{course_id}/knowledge-base`
+- `PUT /api/v1/courses/{course_id}/knowledge-base/{name}`
 - `POST /api/v1/documents/{document_id}/approve`
 - `POST /api/v1/videos`
 - `POST /api/v1/videos/{video_id}/approve`
@@ -435,6 +442,10 @@ auditable work.
 - Submission stores content bytes, content SHA-256, student signature, signing
   certificate, signed timestamp, nonce, state, correction window, retention
   deadline, legal hold, and report data.
+- Sensitive answers and signed content are additionally stored as
+  certificate-recipient envelope-encrypted JSONB payloads. RSA-capable X.509
+  certificates receive AES-GCM payloads with RSA-OAEP-wrapped content keys;
+  unsupported certificate key types are marked in `encryption_status`.
 - Real-exam resubmission is blocked while correction is in progress.
 - Configurable correction window allows limited correction after submission.
 - Soft deletion requires override and reason during retention period.
@@ -469,6 +480,8 @@ keeping instructor review and override.
 - Practice scoring produces immediate student feedback.
 - Real-exam AI grading is provisional and reviewable.
 - Teacher overrides are audited with reason.
+- Practice ASAG scores, tutor overrides, and returned grading data can be stored
+  as encrypted grade envelopes for student and tutor recipients.
 
 **RPC-over-HTTP surface**
 
@@ -481,6 +494,26 @@ keeping instructor review and override.
 - `POST /api/v1/submissions/{submission_id}/return`
 - `POST /api/v1/scoring-profiles`
 - `GET /api/v1/scoring-profiles`
+
+## 13b. Encrypted examination and scoring storage
+
+**Purpose:** keep sensitive ASAG scores, exam answers, signed content, and tutor
+grading payloads in certificate-bound encrypted envelopes, similar in spirit to
+recipient-based mail encryption.
+
+**Attributes**
+
+- Submission rows include `encrypted_answers`, `encrypted_content`,
+  `encrypted_ai_grade`, `encrypted_teacher_grade`, `encryption_recipients`, and
+  `encryption_status`.
+- Grade events include `encrypted_grade` for append-only encrypted grade
+  evidence.
+- Encryption uses AES-256-GCM for payloads and RSA-OAEP-SHA256 to wrap the
+  content encryption key for RSA-capable X.509 recipients.
+- Returned tutor grading can keep separate student and instructor/tutor
+  recipient envelopes.
+- Plain workflow fields remain available for the current alpha application
+  logic; the encrypted columns are the durable protected evidence layer.
 
 **UI surface**
 

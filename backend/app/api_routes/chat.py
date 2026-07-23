@@ -3,6 +3,7 @@
 import uuid
 import asyncio
 import secrets
+import re
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
@@ -10,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
-from ..models import Conversation, ConversationMember, Course, Enrollment, ExamGroup, Examination, Message, PrivatePKI, ResearchInteraction, Role, Submission, User
+from ..models import Conversation, ConversationMember, Course, CourseKnowledgeBase, Enrollment, ExamGroup, Examination, Message, PrivatePKI, ResearchInteraction, Role, Submission, User
 from ..schemas import ConversationCreate, ExamGroupCertificateAssign, MessageCreate, RandomExamGroupsCreate
 from ..security import authenticate, hash_password, require_nonce
 from ..services.audit import append_audit
@@ -21,13 +22,12 @@ from ..services.group_assignment import assign_random_groups
 from ..services.audio import transcribe_audio
 from ..services.ingestion import ContentExtractor, answer_from_uploaded_text
 
-
 from .common import (
     active_scoring_profile, require_course_instructor, require_staff,
 )
 
 router = APIRouter(prefix="/api/v1")
-
+MENTION_PATTERN = re.compile(r'@"([^"]+)"|@\{([^}]+)\}|@([A-Za-z0-9_.@-]+)')
 
 @router.post("/courses/{course_id}/exam-groups/randomize", status_code=201)
 async def randomize_exam_groups(
@@ -70,7 +70,6 @@ async def randomize_exam_groups(
     await append_audit(db, user.id, "exam_groups_randomized", "examination", examination.id, details={"group_count": len(created), "seed": seed, "purpose": data.purpose})
     await db.commit()
     return {"examination_id": examination.id, "seed": seed, "groups": created}
-
 
 @router.put("/exam-groups/{group_id}/certificate")
 async def assign_exam_group_certificate(
@@ -122,7 +121,6 @@ async def create_conversation(data: ConversationCreate, db: AsyncSession = Depen
     await db.commit()
     return {"id": conversation.id, "members": len(members)}
 
-
 @router.get("/conversations")
 async def list_conversations(
     db: AsyncSession = Depends(get_db),
@@ -141,7 +139,6 @@ async def list_conversations(
         "topic": item.topic,
         "examination_id": item.examination_id,
     } for item in rows]
-
 
 async def ensure_chatbot_user(db: AsyncSession) -> User:
     """Return the internal chatbot identity used for automated room replies."""
@@ -181,21 +178,69 @@ async def validate_chat_share(db: AsyncSession, user: User, conversation_id: uui
     else:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Unsupported shared resource type")
 
+def is_chatbot_command(body: str) -> bool:
+    """Return true only when a message starts with the chatbot mention."""
+    return body.strip().casefold().startswith("@chatbot")
 
-async def chatbot_answer_for_message(db: AsyncSession, conversation: Conversation, body: str, extra_context: str = "") -> str:
-    """Answer a chatbot mention using uploaded context first and course RAG otherwise."""
-    question = body.replace("@chatbot", "").strip() or "Please interpret the uploaded material."
+def chatbot_question(body: str) -> str:
+    """Extract the free-text research request after the leading chatbot mention."""
+    stripped = body.strip()
+    return stripped[len("@chatbot"):].strip() or "Please interpret the uploaded material."
+
+async def resolve_user_mentions(db: AsyncSession, conversation_id: uuid.UUID, body: str) -> list[str]:
+    """Resolve non-chatbot @mentions to visible conversation user ids."""
+    if is_chatbot_command(body):
+        return []
+    names = {
+        (quoted or braced or bare or "").strip().casefold()
+        for quoted, braced, bare in MENTION_PATTERN.findall(body)
+    }
+    names.discard("")
+    names.discard("chatbot")
+    if not names:
+        return []
+    members = (await db.execute(
+        select(User).join(ConversationMember, ConversationMember.user_id == User.id).where(
+            ConversationMember.conversation_id == conversation_id,
+        )
+    )).scalars().all()
+    mentioned = [
+        str(member.id)
+        for member in members
+        if member.email.casefold() in names or member.display_name.casefold() in names
+    ]
+    return sorted(set(mentioned))
+
+async def chatbot_answer_for_message(db: AsyncSession, conversation: Conversation, user: User, body: str, extra_context: str = "") -> tuple[str, list[dict], uuid.UUID | None]:
+    """Answer a leading chatbot command using uploaded context first and course RAG otherwise."""
+    question = chatbot_question(body)
     if extra_context.strip():
         result = answer_from_uploaded_text(question, extra_context)
-        return result["answer"] or "I could not extract enough text from the uploaded file."
+        return result["answer"] or "I could not extract enough text from the uploaded file.", [], None
     course = await db.get(Course, conversation.course_id)
     profile = await active_scoring_profile(db, course) if course else None
-    answer, _ = await answer_research_question(
+    knowledge_base = await db.scalar(select(CourseKnowledgeBase).where(
+        CourseKnowledgeBase.course_id == conversation.course_id,
+        CourseKnowledgeBase.active.is_(True),
+    ).order_by(CourseKnowledgeBase.name))
+    answer, sources = await answer_research_question(
         db, conversation.course_id, question,
-        profile.semantic_profile if profile else "economy",
+        knowledge_base.semantic_profile if knowledge_base else profile.semantic_profile if profile else "economy",
         profile.search_weights if profile else None,
     )
-    return answer
+    interaction = ResearchInteraction(
+        course_id=conversation.course_id,
+        user_id=user.id,
+        conversation_id=conversation.id,
+        question=question,
+        answer=answer,
+        sources=sources,
+        visibility="conversation",
+        training_opt_in=False,
+    )
+    db.add(interaction)
+    await db.flush()
+    return answer, sources, interaction.id
 
 
 async def attachment_from_upload(file: UploadFile) -> tuple[dict, str]:
@@ -229,17 +274,18 @@ async def post_message(
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Conversation membership required")
     await validate_chat_share(db, user, conversation_id, data.shared_type, data.shared_id)
     conversation = await db.get(Conversation, conversation_id)
-    item = Message(conversation_id=conversation_id, sender_id=user.id, **data.model_dump())
+    item = Message(conversation_id=conversation_id, sender_id=user.id, mentioned_user_ids=await resolve_user_mentions(db, conversation_id, data.body), **data.model_dump())
     db.add(item)
     chatbot_reply = None
-    if "@chatbot" in data.body.casefold() and conversation:
-        answer = await chatbot_answer_for_message(db, conversation, data.body)
+    if is_chatbot_command(data.body) and conversation:
+        answer, _, interaction_id = await chatbot_answer_for_message(db, conversation, user, data.body)
         bot = await ensure_chatbot_user(db)
         chatbot_reply = Message(
             conversation_id=conversation_id,
             sender_id=bot.id,
             body=answer,
             shared_type="research_result",
+            shared_id=interaction_id,
         )
         db.add(chatbot_reply)
     await db.commit()
@@ -267,13 +313,13 @@ async def post_message_upload(
         if context:
             contexts.append(context)
     conversation = await db.get(Conversation, conversation_id)
-    item = Message(conversation_id=conversation_id, sender_id=user.id, body=body, attachments=attachments, shared_type=shared_type, shared_id=shared_id)
+    item = Message(conversation_id=conversation_id, sender_id=user.id, body=body, attachments=attachments, mentioned_user_ids=await resolve_user_mentions(db, conversation_id, body), shared_type=shared_type, shared_id=shared_id)
     db.add(item)
     chatbot_reply = None
-    if conversation and "@chatbot" in body.casefold():
+    if conversation and is_chatbot_command(body):
         bot = await ensure_chatbot_user(db)
-        answer = await chatbot_answer_for_message(db, conversation, body, "\n\n".join(contexts))
-        chatbot_reply = Message(conversation_id=conversation_id, sender_id=bot.id, body=answer, shared_type="research_result")
+        answer, _, interaction_id = await chatbot_answer_for_message(db, conversation, user, body, "\n\n".join(contexts))
+        chatbot_reply = Message(conversation_id=conversation_id, sender_id=bot.id, body=answer, shared_type="research_result" if interaction_id else None, shared_id=interaction_id)
         db.add(chatbot_reply)
     await db.commit()
     return {"id": item.id, "attachments": attachments, "chatbot_reply_id": chatbot_reply.id if chatbot_reply else None}
@@ -297,7 +343,7 @@ async def conversation_messages(
     user_ids = {item.sender_id for item in items}
     users = (await db.scalars(select(User).where(User.id.in_(user_ids)))).all() if user_ids else []
     names = {item.id: item.display_name for item in users}
-    return [{"id": item.id, "sender_id": item.sender_id, "sender_name": names.get(item.sender_id, "User"), "body": item.body, "attachments": item.attachments, "shared_type": item.shared_type, "shared_id": item.shared_id, "created_at": item.created_at} for item in reversed(items)]
+    return [{"id": item.id, "sender_id": item.sender_id, "sender_name": names.get(item.sender_id, "User"), "body": item.body, "attachments": item.attachments, "mentioned_user_ids": item.mentioned_user_ids, "shared_type": item.shared_type, "shared_id": item.shared_id, "created_at": item.created_at} for item in reversed(items)]
 
 
 @router.get("/conversations/{conversation_id}/shared-submissions/{submission_id}")

@@ -143,6 +143,36 @@ RPC-over-HTTP endpoint:
 POST /api/v1/knowledge/rebuild-chroma?profile=economy
 ```
 
+Course knowledge-base entry points:
+
+```text
+GET /api/v1/courses/{course_id}/knowledge-base
+PUT /api/v1/courses/{course_id}/knowledge-base/{name}
+```
+
+These rows tell the application where a course starts its PostgreSQL full-text,
+BM25, and mBERT/semantic search configuration.
+
+In course chats, only a message whose first token is `@chatbot` invokes this
+course-scoped hybrid search. Other `@user`, `@"User Name"`, and `@{User Name}`
+forms are treated as user mentions and saved with the chat message.
+
+## Database CLI and Playground initialization
+
+Create schema, apply SQL migrations, and initialize the Playground course:
+
+```sh
+python -m backend.app.db_cli bootstrap-playground
+```
+
+Only initialize Playground after configuring `DATABASE_URL` for the intended
+PostgreSQL database.
+
+If RSA-capable X.509 recipient certificates are present, exam answers, signed
+exam content, ASAG proposals, and returned teacher grades are additionally stored
+as AES-256-GCM/RSA-OAEP encrypted JSONB envelopes for the relevant
+student/instructor or group recipients.
+
 Example:
 
 ```sh

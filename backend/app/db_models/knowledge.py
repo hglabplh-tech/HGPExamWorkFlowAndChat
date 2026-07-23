@@ -38,6 +38,22 @@ class DocumentChunk(UUIDMixin, Base):
     chroma_id: Mapped[str | None] = mapped_column(String(80), unique=True)
 
 
+class CourseKnowledgeBase(UUIDMixin, Base):
+    """Define the course-specific entry point for PostgreSQL full-text, BM25, and semantic search."""
+    __tablename__ = "course_knowledge_bases"
+    __table_args__ = (UniqueConstraint("course_id", "name"),)
+    course_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(160), default="default", index=True)
+    description: Mapped[str] = mapped_column(Text, default="")
+    fulltext_config: Mapped[str] = mapped_column(String(80), default="simple")
+    semantic_profile: Mapped[str] = mapped_column(String(20), default="economy")
+    mbert_model: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    settings: Mapped[dict] = mapped_column(JSONB, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+
 class VideoResource(UUIDMixin, Base):
     """Represent videoresource."""
     __tablename__ = "video_resources"

@@ -15,6 +15,7 @@ from ..models import ConversationMember, ExamGroup, Examination, GradeEvent, Sub
 from ..schemas import DeletionRequest, SubmissionCreate, SubmissionOut, SubmissionPrepare
 from ..security import require_nonce
 from ..services.audit import append_audit
+from ..services.envelope_encryption import best_effort_encrypt_bytes, best_effort_encrypt_json
 from ..services.evidence import certificate_matches_public_key, certificate_sha256, sha256_hex, signature_message, verify_certificate_signature
 
 
@@ -141,11 +142,15 @@ async def submit(
         retention_until = now.replace(year=now.year + get_settings().retention_years)
     except ValueError:
         retention_until = now.replace(month=2, day=28, year=now.year + get_settings().retention_years)
+    encrypted_answers, answers_status = best_effort_encrypt_json(data.answers, certificate_pem, "submission.answers")
+    encrypted_content, content_status = best_effort_encrypt_bytes(content, certificate_pem, "submission.content")
     item = Submission(
         examination_id=data.examination_id,
         student_id=user.id,
         answers=data.answers,
+        encrypted_answers=encrypted_answers,
         content=content,
+        encrypted_content=encrypted_content,
         content_type=data.content_type,
         content_sha256=content_hash,
         student_signature=signature,
@@ -160,16 +165,21 @@ async def submit(
         supersedes_submission_id=data.replaces_submission_id,
         exam_group_id=exam_group.id if exam_group else None,
         group_certificate_pem=certificate_pem if exam_group else None,
+        encryption_recipients=[{"role": "student" if not exam_group else "exam_group", "certificate_sha256": certificate_fingerprint}],
+        encryption_status="encrypted" if answers_status == "encrypted" and content_status == "encrypted" else f"{answers_status}:{content_status}",
     )
     db.add(item)
     await db.flush()
     if examination.kind == "practice":
         proposal = await build_grade_proposal(db, item)
         item.ai_grade = proposal
+        item.encrypted_ai_grade, grade_status = best_effort_encrypt_json(proposal, certificate_pem, "submission.practice_ai_grade")
+        if grade_status != "encrypted" and item.encryption_status == "encrypted":
+            item.encryption_status = grade_status
         item.grading_sha256 = sha256_hex(json.dumps(proposal, sort_keys=True, separators=(",", ":")).encode())
         item.state = "practice_feedback_released"
         item.feedback_released_at = now
-        db.add(GradeEvent(submission_id=item.id, actor_id=user.id, kind="practice_ai_feedback", grade=proposal, reason="Immediate practice feedback"))
+        db.add(GradeEvent(submission_id=item.id, actor_id=user.id, kind="practice_ai_feedback", grade=proposal, encrypted_grade=item.encrypted_ai_grade, reason="Immediate practice feedback"))
         await store_exam_report(db, item, examination)
     else:
         item.state = "awaiting_grading"

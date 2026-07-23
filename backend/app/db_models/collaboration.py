@@ -39,6 +39,7 @@ class Message(UUIDMixin, Base):
     sender_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     body: Mapped[str] = mapped_column(Text)
     attachments: Mapped[list] = mapped_column(JSONB, default=list)
+    mentioned_user_ids: Mapped[list] = mapped_column(JSONB, default=list)
     shared_type: Mapped[str | None] = mapped_column(String(40), nullable=True)
     shared_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
